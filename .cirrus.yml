@@ -1,0 +1,41 @@
+package_ci_task:
+  timeout_in: 120m
+  container:
+    dockerfile: ci/Dockerfile
+    matrix:
+      - docker_arguments:
+        - ZEEK_LTS: 1
+        - ZEEK_VERSION: 3.0.13-0
+      - docker_arguments:
+        - ZEEK_LTS:
+        - ZEEK_VERSION: 3.2.4-0
+      - docker_arguments:
+        - ZEEK_LTS:
+        - ZEEK_VERSION: 4.0.0-0
+    cpu: 2
+    memory: 12G
+
+  install_script:
+    - zkg install --force .
+
+  check_script:
+    - zeek -N _Zeek::Spicy
+
+standalone_ci_task:
+  timeout_in: 120m
+  container:
+    dockerfile: ci/Dockerfile
+    matrix:
+      - docker_arguments:
+        - ZEEK_LTS:
+        - ZEEK_VERSION: 4.0.0-0
+    cpu: 2
+    memory: 12G
+
+  install_script:
+    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja && ninja install)
+    - rm -rf build
+
+  check_script:
+    - zeek -N _Zeek::Spicy
+    - PATH=/opt/spicy-plugin/bin:$PATH make -C tests test-install

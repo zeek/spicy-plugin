@@ -1,0 +1,35 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: local
+  hooks:
+  - id: clang-format
+    name: Run clang-format on code
+    entry: ./scripts/run-clang-format
+    args: ["--pre-commit-hook"]
+    files: ^(hilti|spicy|zeek)/.*\.(c|h|C|H|cpp|hpp|cc|hh|c\+\+|h\+\+|cxx|hxx)$
+    language: script
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v2.5.0
+  hooks:
+  - id: trailing-whitespace
+    exclude: '^tests/Baseline'
+  - id: end-of-file-fixer
+    exclude: '^tests/Baseline|^doc/autogen|^doc/_static'
+  - id: check-yaml
+  - id: check-added-large-files
+
+- repo: https://gitlab.com/daverona/pre-commit-cpp
+  rev: 0.6.0
+  hooks:
+  - id: cpplint
+    exclude: '3rdparty/'
+    args: ["--quiet"]
+
+- repo: https://github.com/jorisroovers/gitlint
+  rev:  v0.13.1
+  hooks:
+  - id: gitlint
+
+exclude: 3rdparty/|doc/.*examples/|/Baseline/|(\.svg$)|(\.dat$)
