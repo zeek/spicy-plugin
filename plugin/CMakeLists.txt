@@ -49,7 +49,7 @@ endforeach()
 
 zeek_plugin_dist_files(include/zeek-spicy/autogen/config.h)
 
-if ( SPICY_IN_TREE_BUILD} )
+if ( SPICY_IN_TREE_BUILD )
     # We disable Zeek's standard installation logic so that we control
     # things better (like RPATHs etc.). Unfortunately Zeek doesn't just
     # have a "no install, please" switch, so we change its destination
