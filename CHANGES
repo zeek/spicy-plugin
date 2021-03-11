@@ -1,5 +1,5 @@
 
-0.99.0-5 | 2021-03-11 07:02:28 +0000
+0.99.0-7 | 2021-03-11 13:02:46 +0000
 
   * Fix a couple of CMake issues. (Robin Sommer, Corelight)
 
