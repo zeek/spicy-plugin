@@ -61,6 +61,11 @@ zeek_plugin_bif(src/consts.bif)
 zeek_plugin_bif(src/events.bif)
 zeek_plugin_bif(src/functions.bif)
 
+if ( ZEEK_DEBUG_BUILD )
+    # This one needs the DEBUG defined earlier than zeek-compat would.
+    set_source_files_properties(functions.bif.cc PROPERTIES COMPILE_DEFINITIONS DEBUG=1)
+endif ()
+
 zeek_plugin_dist_files(spicy/zeek.spicy)
 zeek_plugin_dist_files(spicy/zeek_rt.hlt)
 zeek_plugin_dist_files(bin/spicyz)
@@ -71,7 +76,6 @@ endforeach()
 
 zeek_plugin_dist_files(include/zeek-spicy/autogen/config.h)
 
-set_source_files_properties(src/plugin.cc PROPERTIES OBJECT_DEPENDS "${deps}")
 
 if ( SPICY_IN_TREE_BUILD )
     # We disable Zeek's standard installation logic so that we control

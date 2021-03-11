@@ -150,6 +150,57 @@ public:
     ::zeek::analyzer::Tag tagForPacketAnalyzer(const ::zeek::analyzer::Tag& tag);
 #endif
 
+    /**
+     * Explicitly enable/disable a protocol analyzer. By default, all analyzers
+     * loaded will also be activated. By calling this method, an analyzer can
+     * toggled.
+     *
+     * @param analyzer tag of analyer
+     * @param enable true to enable, false to disable
+     */
+    bool toggleAnalyzer(const ::zeek::analyzer::Tag& tag, bool enable);
+
+    /**
+     * Explicitly enable/disable a file analyzer. By default, all analyzers
+     * loaded will also be activated. By calling this method, an analyzer can
+     * toggled.
+     *
+     * @note This functionality requires Zeek >= 4.1.
+     *
+     * @param analyzer tag of analyer
+     * @param enable true to enable, false to disable
+     */
+    bool toggleAnalyzer(const ::zeek::file_analysis::Tag& tag, bool enable);
+
+#ifdef HAVE_PACKET_ANALYZERS
+    /**
+     * Explicitly enable/disable a packet analyzer. By default, all analyzers
+     * loaded will also be activated. By calling this method, an analyzer can
+     * toggled.
+     *
+     * @note This is currently not supported because Zeek does not provide the
+     * necessary API.
+     *
+     * @param analyzer tag of analyer
+     * @param enable true to enable, false to disable
+     */
+    bool toggleAnalyzer(const ::zeek::packet_analysis::Tag& tag, bool enable);
+#endif
+
+    /**
+     * Explicitly enable/disable an analyzer. By default, all analyzers
+     * loaded will also be activated. By calling this method, an analyzer can
+     * toggled.
+     *
+     * This method is frontend for the versions specific to
+     * protocol/file/packet analyzers. It takes an enum corresponding to either
+     * kind and branches out accordingly.
+     *
+     * @param analyzer tag of analyer
+     * @param enable true to enable, false to disable
+     */
+    bool toggleAnalyzer(::zeek::EnumVal* tag, bool enable);
+
 protected:
     /**
      * Adds one or more paths to search for *.spicy modules. The path will be
@@ -212,7 +263,7 @@ private:
         std::string name_replaces;
         std::string name_zeekygen;
         hilti::rt::Vector<std::string> mime_types;
-        ::zeek::analyzer::Tag::type_t type;
+        ::zeek::file_analysis::Tag::type_t type;
 
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser;

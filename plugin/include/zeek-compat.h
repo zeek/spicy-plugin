@@ -155,6 +155,7 @@ inline ::Val* find_const(const char* name) { return ::internal_const_val(name); 
 } // namespace id
 
 using Args = val_list*;
+using EnumVal = ::EnumVal;
 using Plugin = ::plugin::Plugin;
 using RecordVal = ::RecordVal;
 using RecordValPtr = ::RecordVal*;
@@ -221,12 +222,15 @@ inline auto Unref(const ::zeek::IntrusivePtr<T>& o) {
 inline auto Attribute_Find(::zeek::IntrusivePtr<::zeek::detail::Attributes> a, ::zeek::detail::AttrTag x) {
     return a->Find(x);
 }
+inline auto AnalyzerMgr_GetTagType() { return ::zeek::analyzer_mgr->GetTagType(); }
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->ConnVal(); }
 inline auto EnumTypeGetEnumVal(::zeek::EnumType* t, ::bro_int_t i) { return t->GetEnumVal(i); }
+inline auto EnumVal_GetType(::zeek::EnumVal* v) { return v->GetType(); }
 inline auto EventHandler_GetType(::zeek::EventHandlerPtr ev, bool check_export = true) {
     return ev->GetType(check_export);
 }
 inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) { return t.AsVal(); }
+inline auto FileMgr_GetTagType() { return ::zeek::file_mgr->GetTagType(); }
 inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->ToVal(); }
 inline auto FuncType_ArgTypes(::zeek::FuncTypePtr f) { return f->ParamList(); }
 inline auto RecordType_GetFieldType(::zeek::RecordType* t, int i) { return t->GetFieldType(i); }
@@ -234,6 +238,7 @@ inline auto TableType_GetIndexTypes(::zeek::TableType* tt) { return tt->GetIndex
 inline auto TableType_GetIndexTypesLength(::zeek::TableType* tt) { return tt->GetIndexTypes().size(); }
 inline auto TableType_Yield(::zeek::TableType* t) { return t->Yield(); }
 inline auto TypeList_GetTypes(::zeek::TypeListPtr l) { return l->GetTypes(); }
+inline auto Val_GetTypeTag(const ::zeek::Val* v) { return v->GetType()->Tag(); }
 inline auto VectorType_Yield(::zeek::VectorType* t) { return t->Yield(); }
 inline auto ZeekArgs_New() { return ::zeek::Args(); }
 inline auto ZeekArgs_Append(::zeek::Args& args, ::zeek::ValPtr v) { args.emplace_back(std::move(v)); }
@@ -297,13 +302,16 @@ inline auto ToValCtorType(T p) {
 
 inline auto Unref(::BroObj* o) { ::Unref(o); }
 
+inline auto AnalyzerMgr_GetTagType() { return ::zeek::analyzer_mgr->GetTagEnumType(); }
 inline auto Attribute_Find(Attributes* a, ::attr_tag x) { return a->FindAttr(x); }
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->BuildConnVal(); }
 inline auto EnumTypeGetEnumVal(::EnumType* t, ::bro_int_t i) { return t->GetVal(i); }
+inline auto EnumVal_GetType(::zeek::EnumVal* v) { return v->Type(); }
 inline auto EventHandler_GetType(::zeek::EventHandlerPtr ev, bool check_export = true) {
     return ev->FType(check_export);
 }
 inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) { return t.AsEnumVal(); }
+inline auto FileMgr_GetTagType() { return ::zeek::file_mgr->GetTagEnumType(); }
 inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->GetVal()->Ref(); }
 inline auto FuncType_ArgTypes(::FuncType* f) { return f->ArgTypes(); }
 inline auto RecordType_GetFieldType(::RecordType* t, int i) { return t->FieldType(i); }
@@ -311,6 +319,7 @@ inline auto& TableType_GetIndexTypes(::TableType* tt) { return *tt->IndexTypes()
 inline auto TableType_GetIndexTypesLength(::TableType* tt) { return tt->IndexTypes()->length(); }
 inline auto TableType_Yield(::TableType* t) { return t->YieldType(); }
 inline auto TypeList_GetTypes(const ::TypeList* l) { return l->Types(); }
+inline auto Val_GetTypeTag(const ::Val* v) { return v->Type()->Tag(); }
 inline auto VectorType_Yield(::VectorType* t) { return t->YieldType(); }
 inline auto ZeekArgs_New() { return new ::val_list(); }
 inline auto ZeekArgs_Append(::val_list* args, ::Val* v) { args->push_back(std::move(v)); }

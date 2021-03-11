@@ -1,2 +1,21 @@
 
 module Spicy;
+
+%%{
+    #include "zeek-spicy/zeek-compat.h"
+    #include "zeek-spicy/plugin.h"
+%%}
+
+function Spicy::__toggle_analyzer%(tag: any, enable: bool%) : bool
+        %{
+        if ( ::spicy::zeek::compat::Val_GetTypeTag(tag) != ::zeek::TYPE_ENUM ) {
+            zeek::reporter->Warning("Spicy::disable_analyzer() must receive an analyzer tag");
+            return ::spicy::zeek::compat::val_mgr_Bool(false);
+            }
+
+        bool result = ::plugin::Zeek_Spicy::OurPlugin->toggleAnalyzer(tag->AsEnumVal(), enable);
+        if ( ! result )
+            zeek::reporter->Warning("could not toggle Spicy analyzer");
+
+        return ::spicy::zeek::compat::val_mgr_Bool(result);
+        %}

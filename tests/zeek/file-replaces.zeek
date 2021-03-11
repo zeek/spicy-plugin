@@ -1,7 +1,22 @@
-# @TEST-REQUIRES: test "$(Scripts/zeek-version)" -ge "40100"
+# @TEST-REQUIRES: zeek-version 40100
 #
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ftp-pe.pcap pe.spicy zeek_pe.spicy pe.evt %INPUT >output
+# @TEST-EXEC: spicyz -o pe.hlto pe.spicy zeek_pe.spicy pe.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ftp-pe.pcap pe.hlto %INPUT ENABLE=T
+# @TEST-EXEC: cat files.log | grep PE >>output
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ftp-pe.pcap pe.hlto %INPUT ENABLE=F
+# @TEST-EXEC: cat files.log | grep PE >>output
 # @TEST-EXEC: btest-diff output
+#
+# @TEST-DOC: Test replacing an existing file analyzer, and also toggling the Spicy one on and off
+
+const ENABLE = T &redef;
+
+event zeek_init() {
+    if ( ENABLE )
+        Spicy::enable_file_analyzer(Files::ANALYZER_SPICY_PE);
+    else
+        Spicy::disable_file_analyzer(Files::ANALYZER_SPICY_PE);
+}
 
 event pe_dos_header(f: fa_file, h: PE::DOSHeader)
 	{
