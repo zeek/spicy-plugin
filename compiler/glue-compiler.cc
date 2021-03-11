@@ -813,6 +813,10 @@ bool GlueCompiler::compile() {
             return false;
     }
 
+    // Register our Zeek events at pre-init time.
+    for ( auto&& ev : _events )
+        preinit_body.addCall("zeek_rt::install_handler", {builder::string(ev.name)});
+
     // Create Zeek enum types for exported Spicy enums. We do this here
     // mainly for when compiling C+ code offline. When running live inside
     // Zeek, we also do it earlier through the GlueBuilder itself so that the
