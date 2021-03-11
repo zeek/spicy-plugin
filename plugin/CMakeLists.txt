@@ -20,7 +20,29 @@ include(BroPlugin)
 set(CMAKE_C_FLAGS ${save_c_flags})
 set(CMAKE_CXX_FLAGS ${save_cxx_flags})
 
-set(HEADERS cookie.h debug.h driver.h file-analyzer.h packet-analyzer.h plugin.h protocol-analyzer.h runtime-support.h zeek-compat.h zeek-reporter.h)
+set(HEADERS
+    cookie.h
+    debug.h
+    driver.h
+    file-analyzer.h
+    packet-analyzer.h
+    plugin.h
+    protocol-analyzer.h
+    runtime-support.h
+    zeek-compat.h
+    zeek-reporter.h)
+
+set(ZEEK_SCRIPTS
+    scripts/__load__.zeek
+    scripts/base/spicy/__load__.zeek
+    scripts/base/spicy/main.zeek
+    scripts/misc/record-spicy-batch.zeek
+    )
+
+set(SPICY_SCRIPTS
+    spicy/zeek.spicy
+    spicy/zeek_rt.hlt
+    )
 
 zeek_plugin_begin(_Zeek Spicy)
 
@@ -49,6 +71,8 @@ endforeach()
 
 zeek_plugin_dist_files(include/zeek-spicy/autogen/config.h)
 
+set_source_files_properties(src/plugin.cc PROPERTIES OBJECT_DEPENDS "${deps}")
+
 if ( SPICY_IN_TREE_BUILD )
     # We disable Zeek's standard installation logic so that we control
     # things better (like RPATHs etc.). Unfortunately Zeek doesn't just
@@ -71,13 +95,15 @@ set_property(TARGET ${_plugin_lib} PROPERTY ENABLE_EXPORTS true)
 
 # Copy Spicy & Zeek scripts into plugin directory. This nixes the "scripts" symlink that
 # the Zeek plugin infrastructure puts in place.
-add_custom_command(TARGET ${_plugin_lib} POST_BUILD
+add_custom_target(copy-scripts DEPENDS ${ZEEK_SCRIPTS} ${SPICY_SCRIPTS}
                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/spicy
                    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_BINARY_DIR}/scripts
                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/scripts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/spicy ${ZEEK_SPICY_PLUGIN_BUILD_DIR}/spicy
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/scripts ${ZEEK_SPICY_PLUGIN_BUILD_DIR}/scripts
                    )
+
+add_dependencies(${_plugin_lib} copy-scripts)
 
 # Generate autogen headers directly inside the plugin's build directory.
 set(AUTOGEN_H "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/include/zeek-spicy/autogen")
