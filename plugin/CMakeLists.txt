@@ -49,7 +49,7 @@ endforeach()
 
 zeek_plugin_dist_files(include/zeek-spicy/autogen/config.h)
 
-if ( SPICY_IN_TREE_BUILD} )
+if ( SPICY_IN_TREE_BUILD )
     # We disable Zeek's standard installation logic so that we control
     # things better (like RPATHs etc.). Unfortunately Zeek doesn't just
     # have a "no install, please" switch, so we change its destination
@@ -73,6 +73,7 @@ set_property(TARGET ${_plugin_lib} PROPERTY ENABLE_EXPORTS true)
 # the Zeek plugin infrastructure puts in place.
 add_custom_command(TARGET ${_plugin_lib} POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/spicy
+                   COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_BINARY_DIR}/scripts
                    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/scripts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/spicy ${ZEEK_SPICY_PLUGIN_BUILD_DIR}/spicy
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/scripts ${ZEEK_SPICY_PLUGIN_BUILD_DIR}/scripts
