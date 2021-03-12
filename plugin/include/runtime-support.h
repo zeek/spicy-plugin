@@ -99,8 +99,13 @@ void register_enum_type(const std::string& ns, const std::string& id,
 inline hilti::rt::Bool have_handler(const ::zeek::EventHandlerPtr& handler) { return static_cast<bool>(handler); }
 
 /**
- * Looks up an event handler by name. This will always return a handler; if
- * none exist yet under that name, it'll be created.
+ * Creates a new event handler under the given name.
+ */
+void install_handler(const std::string& name);
+
+/**
+ * Looks up an event handler by name. This assume the handler has been
+ * installed before.
  */
 ::zeek::EventHandlerPtr internal_handler(const std::string& name);
 

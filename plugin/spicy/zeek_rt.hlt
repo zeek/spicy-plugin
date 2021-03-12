@@ -14,6 +14,7 @@ declare public void register_enum_type(string ns, string id, vector<tuple<string
 
 declare public bool have_handler(EventHandlerPtr handler) &cxxname="spicy::zeek::rt::have_handler";
 declare public EventHandlerPtr internal_handler(string event) &cxxname="spicy::zeek::rt::internal_handler";
+declare public void install_handler(string event) &cxxname="spicy::zeek::rt::install_handler";
 
 declare public void raise_event(EventHandlerPtr handler, vector<Val> args, string location) &cxxname="spicy::zeek::rt::raise_event";
 declare public BroType event_arg_type(EventHandlerPtr handler, uint<64> idx, string location) &cxxname="spicy::zeek::rt::event_arg_type";
