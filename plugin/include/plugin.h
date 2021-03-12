@@ -237,6 +237,9 @@ private:
     // Recursively search pre-compiled *.hlto in colon-separated paths.
     void searchModules(std::string paths);
 
+    // Return a Zeek location object for the given file name that will stay valid.
+    ::zeek::detail::Location makeLocation(const std::string& fname);
+
     /** Captures a registered protocol analyzer. */
     struct ProtocolAnalyzerInfo {
         // Filled in when registering the analyzer.
@@ -290,6 +293,7 @@ private:
     std::vector<PacketAnalyzerInfo> _packet_analyzers_by_type;
 #endif
     std::unordered_map<std::string, hilti::rt::Library> _libraries;
+    std::set<std::string> _locations;
 
 #ifdef SPICY_HAVE_TOOLCHAIN
     std::unique_ptr<Driver> _driver;

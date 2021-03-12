@@ -1,8 +1,11 @@
 
-0.99.0-17 | 2021-03-12 10:46:48 +0000
+0.99.0-20 | 2021-03-12 17:14:30 +0000
 
   * Fix for Zeek-side registration of Spicy events. (Robin Sommer,
     Corelight)
+
+  * GH-5: Revert "Ensure that Spicy events are always exported inside
+    Zeek."
 
 0.99.0-15 | 2021-03-12 07:43:18 +0000
 
