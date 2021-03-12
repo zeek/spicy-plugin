@@ -3,11 +3,11 @@ all: test
 test: test-build
 
 test-build:
-	@btest -j -d
+	@btest -j 2 -d
 
 # Might need to have SPICY_INSTALLATION_DIRECTORY set.
 test-install:
-	@btest -j -d -a installation
+	@btest -j 2 -d -a installation
 
 clean:
 	@rm -f $(DIAG) .btest.failed.dat

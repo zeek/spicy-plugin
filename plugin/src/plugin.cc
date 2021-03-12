@@ -92,8 +92,9 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.ports = ports;
 
     if ( replaces.size() ) {
-        if ( zeek::analyzer::Tag tag = ::zeek::analyzer_mgr->GetAnalyzerTag(replaces.c_str()) ) {
-            ZEEK_DEBUG(hilti::rt::fmt("Disabling %s for %s", replaces, name));
+        if ( auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(replaces.c_str()) ) {
+            ZEEK_DEBUG(hilti::rt::fmt("  Replaces existing protocol analyzer %s", replaces));
+            info.replaces = tag;
             ::zeek::analyzer_mgr->DisableAnalyzer(tag);
         }
         else
@@ -144,7 +145,8 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     // to make Spicy compilation work regardless.
     if ( replaces.size() ) {
         if ( auto component = ::zeek::file_mgr->Lookup(replaces) ) {
-            ZEEK_DEBUG(hilti::rt::fmt("Disabling %s for %s", replaces, name));
+            ZEEK_DEBUG(hilti::rt::fmt("  Replaces existing file analyzer %s", replaces));
+            info.replaces = component->Tag();
             component->SetEnabled(false);
         }
         else
@@ -255,7 +257,7 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(con
 }
 
 ::zeek::file_analysis::Tag plugin::Zeek_Spicy::Plugin::tagForFileAnalyzer(const ::zeek::file_analysis::Tag& tag) {
-    if ( auto r = _file_analyzers_by_type[tag.Subtype()].replaces )
+    if ( auto r = _file_analyzers_by_type[tag.Type()].replaces )
         return r;
     else
         return tag;
@@ -267,6 +269,135 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(con
     return tag;
 }
 #endif
+
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::analyzer::Tag& tag, bool enable) {
+    auto type = tag.Type();
+
+    if ( type >= _protocol_analyzers_by_type.size() )
+        return false;
+
+    const auto& analyzer = _protocol_analyzers_by_type[type];
+
+    if ( ! analyzer.type )
+        // not set -> not ours
+        return false;
+
+    if ( enable ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Enabling Spicy protocol analyzer %s", analyzer.name_analyzer));
+        ::zeek::analyzer_mgr->EnableAnalyzer(tag);
+
+        if ( analyzer.replaces ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Disabling standard protocol analyzer %s", analyzer.name_analyzer));
+            ::zeek::analyzer_mgr->DisableAnalyzer(analyzer.replaces);
+        }
+    }
+    else {
+        ZEEK_DEBUG(hilti::rt::fmt("Disabling Spicy protocol analyzer %s", analyzer.name_analyzer));
+        ::zeek::analyzer_mgr->DisableAnalyzer(tag);
+
+        if ( analyzer.replaces ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Re-enabling standard protocol analyzer %s", analyzer.name_analyzer));
+            ::zeek::analyzer_mgr->EnableAnalyzer(analyzer.replaces);
+        }
+    }
+
+    return true;
+}
+
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::file_analysis::Tag& tag, bool enable) {
+    auto type = tag.Type();
+
+    if ( type >= _file_analyzers_by_type.size() )
+        return false;
+
+    const auto& analyzer = _file_analyzers_by_type[type];
+
+    if ( ! analyzer.type )
+        // not set -> not ours
+        return false;
+
+#if ZEEK_VERSION_NUMBER >= 40100
+    ::zeek::file_analysis::Component* component = ::zeek::file_mgr->Lookup(tag);
+    ::zeek::file_analysis::Component* component_replaces =
+        analyzer.replaces ? ::zeek::file_mgr->Lookup(analyzer.replaces) : nullptr;
+
+    if ( ! component ) {
+        // Shouldn't really happen.
+        reporter::internalError("failed to lookup file analyzer component");
+        return false;
+    }
+
+    if ( enable ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Enabling Spicy file analyzer %s", analyzer.name_analyzer));
+        component->SetEnabled(true);
+
+        if ( component_replaces ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Disabling standard file analyzer %s", analyzer.name_analyzer));
+            component_replaces->SetEnabled(false);
+        }
+    }
+    else {
+        ZEEK_DEBUG(hilti::rt::fmt("Disabling Spicy file analyzer %s", analyzer.name_analyzer));
+        component->SetEnabled(false);
+
+        if ( component_replaces ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Enabling standard file analyzer %s", analyzer.name_analyzer));
+            component_replaces->SetEnabled(true);
+        }
+    }
+
+    return true;
+#else
+    ZEEK_DEBUG(hilti::rt::fmt("supposed to toggle file analyzer %s, but that is not supported by Zeek version",
+                              analyzer.name_analyzer));
+    return false;
+#endif
+}
+
+#ifdef HAVE_PACKET_ANALYZERS
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::packet_analysis::Tag& tag, bool enable) {
+    auto type = tag.Type();
+
+    if ( type >= _packet_analyzers_by_type.size() )
+        return false;
+
+    const auto& analyzer = _protocol_analyzers_by_type[type];
+
+    if ( ! analyzer.type )
+        // not set -> not ours
+        return false;
+    ZEEK_DEBUG(hilti::rt::fmt("supposed to toggle packet analyzer %s, but that is not supported by Zeek",
+                              analyzer.name_analyzer));
+    return false;
+}
+#endif
+
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enable) {
+    if ( ::spicy::zeek::compat::EnumVal_GetType(tag) == ::spicy::zeek::compat::AnalyzerMgr_GetTagType() ) {
+        if ( auto analyzer = ::zeek::analyzer_mgr->Lookup(tag) )
+            return toggleAnalyzer(analyzer->Tag(), enable);
+        else
+            return false;
+    }
+
+    if ( ::spicy::zeek::compat::EnumVal_GetType(tag) == ::spicy::zeek::compat::FileMgr_GetTagType() ) {
+        if ( auto analyzer = ::zeek::file_mgr->Lookup(tag) )
+            return toggleAnalyzer(analyzer->Tag(), enable);
+        else
+            return false;
+    }
+
+#ifdef HAVE_PACKET_ANALYZERS
+    if ( tag->GetType() == ::zeek::packet_mgr->GetTagType() ) {
+        if ( auto analyzer = ::zeek::file_mgr->Lookup(tag) )
+            return toggleAnalyzer(analyzer->Tag(), enable);
+        else
+            return false;
+    }
+#endif
+
+    return false;
+}
 
 ::zeek::plugin::Configuration plugin::Zeek_Spicy::Plugin::Configure() {
     ::zeek::plugin::Configuration config;
@@ -375,15 +506,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 
         p.parser_orig = find_parser(p.name_analyzer, p.name_parser_orig);
         p.parser_resp = find_parser(p.name_analyzer, p.name_parser_resp);
-
-        if ( p.name_replaces.size() ) {
-            ZEEK_DEBUG(hilti::rt::fmt("  Replaces existing protocol analyzer %s", p.name_replaces));
-            p.replaces = ::zeek::analyzer_mgr->GetAnalyzerTag(p.name_replaces.c_str());
-
-            if ( ! p.replaces )
-                reporter::error(hilti::rt::fmt("Parser '%s' is to replace '%s', but that one does not exist",
-                                               p.name_analyzer, p.name_replaces));
-        }
 
         // Register analyzer for its well-known ports.
         auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(p.name_analyzer.c_str());
