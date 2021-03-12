@@ -38,8 +38,6 @@ void rt::register_enum_type(
 }
 
 void rt::install_handler(const std::string& name) {
-    zeek::compat::event_register_Register(name);
-
     auto n = ::hilti::rt::split(name, "::");
     std::string mod;
 
@@ -48,7 +46,11 @@ void rt::install_handler(const std::string& name) {
     else
         mod = ::zeek::detail::GLOBAL_MODULE_NAME;
 
+    if ( lookup_ID(name.c_str(), mod.c_str()) )
+        return;
+
     ::zeek::detail::install_ID(name.c_str(), mod.c_str(), false, true);
+    zeek::compat::event_register_Register(name);
 }
 
 ::zeek::EventHandlerPtr rt::internal_handler(const std::string& name) {

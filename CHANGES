@@ -1,4 +1,9 @@
 
+0.99.0-17 | 2021-03-12 10:46:48 +0000
+
+  * Fix for Zeek-side registration of Spicy events. (Robin Sommer,
+    Corelight)
+
 0.99.0-15 | 2021-03-12 07:43:18 +0000
 
   * GH-1: Add BiFs to enable/disable Spicy analyzers. (Robin Sommer, Corelight)
