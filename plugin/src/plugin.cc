@@ -115,7 +115,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     // Hack to prevent Zeekygen from reporting the ID as not having a
     // location during the following initialization step.
     ::zeek::detail::zeekygen_mgr->Script(info.name_zeekygen);
-    ::zeek::detail::set_location(::zeek::detail::Location(info.name_zeekygen.c_str(), 0, 0, 0, 0));
+    ::zeek::detail::set_location(makeLocation(info.name_zeekygen));
 
     // TODO: Should Zeek do this? It has run component intiialization at
     // this point already, so ours won't get initialized anymore.
@@ -646,6 +646,11 @@ void plugin::Zeek_Spicy::Plugin::searchModules(std::string paths) {
         }
     }
 };
+
+::zeek::detail::Location plugin::Zeek_Spicy::Plugin::makeLocation(const std::string& fname) {
+    auto x = _locations.insert(fname);
+    return ::zeek::detail::Location(x.first->c_str(), 0, 0, 0, 0);
+}
 
 void plugin::Zeek_Spicy::Plugin::autoDiscoverModules() {
     if ( const char* search_paths = getenv("SPICY_MODULE_PATH"); search_paths && *search_paths )
