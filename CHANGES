@@ -1,4 +1,11 @@
 
+0.99.0-23 | 2021-03-13 07:42:01 +0000
+
+  * Tweak script structure for zkg. (Robin Sommer, Corelight)
+
+  * Add Zeek run with zkg packages to CI check (Robin Sommer,
+    Corelight)
+
 0.99.0-20 | 2021-03-12 17:14:30 +0000
 
   * Fix for Zeek-side registration of Spicy events. (Robin Sommer,
