@@ -15,8 +15,11 @@ package_ci_task:
     cpu: 2
     memory: 12G
 
+  test_script:
+    - zkg test .
+
   install_script:
-    - zkg install --force .
+    - zkg install --force --skiptests .
 
   check_script:
     - zeek -N _Zeek::Spicy
