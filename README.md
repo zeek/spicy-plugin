@@ -65,6 +65,11 @@ Zeek should now show it:
     # zeek -N _Zeek::Spicy
     _Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
 
+## Documentation
+
+The plugin's documentation is [part of the Spicy
+manual](https://docs.zeek.org/projects/spicy/en/latest/zeek.html).
+
 ## License
 
 Just like Spicy, the plugin is open source and released under a BSD license.

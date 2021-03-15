@@ -1,4 +1,10 @@
 
+0.99.0-27 | 2021-03-15 13:21:26 +0000
+
+  * Update README. (Robin Sommer, Corelight)
+
+  * Fix memory management bug with Zeek 3.0. (Robin Sommer, Corelight)
+
 0.99.0-23 | 2021-03-13 07:42:01 +0000
 
   * Tweak script structure for zkg. (Robin Sommer, Corelight)
