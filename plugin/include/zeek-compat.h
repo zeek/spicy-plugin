@@ -310,7 +310,7 @@ inline auto EnumVal_GetType(::zeek::EnumVal* v) { return v->Type(); }
 inline auto EventHandler_GetType(::zeek::EventHandlerPtr ev, bool check_export = true) {
     return ev->FType(check_export);
 }
-inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) { return t.AsEnumVal(); }
+inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) { return t.AsEnumVal()->Ref(); }
 inline auto FileMgr_GetTagType() { return ::zeek::file_mgr->GetTagEnumType(); }
 inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->GetVal()->Ref(); }
 inline auto FuncType_ArgTypes(::FuncType* f) { return f->ArgTypes(); }
