@@ -81,9 +81,24 @@ public:
      */
     void registerPacketAnalyzer(const std::string& name, const std::string& parser);
 
-    /** TODO */
+    /**
+     * Runtime method to register a Spicy-generted enum time with Zeek.
+     *
+     * @param ns namespace to define the Zeek enum type in
+     * @param id local ID of the enum type
+     * @param labls mapping of enum label to numerical value
+     */
     void registerEnumType(const std::string& ns, const std::string& id,
                           const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels);
+
+    /**
+     * Runtime method to register a Spicy-generated event. The installs the ID
+     * Zeek-side and is called at startup by generated Spicy code for each
+     * event defined in an EVT file.
+     *
+     * @param name fully scoped name of the event
+     */
+    void registerEvent(const std::string& name);
 
     /**
      * Runtime method to retrieve the Spicy parser for a given Zeek protocol analyzer tag.
@@ -294,6 +309,7 @@ private:
 #endif
     std::unordered_map<std::string, hilti::rt::Library> _libraries;
     std::set<std::string> _locations;
+    std::unordered_map<std::string, ::zeek::detail::IDPtr> _events;
 
 #ifdef SPICY_HAVE_TOOLCHAIN
     std::unique_ptr<Driver> _driver;

@@ -182,6 +182,7 @@ using ::TypeTag::TYPE_TIME;
 using ::TypeTag::TYPE_VECTOR;
 
 namespace detail {
+using IDPtr = ::ID*;
 using Location = ::Location;
 
 using ::attr_tag;
@@ -203,6 +204,12 @@ inline auto IntervalVal_New(double x) { return ::zeek::make_intrusive<::zeek::In
 inline auto StringVal_New(const std::string& x) { return ::zeek::make_intrusive<::zeek::StringVal>(x); }
 inline auto TimeVal_New(double x) { return ::zeek::make_intrusive<::zeek::TimeVal>(x); }
 inline auto EnumType_New(std::string& x) { return ::zeek::make_intrusive<::zeek::EnumType>(x); }
+
+// Helper to create an event type taking no arguments.
+inline auto EventTypeDummy_New() {
+    auto args = ::zeek::make_intrusive<::zeek::RecordType>(new ::zeek::type_decl_list());
+    return ::zeek::make_intrusive<::zeek::FuncType>(std::move(args), ::zeek::base_type(::zeek::TYPE_VOID), ::zeek::FUNC_FLAVOR_EVENT);
+}
 
 template<typename T>
 inline auto ToValPtr(std::unique_ptr<T> p) {
@@ -233,6 +240,7 @@ inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) 
 inline auto FileMgr_GetTagType() { return ::zeek::file_mgr->GetTagType(); }
 inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->ToVal(); }
 inline auto FuncType_ArgTypes(::zeek::FuncTypePtr f) { return f->ParamList(); }
+inline auto ID_GetType(::zeek::detail::IDPtr id) { return id->GetType(); }
 inline auto RecordType_GetFieldType(::zeek::RecordType* t, int i) { return t->GetFieldType(i); }
 inline auto TableType_GetIndexTypes(::zeek::TableType* tt) { return tt->GetIndexTypes(); }
 inline auto TableType_GetIndexTypesLength(::zeek::TableType* tt) { return tt->GetIndexTypes().size(); }
@@ -248,8 +256,10 @@ inline auto event_mgr_Enqueue(const ::zeek::EventHandlerPtr& h, ::zeek::Args vl)
 }
 #if ZEEK_VERSION_NUMBER >= 40000 // Zeek >= 4.0
 inline auto event_register_Register(const std::string& x) { return ::zeek::event_registry->Register(x); }
+inline auto event_register_Lookup(const std::string& x) { return ::zeek::event_registry->Lookup(x); }
 #else
 inline auto event_register_Register(const std::string& x) { return ::event_registry->Register(x); }
+inline auto event_register_Lookup(const std::string& x) { return ::event_registry->Lookup(x); }
 #endif
 inline auto val_mgr_Bool(bool b) { return ::zeek::val_mgr->Bool(b); }
 inline auto val_mgr_Count(uint64_t i) { return ::zeek::val_mgr->Count(i); }
@@ -290,6 +300,11 @@ inline auto StringVal_New(const std::string& x) { return new ::StringVal(x); }
 inline auto TimeVal_New(double x) { return new ::Val(x, ::TYPE_TIME); }
 inline auto EnumType_New(std::string& x) { return new ::EnumType(x); }
 
+inline auto EventTypeDummy_New() {
+    auto args = new ::RecordType(new ::type_decl_list());
+    return new ::FuncType(args, ::base_type(::TYPE_VOID), ::FUNC_FLAVOR_EVENT);
+}
+
 template<typename T>
 inline auto ToValPtr(std::unique_ptr<T> p) {
     return p.release();
@@ -314,6 +329,7 @@ inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) 
 inline auto FileMgr_GetTagType() { return ::zeek::file_mgr->GetTagEnumType(); }
 inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->GetVal()->Ref(); }
 inline auto FuncType_ArgTypes(::FuncType* f) { return f->ArgTypes(); }
+inline auto ID_GetType(::ID* id) { return id->Type(); }
 inline auto RecordType_GetFieldType(::RecordType* t, int i) { return t->FieldType(i); }
 inline auto& TableType_GetIndexTypes(::TableType* tt) { return *tt->IndexTypes(); }
 inline auto TableType_GetIndexTypesLength(::TableType* tt) { return tt->IndexTypes()->length(); }
@@ -328,6 +344,7 @@ inline auto event_mgr_Enqueue(const ::zeek::EventHandlerPtr& h, ::val_list* vl) 
     return ::zeek::event_mgr.QueueEvent(h, std::move(vl));
 }
 inline auto event_register_Register(const std::string& x) { return ::internal_handler(x.c_str()); }
+inline auto event_register_Lookup(const std::string& x) { return ::event_registry->Lookup(x.c_str()); }
 inline auto val_mgr_Bool(bool b) { return ::val_mgr->GetBool(b); }
 inline auto val_mgr_Count(uint64_t i) { return ::val_mgr->GetCount(i); }
 inline auto val_mgr_Int(int64_t i) { return ::val_mgr->GetInt(i); }

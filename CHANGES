@@ -1,4 +1,14 @@
 
+0.99.2 | 2021-03-16 18:55:33 +0000
+
+  * GH-15: Auto-export Spicy-generated events inside the Zeek
+    interpreter. (Robin Sommer, Corelight)
+
+  * Fix up a couple of memory issues. (Robin Sommer, Corelight)
+
+  * Avoid conflicts during testing with otherwise installed analyzers.
+    (Robin Sommer, Corelight)
+
 0.99.1 | 2021-03-15 15:27:36 +0000
 
   * Split CI zkg run into separate test and install steps. (Robin
@@ -30,20 +40,28 @@
   * GH-1: Add BiFs to enable/disable Spicy analyzers. (Robin Sommer, Corelight)
 
         global enable_protocol_analyzer: function(tag: Analyzer::Tag) : bool;
-        global disable_protocol_analyzer: function(tag: Analyzer::Tag) : bool;
-        global enable_file_analyzer: function(tag: Files::Tag) : bool;  # requires Zeek > 4.0
-        global disable_file_analyzer: function(tag: Files::Tag) : bool; # requires Zeek > 4.0
+global disable_protocol_analyzer : function(tag : Analyzer::Tag) : bool;
+global enable_file_analyzer : function(tag : Files::Tag) : bool;
+#requires Zeek> 4.0 global disable_file_analyzer : function(tag : Files::Tag) : bool;
+#requires Zeek> 4.0
 
-  * GH-5: Ensure that Spicy events are always exported inside Zeek. (Robin Sommer, Corelight)
+*GH -
+        5 : Ensure that Spicy events are always exported inside Zeek.(Robin Sommer, Corelight)
 
-  * Clean up plugin's script structure. (Robin Sommer, Corelight)
+            * Clean up plugin's script structure. (Robin Sommer, Corelight)
 
-  * Fix CMake issues. (Robin Sommer, Corelight)
+                  * Fix CMake issues.(Robin Sommer, Corelight)
 
-0.99.0-7 | 2021-03-11 13:02:46 +0000
+                      0.99.0 -
+        7 |
+    2021 - 03 - 11 13 : 02 : 46 +
+        0000
 
-  * Fix a couple of CMake issues. (Robin Sommer, Corelight)
+            * Fix a couple of CMake issues.(Robin Sommer, Corelight)
 
-0.99.0-1 | 2021-03-09 12:15:54 +0000
+                  0.99.0 -
+        1 |
+    2021 - 03 - 09 12 : 15 : 54 +
+        0000
 
-  * Starting CHANGES.
+            * Starting CHANGES.
