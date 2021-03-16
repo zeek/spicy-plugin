@@ -231,6 +231,31 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
     zeek_id->MakeType();
 }
 
+void plugin::Zeek_Spicy::Plugin::registerEvent(const std::string& name) {
+    // Create a Zeek handler for the event.
+    ::spicy::zeek::compat::event_register_Register(name);
+
+    // Install the ID into the corresponding namespace and export it.
+    auto n = ::hilti::rt::split(name, "::");
+    std::string mod;
+
+    if ( n.size() > 1 )
+        mod = n.front();
+    else
+        mod = ::zeek::detail::GLOBAL_MODULE_NAME;
+
+    if ( auto id = ::zeek::detail::lookup_ID(name.c_str(), mod.c_str(), false, false, false) ) {
+        // Auto-export IDs that already exist.
+        id->SetExport();
+        _events[name] = id;
+    }
+    else
+        // This installs & exports the ID, but it doesn't set its type yet.
+        // That will happen as handlers get defined. If there are no hanlders,
+        // we set a dummy type in the plugin's InitPostScript
+        _events[name] = ::zeek::detail::install_ID(name.c_str(), mod.c_str(), false, true);
+}
+
 const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForProtocolAnalyzer(const ::zeek::analyzer::Tag& tag,
                                                                                bool is_orig) {
     if ( is_orig )
@@ -451,6 +476,14 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 #ifdef SPICY_HAVE_TOOLCHAIN
     _driver->InitPostScript();
 #endif
+
+    // If there's no handler for one of our events, it won't have received a
+    // type. Give it a dummy event type in that case, so that we don't walk
+    // around with a nullptr.
+    for ( const auto& [name, id] : _events ) {
+        if ( ! compat::ID_GetType(id) )
+            id->SetType(compat::EventTypeDummy_New());
+    }
 
     // Init runtime, which will trigger all initialization code to execute.
     ZEEK_DEBUG("Initializing Spicy runtime");

@@ -37,26 +37,15 @@ void rt::register_enum_type(
     OurPlugin->AddBifItem(::hilti::rt::fmt("%s::%s", ns, id), ::zeek::plugin::BifItem::TYPE);
 }
 
+void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(name); }
+
 ::zeek::EventHandlerPtr rt::internal_handler(const std::string& name) {
-    // This always succeeds to return a handler. If there's no such event
-    // yet, an empty handler instance is created.
-    auto ev = zeek::compat::event_register_Register(name);
+    auto handler = zeek::compat::event_register_Lookup(name);
 
-    // To support scoped event names, export their IDs implicitly. For the
-    // lookup we pretend to be in the right module so that Bro doesn't tell
-    // us the ID isn't exported (doh!).
-    auto n = ::hilti::rt::split(name, "::");
-    std::string mod;
+    if ( ! handler )
+        reporter::internalError(::hilti::rt::fmt("Spicy event %s was not installed", name));
 
-    if ( n.size() > 1 )
-        mod = n.front();
-    else
-        mod = ::zeek::detail::GLOBAL_MODULE_NAME;
-
-    if ( auto id = ::zeek::detail::lookup_ID(name.c_str(), mod.c_str()) )
-        id->SetExport();
-
-    return ev;
+    return handler;
 }
 
 void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector<::zeek::ValPtr>& args,
