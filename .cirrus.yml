@@ -19,6 +19,7 @@ package_ci_task:
     - zkg test .
 
   install_script:
+    # --force avoids prompts, --skiptests because tests ran already
     - zkg install --force --skiptests .
 
   check_script:
