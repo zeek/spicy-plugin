@@ -161,7 +161,7 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     // Hack to prevent Zeekygen from reporting the ID as not having a
     // location during the following initialization step.
     ::zeek::detail::zeekygen_mgr->Script(info.name_zeekygen);
-    ::zeek::detail::set_location(::zeek::detail::Location(info.name_zeekygen.c_str(), 0, 0, 0, 0));
+    ::zeek::detail::set_location(makeLocation(info.name_zeekygen));
 
     // TODO: Should Zeek do this? It has run component intiialization at
     // this point already, so ours won't get initialized anymore.
@@ -191,7 +191,7 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     // Hack to prevent Zeekygen from reporting the ID as not having a
     // location during the following initialization step.
     ::zeek::detail::zeekygen_mgr->Script(info.name_zeekygen);
-    ::zeek::detail::set_location(::zeek::detail::Location(info.name_zeekygen.c_str(), 0, 0, 0, 0));
+    ::zeek::detail::set_location(makeLocation(info.name_zeekygen));
 
     // TODO: Should Zeek do this? It has run component intiialization at
     // this point already, so ours won't get initialized anymore.
@@ -220,11 +220,6 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
         auto name = ::hilti::rt::fmt("%s_%s", id, lid);
         etype->AddName(ns, name.c_str(), lval, true);
     }
-
-    // Hack to prevent Zeekygen fromp reporting the ID as not having a
-    // location during the following initialization step.
-    ::zeek::detail::zeekygen_mgr->Script("<Spicy>");
-    ::zeek::detail::set_location(::zeek::detail::Location("<Spicy>", 0, 0, 0, 0));
 
     auto zeek_id = ::zeek::detail::install_ID(id.c_str(), ns.c_str(), true, true);
     zeek_id->SetType(etype);
