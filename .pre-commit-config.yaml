@@ -7,7 +7,7 @@ repos:
     name: Run clang-format on code
     entry: ./scripts/run-clang-format
     args: ["--pre-commit-hook"]
-    files: ^(hilti|spicy|zeek)/.*\.(c|h|C|H|cpp|hpp|cc|hh|c\+\+|h\+\+|cxx|hxx)$
+    files: ^(compiler|plugin)/.*\.(c|h|C|H|cpp|hpp|cc|hh|c\+\+|h\+\+|cxx|hxx)$
     language: script
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -16,7 +16,7 @@ repos:
   - id: trailing-whitespace
     exclude: '^tests/Baseline'
   - id: end-of-file-fixer
-    exclude: '^tests/Baseline|^doc/autogen|^doc/_static'
+    exclude: '^tests/Baseline'
   - id: check-yaml
   - id: check-added-large-files
 
@@ -32,4 +32,4 @@ repos:
   hooks:
   - id: gitlint
 
-exclude: 3rdparty/|doc/.*examples/|/Baseline/|(\.svg$)|(\.dat$)
+exclude: 3rdparty/|/Baseline/|(\.svg$)|(\.dat$)
