@@ -476,7 +476,10 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     // type. Give it a dummy event type in that case, so that we don't walk
     // around with a nullptr.
     for ( const auto& [name, id] : _events ) {
-        if ( ! compat::ID_GetType(id) )
+        if ( ! compat::ID_GetType(id) ) //NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+            // clang-tidy reports a leak here even with >= 3.2. Not sure why because
+            // the memory should be managed. Either way, doesn't matter so we
+            // ignore.
             id->SetType(compat::EventTypeDummy_New());
     }
 
