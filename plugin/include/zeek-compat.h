@@ -208,7 +208,8 @@ inline auto EnumType_New(std::string& x) { return ::zeek::make_intrusive<::zeek:
 // Helper to create an event type taking no arguments.
 inline auto EventTypeDummy_New() {
     auto args = ::zeek::make_intrusive<::zeek::RecordType>(new ::zeek::type_decl_list());
-    return ::zeek::make_intrusive<::zeek::FuncType>(std::move(args), ::zeek::base_type(::zeek::TYPE_VOID), ::zeek::FUNC_FLAVOR_EVENT);
+    return ::zeek::make_intrusive<::zeek::FuncType>(std::move(args), ::zeek::base_type(::zeek::TYPE_VOID),
+                                                    ::zeek::FUNC_FLAVOR_EVENT);
 }
 
 template<typename T>
