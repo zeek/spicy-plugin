@@ -15,6 +15,11 @@ package_ci_task:
     cpu: 2
     memory: 12G
 
+  install_spicy_script:
+    - curl -o spicy.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy.deb
+    - dpkg --install spicy.deb
+    - rm spicy.deb
+
   test_script:
     - zkg test .
 
@@ -39,6 +44,11 @@ standalone_ci_task:
         - ZEEK_VERSION: 4.0.0-0
     cpu: 2
     memory: 12G
+
+  install_spicy_script:
+    - curl -o spicy.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy.deb
+    - dpkg --install spicy.deb
+    - rm spicy.deb
 
   install_script:
     - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja && ninja install)
