@@ -8,3 +8,13 @@ protocol analyzer spicy::SSH over TCP:
 
 protocol analyzer spicy::SSH over TCP:
     port -1/udp;
+
+@TEST-START-NEXT
+
+protocol analyzer spicy::SSH over TCP:
+    port 1/udp-2/tcp;
+
+@TEST-START-NEXT
+
+protocol analyzer spicy::SSH over TCP:
+    port 2/udp-1/udp;

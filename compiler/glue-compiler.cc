@@ -242,6 +242,35 @@ static hilti::rt::Port extract_port(const std::string& chunk, size_t* i) {
     return {static_cast<uint16_t>(port), proto};
 }
 
+static std::vector<hilti::rt::Port> extract_ports(const std::string& chunk, size_t* i) {
+    auto start = extract_port(chunk, i);
+    auto end = std::optional<hilti::rt::Port>();
+
+    if ( looking_at(chunk, *i, "-") ) {
+        eat_token(chunk, i, "-");
+        end = extract_port(chunk, i);
+    }
+
+    if ( end ) {
+        if ( start.protocol() != end->protocol() )
+            throw ParseError("start and end of port range must have same protocol");
+
+        if ( start.port() > end->port() )
+            throw ParseError("start of port range cannot be after its end");
+    }
+
+    std::vector<hilti::rt::Port> result;
+
+    // Port ranges are a closed interval.
+    for ( auto port = start.port(); ! end || port <= end->port(); ++port ) {
+        result.emplace_back(port, start.protocol());
+        if ( ! end )
+            break;
+    }
+
+    return result;
+}
+
 GlueCompiler::GlueCompiler(Driver* driver, int zeek_version) : _driver(driver), _zeek_version(zeek_version) {}
 
 GlueCompiler::~GlueCompiler() {}
@@ -529,8 +558,8 @@ glue::ProtocolAnalyzer GlueCompiler::parseProtocolAnalyzer(const std::string& ch
             eat_token(chunk, &i, "{");
 
             while ( true ) {
-                auto p = extract_port(chunk, &i);
-                a.ports.push_back(p);
+                auto ports = extract_ports(chunk, &i);
+                a.ports.insert(a.ports.end(), ports.begin(), ports.end());
 
                 if ( looking_at(chunk, i, "}") ) {
                     eat_token(chunk, &i, "}");
@@ -543,8 +572,8 @@ glue::ProtocolAnalyzer GlueCompiler::parseProtocolAnalyzer(const std::string& ch
 
         else if ( looking_at(chunk, i, "port") ) {
             eat_token(chunk, &i, "port");
-            auto p = extract_port(chunk, &i);
-            a.ports.push_back(p);
+            auto ports = extract_ports(chunk, &i);
+            a.ports.insert(a.ports.end(), ports.begin(), ports.end());
         }
 
         else if ( looking_at(chunk, i, "replaces") ) {

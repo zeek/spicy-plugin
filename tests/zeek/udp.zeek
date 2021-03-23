@@ -17,7 +17,8 @@ public type Message = unit {
 # @TEST-START-FILE udp-test.evt
 protocol analyzer spicy::UDP_TEST over UDP:
     parse with UDPTest::Message,
-    port 31337/udp;
+    port 11337/udp-11340/udp,
+    ports {31337/udp-31340/udp};
 
 on UDPTest::Message -> event udp_test::message($conn, $is_orig, self.data);
 # @TEST-END-FILE
