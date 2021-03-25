@@ -4,3 +4,5 @@ plugin_dir = build/plugin
 
 build_command = mkdir -p build && cd build && cmake .. && make -j 4
 test_command = cd tests && btest -d -j 2
+
+executables = build/plugin/bin/spicyz
