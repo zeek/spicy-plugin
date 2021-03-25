@@ -28,6 +28,7 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"print-zeek-config", no_argument, nullptr, 'z'},
                                               {"print-module-path", no_argument, nullptr, 'M'},
                                               {"report-times", required_argument, nullptr, 'R'},
+                                              {"print-scripts-path", no_argument, nullptr, 'S'},
                                               {"version", no_argument, nullptr, 'v'},
                                               {"version-number", no_argument, nullptr, 'V'},
                                               {nullptr, 0, nullptr, 0}};
@@ -50,6 +51,7 @@ static void usage() {
                  "  -M | --print-module-path        Print the Zeek plugin's default module search path.\n"
                  "  -O | --optimize                 Build optimized release version of generated code.\n"
                  "  -R | --report-times             Report a break-down of compiler's execution time.\n"
+                 "  -S | --print-scripts-path       Print the path to Zeek scripts accompanying Spicy modules.\n"
                  "  -T | --keep-tmps                Do not delete any temporary files created.\n"
                  "  -X | --debug-addl <addl>        Implies -d and adds selected additional instrumentation "
                  "(comma-separated; see 'help' for list).\n"
@@ -63,7 +65,7 @@ using hilti::Nothing;
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:CdX:D:L:Mo:ORTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:CdX:D:L:Mo:ORSTvhz", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -140,6 +142,8 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'O': compiler_options->optimize = true; break;
 
             case 'R': driver_options->report_times = true; break;
+
+            case 'S': std::cout << spicy::zeek::configuration::PluginScriptsDirectory << std::endl; return Nothing();
 
             case 'T': driver_options->keep_tmps = true; break;
 
