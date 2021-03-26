@@ -1,4 +1,18 @@
 
+0.99.3 | 2021-03-26 08:31:38 +0000
+
+  * Declare `spicyz` as an executable for zkg. (Robin Sommer,
+    Corelight)
+
+  * Add support for a custom Zeek scripts directory. The path can be
+    printed through `spicyz --print-scripts-dir`, it'll be
+    `<libdir>/spicy/zeek/scripts`. If ZEEKPATH is not set explicitly,
+    the plugin will add this to Zeek's search path. (Robin Sommer,
+    Corelight)
+
+  * Relocate the module directory to `<libdir>/spicy/zeek/modules`.
+    (Robin Sommer, Corelight)
+
 0.99.2-15 | 2021-03-25 09:30:46 +0100
 
   * GH-22: Add EVT syntax for port ranges. (Benjamin Bannier, Corelight)

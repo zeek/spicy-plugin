@@ -86,6 +86,8 @@ message(
     "\n"
     "\nVersion:               ${SPICY_ZEEK_PLUGIN_VERSION} (${SPICY_ZEEK_PLUGIN_VERSION_NUMBER})"
     "\nBuild type:            ${CMAKE_BUILD_TYPE}"
+    "\nModules directory:     ${SPICY_ZEEK_MODULE_DIR}"
+    "\nScripts directory:     ${SPICY_ZEEK_SCRIPTS_DIR}"
     "\nZeek debug build:      ${ZEEK_DEBUG_BUILD}"
     "\nspicy-config:          ${SPICY_CONFIG}"
     "\nzeek-config:           ${ZEEK_CONFIG}"

@@ -447,6 +447,11 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
     addLibraryPaths(hilti::rt::normalizePath(OurPlugin->PluginDirectory()).string() + "/spicy");
     autoDiscoverModules();
 
+    if ( ! getenv("ZEEKPATH") ) { // similar to Zeek: don't touch ZEEKPATH if set to anything (including empty)
+        ZEEK_DEBUG(hilti::rt::fmt("Adding %s to ZEEKPATH", spicy::zeek::configuration::PluginScriptsDirectory));
+        ::zeek::util::detail::add_to_zeek_path(spicy::zeek::configuration::PluginScriptsDirectory);
+    }
+
     ZEEK_DEBUG("Done with pre-script initialization");
 }
 
