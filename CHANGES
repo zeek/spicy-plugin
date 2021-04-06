@@ -1,4 +1,8 @@
 
+0.99.3-2 | 2021-04-06 10:54:40 +0000
+
+  * Add note on spicyz to README. (Robin Sommer, Corelight)
+
 0.99.3 | 2021-03-26 08:31:38 +0000
 
   * Declare `spicyz` as an executable for zkg. (Robin Sommer,
