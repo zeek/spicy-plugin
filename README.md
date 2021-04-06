@@ -43,6 +43,12 @@ this:
     # zeek -NN _Zeek::Spicy
     _Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
 
+If you want to develop your own Spicy analyzers for Zeek, you will
+need a tool that comes with the plugin: ``spicyz``. Please see the
+[Spicy manual](https://docs.zeek.org/projects/spicy/en/latest/zeek.html#zeek_spicyz)
+on how to make `spicyz` show up in your `PATH` after the plugin got
+installed.
+
 ### Install manually
 
 You can also install the plugin through normal CMake means. After
@@ -64,6 +70,8 @@ Zeek should now show it:
 
     # zeek -N _Zeek::Spicy
     _Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+
+You will also find `spicyz` in `${prefix}/bin` now.
 
 ## Documentation
 
