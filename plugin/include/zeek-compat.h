@@ -122,6 +122,10 @@ using File = ::file_analysis::File;
 using Tag = ::file_analysis::Tag;
 } // namespace file_analysis
 
+namespace id {
+inline auto& fa_file = ::fa_file_type;
+}
+
 namespace util {
 inline const auto& zeek_plugin_path = ::bro_plugin_path;
 }
@@ -243,6 +247,7 @@ inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->ToVal(); }
 inline auto FuncType_ArgTypes(::zeek::FuncTypePtr f) { return f->ParamList(); }
 inline auto ID_GetType(::zeek::detail::IDPtr id) { return id->GetType(); }
 inline auto RecordType_GetFieldType(::zeek::RecordType* t, int i) { return t->GetFieldType(i); }
+inline auto RecordVal_GetField(::zeek::RecordVal* v, const char* field) { return v->GetField(field); }
 inline auto TableType_GetIndexTypes(::zeek::TableType* tt) { return tt->GetIndexTypes(); }
 inline auto TableType_GetIndexTypesLength(::zeek::TableType* tt) { return tt->GetIndexTypes().size(); }
 inline auto TableType_Yield(::zeek::TableType* t) { return t->Yield(); }
@@ -332,6 +337,7 @@ inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->GetVal()->Ref
 inline auto FuncType_ArgTypes(::FuncType* f) { return f->ArgTypes(); }
 inline auto ID_GetType(::ID* id) { return id->Type(); }
 inline auto RecordType_GetFieldType(::RecordType* t, int i) { return t->FieldType(i); }
+inline auto RecordVal_GetField(::RecordVal* v, const char* field) { return v->Lookup(field); }
 inline auto& TableType_GetIndexTypes(::TableType* tt) { return *tt->IndexTypes(); }
 inline auto TableType_GetIndexTypesLength(::TableType* tt) { return tt->IndexTypes()->length(); }
 inline auto TableType_Yield(::TableType* t) { return t->YieldType(); }
