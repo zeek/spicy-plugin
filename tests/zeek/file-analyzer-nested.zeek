@@ -1,3 +1,4 @@
+# @TEST-REQUIRES: spicy-version 10100
 # @TEST-EXEC: spicyz -o text.hlto text.spicy ./text.evt
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::enable_print=T >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
