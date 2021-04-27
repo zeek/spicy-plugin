@@ -41,6 +41,7 @@ set(ZEEK_SCRIPTS
 
 set(SPICY_SCRIPTS
     spicy/zeek.spicy
+    spicy/zeek_file.spicy
     spicy/zeek_rt.hlt
     )
 
@@ -67,6 +68,7 @@ if ( ZEEK_DEBUG_BUILD )
 endif ()
 
 zeek_plugin_dist_files(spicy/zeek.spicy)
+zeek_plugin_dist_files(spicy/zeek_file.spicy)
 zeek_plugin_dist_files(spicy/zeek_rt.hlt)
 zeek_plugin_dist_files(bin/spicyz)
 

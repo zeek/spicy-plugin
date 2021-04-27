@@ -1,4 +1,20 @@
 
+0.99.4 | 2021-04-27 16:12:27 +0000
+
+  * Provide convenience library unit for passing content into Zeek's
+    file analysis. After connecting a `zeek_file::File`` to a sink,
+    all data sent to the sink will be passed on to Zeek's file
+    analysis. (Robin Sommer, Corelight)
+
+  * Support recursive file analysis so that one can now pass files
+    back into Zeek that are coming out of other files. (Robin Sommer,
+    Corelight)
+
+  * Disable parallelism during tests. (Benjamin Bannier, Corelight)
+
+  * Request less memory for Cirrus CI tasks. (Benjamin Bannier,
+    Corelight)
+
 0.99.3-2 | 2021-04-06 10:54:40 +0000
 
   * Add note on spicyz to README. (Robin Sommer, Corelight)
