@@ -210,19 +210,18 @@ void rt::reject_protocol(const std::string& reason) {
         throw ValueUnavailable("no current connection available");
 }
 
-static std::string _file_id(const rt::cookie::ProtocolAnalyzer& c) {
-    auto id = hilti::rt::fmt("%" PRIu64 ".%" PRIu64 ".%d", c.analyzer_id, c.file_id, static_cast<int>(c.is_orig));
-    return ::zeek::file_mgr->HashHandle(id);
+inline rt::cookie::FileState* _file_state(rt::Cookie* cookie) {
+    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
+        return c->is_orig ? &c->fstate_orig : &c->fstate_resp;
+    else if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) )
+        return &f->fstate;
+    else
+        throw rt::ValueUnavailable("no current connection or file available");
 }
 
-void rt::file_begin(const std::optional<std::string>& mime_type) {
-    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+static std::string _file_id(rt::Cookie* cookie) {
     assert(cookie);
-
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        c->mime_type = mime_type;
-    else
-        throw ValueUnavailable("no current connection available");
+    return _file_state(cookie)->id();
 }
 
 std::string rt::fuid() {
@@ -237,62 +236,91 @@ std::string rt::fuid() {
     throw ValueUnavailable("fuid() not available in current context");
 }
 
+void rt::file_begin(const std::optional<std::string>& mime_type) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    auto* fstate = _file_state(cookie);
+    ++fstate->file_id;
+
+    auto fid = _file_id(cookie);
+
+    // Feed an empty chunk into the analysis to force creating the file state inside Zeek.
+    ::zeek::file_mgr->DataIn((const u_char*)"", 0, ::zeek::analyzer::Tag(), nullptr, false, fid,
+                             mime_type ? *mime_type : std::string());
+
+    auto file = ::zeek::file_mgr->LookupFile(fid);
+    assert(file); // our empty data created this
+
+    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
+        // Set the source to the current protocol analyzer.
+        file->SetSource(c->analyzer->GetAnalyzerName());
+    else if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) ) {
+        // Set the source to the current file analyzer.
+        file->SetSource(::zeek::file_mgr->GetComponentName(f->analyzer->Tag()));
+
+        // There are some fields inside the new fa_info record that we want to
+        // set, but don't have a Zeek API for. Hence, we need to play some
+        // tricks: we can get to the fa_info value, but read-only; const_cast
+        // comes to our rescue. And then we just write directly into the
+        // record fields.
+        auto rval = const_cast<::zeek::RecordVal*>(zeek::compat::File_ToVal(file)->AsRecordVal());
+        auto current = zeek::compat::File_ToVal(f->analyzer->GetFile())->AsRecordVal();
+        rval->Assign(::zeek::id::fa_file->FieldOffset("parent_id"),
+                     zeek::compat::RecordVal_GetField(current, "id")); // set to parent
+        rval->Assign(::zeek::id::fa_file->FieldOffset("conns"),
+                     zeek::compat::RecordVal_GetField(current, "conns")); // copy from parent
+        rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
+                     zeek::compat::RecordVal_GetField(current, "is_orig")); // copy from parent
+
+        // Note: In files.log, there's a bunch of connection information that's
+        // extracted from the connection record passed to the
+        // file_over_new_connection() event. If we had access to the connection
+        // here, we could pass that into DataIn() above; that event would then
+        // be generated. However, I don't see a way to get to the connection at
+        // this point, hence the coresponding fields in files.log will remain
+        // unset unfortunately.
+    }
+    else
+        throw rt::ValueUnavailable("no current connection or file available");
+}
+
 void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    assert(cookie);
+    auto fid = _file_id(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        ::zeek::file_mgr->SetSize(size, OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag()),
-                                  c->analyzer->Conn(), c->is_orig, _file_id(*c));
-    else
-        throw ValueUnavailable("no current connection available");
+    // Zeek ignores the connection-related parameters if one passes a precomputed file ID in.
+    ::zeek::file_mgr->SetSize(size, ::zeek::analyzer::Tag(), nullptr, false, fid);
 }
 
 void rt::file_data_in(const hilti::rt::Bytes& data) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    assert(cookie);
+    auto fid = _file_id(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        ::zeek::file_mgr->DataIn(reinterpret_cast<const unsigned char*>(data.data()), data.size(),
-                                 OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag()), c->analyzer->Conn(),
-                                 c->is_orig, _file_id(*c), c->mime_type ? *c->mime_type : std::string());
-    else
-        throw ValueUnavailable("no current connection available");
+    // Zeek ignores the connection-related parameters if one passes a precomputed file ID in.
+    ::zeek::file_mgr->DataIn(reinterpret_cast<const unsigned char*>(data.data()), data.size(), ::zeek::analyzer::Tag(),
+                             nullptr, false, fid);
 }
 
 void rt::file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    assert(cookie);
+    auto fid = _file_id(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        ::zeek::file_mgr->DataIn(reinterpret_cast<const unsigned char*>(data.data()), data.size(), offset,
-                                 OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag()), c->analyzer->Conn(),
-                                 c->is_orig, _file_id(*c), c->mime_type ? *c->mime_type : std::string());
-    else
-        throw ValueUnavailable("no current connection available");
+    // Zeek ignores the connection-related parameters if one passes a precomputed file ID in.
+    ::zeek::file_mgr->DataIn(reinterpret_cast<const unsigned char*>(data.data()), data.size(), offset,
+                             ::zeek::analyzer::Tag(), nullptr, false, fid);
 }
 
 void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    assert(cookie);
+    auto fid = _file_id(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        ::zeek::file_mgr->Gap(offset, len, OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag()),
-                              c->analyzer->Conn(), c->is_orig, _file_id(*c));
-    else
-        throw ValueUnavailable("no current connection available");
+    ::zeek::file_mgr->Gap(offset, len, ::zeek::analyzer::Tag(), nullptr, false, fid);
 }
 
 void rt::file_end() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    assert(cookie);
+    auto fid = _file_id(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
-        ::zeek::file_mgr->EndOfFile(_file_id(*c));
-        c->file_id += 1;
-    }
-    else
-        throw ValueUnavailable("no current connection available");
+    ::zeek::file_mgr->EndOfFile(_file_id(cookie));
 }
 
 void rt::forward_packet(uint32_t identifier) {

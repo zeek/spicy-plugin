@@ -19,8 +19,8 @@ using namespace plugin::Zeek_Spicy;
 void FileState::debug(const std::string& msg) { spicy::zeek::rt::debug(_cookie, msg); }
 
 static auto create_file_state(FileAnalyzer* analyzer) {
-    cookie::FileAnalyzer cookie;
-    cookie.analyzer = analyzer;
+    cookie::FileAnalyzer cookie{.analyzer = analyzer, .fstate = cookie::FileState(analyzer->GetFile()->GetID())};
+
     return FileState(cookie);
 }
 
@@ -65,7 +65,6 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
             return false;
         }
     }
-
 
     try {
         hilti::rt::context::CookieSetter _(&_state.cookie());

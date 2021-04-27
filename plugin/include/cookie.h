@@ -11,26 +11,43 @@
 #include <string>
 #include <variant>
 
+#include <hilti/rt/fmt.h>
+
 #include <zeek-spicy/zeek-compat.h>
 
 namespace spicy::zeek::rt {
 
 namespace cookie {
 
+/** State stored inside protocol/file analyzer cookies to retain file analysis state. */
+struct FileState {
+    FileState(std::string analyzer_id) : analyzer_id(analyzer_id) {}
+    std::string analyzer_id; /**< unique analyzer ID */
+    uint64_t file_id = 0;    /**< counter incremented for each file processed by this analyzer */
+
+    /**
+     * Computes the Zeek-side file ID for the current state (which will be
+     * hashed further before passing on to Zeek.)
+     */
+    std::string id() const {
+        auto id = hilti::rt::fmt("%s.%" PRIu64 ".%d", analyzer_id, file_id);
+        return ::zeek::file_mgr->HashHandle(id);
+    }
+};
+
 /** State on the current protocol analyzer. */
 struct ProtocolAnalyzer {
     ::zeek::analyzer::Analyzer* analyzer = nullptr; /**< current analyzer */
     bool is_orig = false;                           /**< direction of the connection */
     uint64_t num_packets = 0;                       /**< number of packets seen so far */
-    uint64_t analyzer_id = 0;                       /**< unique analyzer ID */
-    uint64_t file_id = 0;                           /**< counter for file IDs */
-    std::optional<std::string>
-        mime_type; /**< The mime type of the current file being passed to the file analysis framework */
+    FileState fstate_orig;                          /**< file analysis state for originator side */
+    FileState fstate_resp;                          /**< file analysis state for responder side */
 };
 
 /** State on the current file analyzer. */
 struct FileAnalyzer {
     ::zeek::file_analysis::Analyzer* analyzer = nullptr; /**< current analyzer */
+    FileState fstate;                                    /**< file analysis state for nested files */
 };
 
 #ifdef HAVE_PACKET_ANALYZERS
