@@ -1,4 +1,9 @@
 
+0.99.5 | 2021-04-28 13:49:42 +0000
+
+  * GH-32: Rename VERSION file to avoid a naming conflict on macOS.
+    (Robin Sommer, Corelight)
+
 0.99.4 | 2021-04-27 16:12:27 +0000
 
   * Provide convenience library unit for passing content into Zeek's
