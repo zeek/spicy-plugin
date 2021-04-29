@@ -23,8 +23,9 @@ namespace cookie {
 /** State stored inside protocol/file analyzer cookies to retain file analysis state. */
 struct FileState {
     FileState(std::string analyzer_id) : analyzer_id(std::move(analyzer_id)) {}
-    std::string analyzer_id; /**< unique analyzer ID */
-    uint64_t file_id = 0;    /**< counter incremented for each file processed by this analyzer */
+    std::string analyzer_id;              /**< unique analyzer ID */
+    uint64_t file_id = 0;                 /**< counter incremented for each file processed by this analyzer */
+    std::optional<std::string> mime_type; /**< MIME type, if explicitly set */
 
     /**
      * Computes the Zeek-side file ID for the current state (which will be
