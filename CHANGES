@@ -1,4 +1,12 @@
 
+0.99.6 | 2021-04-29 08:55:29 +0000
+
+  * Rework initializing of file meta data.
+    The previous change for file-in-file analysis had caused a regression for
+    files coming out of connection analysis. (Robin Sommer, Corelight)
+
+  * Fix format string. (Robin Sommer, Corelight)
+
 0.99.5 | 2021-04-28 13:49:42 +0000
 
   * GH-32: Rename VERSION file to avoid a naming conflict on macOS.

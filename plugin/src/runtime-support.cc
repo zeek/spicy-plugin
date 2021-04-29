@@ -224,6 +224,29 @@ static std::string _file_id(rt::Cookie* cookie) {
     return _file_state(cookie)->id();
 }
 
+static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> offset = {}) {
+    auto cookie = static_cast<rt::Cookie*>(hilti::rt::context::cookie());
+    auto* fstate = _file_state(cookie);
+    auto fid = fstate->id();
+    auto data_ = reinterpret_cast<const unsigned char*>(data);
+    auto mime_type = (fstate->mime_type ? *fstate->mime_type : std::string());
+
+    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) ) {
+        auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
+
+        if ( offset )
+            ::zeek::file_mgr->DataIn(data_, len, *offset, tag, c->analyzer->Conn(), c->is_orig, fid, mime_type);
+        else
+            ::zeek::file_mgr->DataIn(data_, len, tag, c->analyzer->Conn(), c->is_orig, fid, mime_type);
+    }
+    else {
+        if ( offset )
+            ::zeek::file_mgr->DataIn(data_, len, *offset, ::zeek::analyzer::Tag(), nullptr, false, fid, mime_type);
+        else
+            ::zeek::file_mgr->DataIn(data_, len, ::zeek::analyzer::Tag(), nullptr, false, fid, mime_type);
+    }
+}
+
 std::string rt::fuid() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
@@ -240,20 +263,19 @@ void rt::file_begin(const std::optional<std::string>& mime_type) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie);
     ++fstate->file_id;
+    fstate->mime_type = mime_type;
 
-    auto fid = _file_id(cookie);
+    if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) ) {
+        // We need to initialize some fa_info fields ourselves that would
+        // normally be inferred from the connection.
 
-    // Feed an empty chunk into the analysis to force creating the file state inside Zeek.
-    ::zeek::file_mgr->DataIn((const u_char*)"", 0, ::zeek::analyzer::Tag(), nullptr, false, fid,
-                             mime_type ? *mime_type : std::string());
+        // Feed an empty chunk into the analysis to force creating the file state inside Zeek.
+        _data_in("", 0);
 
-    auto file = ::zeek::file_mgr->LookupFile(fid);
-    assert(file); // our empty data created this
+        auto fid = _file_id(cookie);
+        auto file = ::zeek::file_mgr->LookupFile(fid);
+        assert(file); // passing in empty data ensures that this is now available
 
-    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
-        // Set the source to the current protocol analyzer.
-        file->SetSource(c->analyzer->GetAnalyzerName());
-    else if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) ) {
         // Set the source to the current file analyzer.
         file->SetSource(::zeek::file_mgr->GetComponentName(f->analyzer->Tag()));
 
@@ -270,50 +292,37 @@ void rt::file_begin(const std::optional<std::string>& mime_type) {
                      zeek::compat::RecordVal_GetField(current, "conns")); // copy from parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
                      zeek::compat::RecordVal_GetField(current, "is_orig")); // copy from parent
-
-        // Note: In files.log, there's a bunch of connection information that's
-        // extracted from the connection record passed to the
-        // file_over_new_connection() event. If we had access to the connection
-        // here, we could pass that into DataIn() above; that event would then
-        // be generated. However, I don't see a way to get to the connection at
-        // this point, hence the coresponding fields in files.log will remain
-        // unset unfortunately.
     }
-    else
-        throw rt::ValueUnavailable("no current connection or file available");
 }
 
 void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto fid = _file_id(cookie);
 
-    // Zeek ignores the connection-related parameters if one passes a precomputed file ID in.
-    ::zeek::file_mgr->SetSize(size, ::zeek::analyzer::Tag(), nullptr, false, fid);
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
+        ::zeek::file_mgr->SetSize(size, tag, c->analyzer->Conn(), c->is_orig, fid);
+    }
+    else
+        ::zeek::file_mgr->SetSize(size, ::zeek::analyzer::Tag(), nullptr, false, fid);
 }
 
-void rt::file_data_in(const hilti::rt::Bytes& data) {
-    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    auto fid = _file_id(cookie);
-
-    // Zeek ignores the connection-related parameters if one passes a precomputed file ID in.
-    ::zeek::file_mgr->DataIn(reinterpret_cast<const unsigned char*>(data.data()), data.size(), ::zeek::analyzer::Tag(),
-                             nullptr, false, fid);
-}
+void rt::file_data_in(const hilti::rt::Bytes& data) { _data_in(data.data(), data.size()); }
 
 void rt::file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset) {
-    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    auto fid = _file_id(cookie);
-
-    // Zeek ignores the connection-related parameters if one passes a precomputed file ID in.
-    ::zeek::file_mgr->DataIn(reinterpret_cast<const unsigned char*>(data.data()), data.size(), offset,
-                             ::zeek::analyzer::Tag(), nullptr, false, fid);
+    _data_in(data.data(), data.size(), offset);
 }
 
 void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto fid = _file_id(cookie);
 
-    ::zeek::file_mgr->Gap(offset, len, ::zeek::analyzer::Tag(), nullptr, false, fid);
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
+        ::zeek::file_mgr->Gap(offset, len, tag, c->analyzer->Conn(), c->is_orig, fid);
+    }
+    else
+        ::zeek::file_mgr->Gap(offset, len, ::zeek::analyzer::Tag(), nullptr, false, fid);
 }
 
 void rt::file_end() {
