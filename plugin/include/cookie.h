@@ -31,7 +31,7 @@ struct FileState {
      * hashed further before passing on to Zeek.)
      */
     std::string id() const {
-        auto id = hilti::rt::fmt("%s.%" PRIu64 ".%d", analyzer_id, file_id);
+        auto id = hilti::rt::fmt("%s.%d", analyzer_id, file_id);
         return ::zeek::file_mgr->HashHandle(id);
     }
 };
