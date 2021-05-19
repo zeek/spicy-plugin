@@ -12,7 +12,9 @@ event zeek_init() {
   local i: TupleEnum::TestEnum;
 
   i = TupleEnum::TestEnum_A;
+  print i;
 
+  i = TupleEnum::TestEnum_Undef;
   print i;
 }
 
