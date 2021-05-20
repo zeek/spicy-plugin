@@ -1,9 +1,14 @@
 
+1.0.0 | 2021-05-20 09:25:17 +0200
+
+  * GH-35: Make enums' `Undef` available to Zeek scripts. (Robin
+    Sommer, Corelight)
+
 0.99.6 | 2021-04-29 08:55:29 +0000
 
-  * Rework initializing of file meta data.
-    The previous change for file-in-file analysis had caused a regression for
-    files coming out of connection analysis. (Robin Sommer, Corelight)
+  * Rework initializing of file meta data. The previous change for
+    file-in-file analysis had caused a regression for files coming out
+    of connection analysis. (Robin Sommer, Corelight)
 
   * Fix format string. (Robin Sommer, Corelight)
 

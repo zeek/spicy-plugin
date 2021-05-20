@@ -557,15 +557,28 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
 }
 
 /**
- * Converts a Spicy-side tuple to a Zeek record value. The result is returned
+ * Converts a Spicy-side enum to a Zeek record value. The result is returned
  * with ref count +1.
  */
 template<typename T, typename std::enable_if_t<std::is_enum<T>::value>*>
 inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location) {
+
     if ( target->Tag() != ::zeek::TYPE_ENUM )
         throw TypeMismatch("enum", target, location);
 
-    return zeek::compat::EnumTypeGetEnumVal(target->AsEnumType(), static_cast<int>(t));
+    // We'll usually be getting an int64_t for T, but allow other signed ints
+    // as well.
+    static_assert(std::is_signed<std::underlying_type_t<T>>{});
+    auto it = static_cast<int64_t>(t);
+
+    // Zeek's enum can't be negative, so we swap in max_int for our Undef (-1).
+    if ( it == std::numeric_limits<int64_t>::max() )
+        // can't allow this ...
+        throw InvalidValue("enum values with value max_int not supported by Zeek integration", location);
+
+    bro_int_t bt = (it >= 0 ? it : std::numeric_limits<::bro_int_t>::max());
+
+    return zeek::compat::EnumTypeGetEnumVal(target->AsEnumType(), bt);
 }
 
 } // namespace spicy::zeek::rt

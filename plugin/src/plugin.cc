@@ -216,8 +216,13 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
 
     auto etype = ::spicy::zeek::compat::EnumType_New(fqid);
 
-    for ( const auto& [lid, lval] : labels ) {
+    for ( auto [lid, lval] : labels ) {
         auto name = ::hilti::rt::fmt("%s_%s", id, lid);
+
+        if ( lval == -1 )
+            // Zeek's enum can't be negative, so swap int max_int for our Undef.
+            lval = std::numeric_limits<::bro_int_t>::max();
+
         etype->AddName(ns, name.c_str(), lval, true);
     }
 
