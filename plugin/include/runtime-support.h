@@ -200,8 +200,9 @@ void reject_protocol(const std::string& reason);
  * with the current connection.
  *
  * param mime_type optional mime type passed to Zeek
+ * @returns Zeek-side file ID of the new file
  */
-void file_begin(const std::optional<std::string>& mime_type);
+std::string file_begin(const std::optional<std::string>& mime_type);
 
 /**
  * Returns the current file's FUID.
