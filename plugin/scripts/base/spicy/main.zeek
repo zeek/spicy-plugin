@@ -35,6 +35,10 @@ export {
 
     ## Include backtraces when reporting unhandled exceptions.
     const show_backtraces = F &redef;
+
+    ## Maximum depth of recursive file analysis (Spicy analyzers only)
+    const max_file_depth: count = 5 &redef;
+
 # doc-options-end
 
 # doc-functions-start
