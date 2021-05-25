@@ -56,7 +56,9 @@
 #include <zeek/analyzer/Analyzer.h>
 #include <zeek/analyzer/Manager.h>
 #include <zeek/analyzer/protocol/tcp/TCP.h>
+#if ZEEK_VERSION_NUMBER < 40100 // Zeek < 4.1
 #include <zeek/analyzer/protocol/udp/UDP.h>
+#endif
 #include <zeek/file_analysis/Analyzer.h>
 #include <zeek/file_analysis/File.h>
 #include <zeek/file_analysis/Manager.h>
@@ -234,8 +236,14 @@ inline auto Unref(const ::zeek::IntrusivePtr<T>& o) {
 inline auto Attribute_Find(::zeek::IntrusivePtr<::zeek::detail::Attributes> a, ::zeek::detail::AttrTag x) {
     return a->Find(x);
 }
-inline auto AnalyzerMgr_GetTagType() { return ::zeek::analyzer_mgr->GetTagType(); }
+
+#if ZEEK_VERSION_NUMBER >= 40100 // Zeek >= 4.1
+inline auto Connection_ConnVal(::zeek::Connection* c) { return c->GetVal(); }
+#else
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->ConnVal(); }
+#endif
+
+inline auto AnalyzerMgr_GetTagType() { return ::zeek::analyzer_mgr->GetTagType(); }
 inline auto EnumTypeGetEnumVal(::zeek::EnumType* t, ::bro_int_t i) { return t->GetEnumVal(i); }
 inline auto EnumVal_GetType(::zeek::EnumVal* v) { return v->GetType(); }
 inline auto EventHandler_GetType(::zeek::EventHandlerPtr ev, bool check_export = true) {
