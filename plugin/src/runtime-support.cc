@@ -259,22 +259,22 @@ std::string rt::fuid() {
     throw ValueUnavailable("fuid() not available in current context");
 }
 
-void rt::file_begin(const std::optional<std::string>& mime_type) {
+std::string rt::file_begin(const std::optional<std::string>& mime_type) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie);
     ++fstate->file_id;
     fstate->mime_type = mime_type;
 
+    // Feed an empty chunk into the analysis to force creating the file state inside Zeek.
+    _data_in("", 0);
+
+    auto fid = _file_id(cookie);
+    auto file = ::zeek::file_mgr->LookupFile(fid);
+    assert(file); // passing in empty data ensures that this is now available
+
     if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) ) {
         // We need to initialize some fa_info fields ourselves that would
         // normally be inferred from the connection.
-
-        // Feed an empty chunk into the analysis to force creating the file state inside Zeek.
-        _data_in("", 0);
-
-        auto fid = _file_id(cookie);
-        auto file = ::zeek::file_mgr->LookupFile(fid);
-        assert(file); // passing in empty data ensures that this is now available
 
         // Set the source to the current file analyzer.
         file->SetSource(::zeek::file_mgr->GetComponentName(f->analyzer->Tag()));
@@ -293,6 +293,9 @@ void rt::file_begin(const std::optional<std::string>& mime_type) {
         rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
                      zeek::compat::RecordVal_GetField(current, "is_orig")); // copy from parent
     }
+
+
+    return file->GetID();
 }
 
 void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size) {
