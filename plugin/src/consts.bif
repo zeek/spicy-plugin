@@ -30,3 +30,6 @@ const abort_on_exceptions: bool;
 
 # Include backtraces when reporting unhandled exceptions.
 const show_backtraces: bool;
+
+# Maximum depth of recursive file analysis.
+const max_file_depth: count;

@@ -49,7 +49,8 @@ struct ProtocolAnalyzer {
 /** State on the current file analyzer. */
 struct FileAnalyzer {
     ::zeek::file_analysis::Analyzer* analyzer = nullptr; /**< current analyzer */
-    FileState fstate;                                    /**< file analysis state for nested files */
+    uint64_t depth = 0; /**< recursive depth of file analysis (Spicy-side file analysis only) */
+    FileState fstate;   /**< file analysis state for nested files */
 };
 
 #ifdef HAVE_PACKET_ANALYZERS

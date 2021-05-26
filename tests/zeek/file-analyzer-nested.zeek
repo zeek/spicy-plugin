@@ -1,8 +1,23 @@
 # @TEST-REQUIRES: spicy-version 10100
 # @TEST-EXEC: spicyz -o text.hlto text.spicy ./text.evt
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::enable_print=T >output
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::enable_print=T | sort -k 3 >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff files.log
+#
+# Check that exceeding max-file-depth leads to aborting.
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
+# @TEST-EXEC: cat weird.log | zeek-cut addl | grep -q "maximal file depth exceeded"
+# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output-max
+
+event text::data1(f: fa_file, data: string)
+	{
+	print "data1", f$id, data;
+	}
+
+event text::data2(f: fa_file, data: string)
+	{
+	print "data2", f$id, data;
+	}
 
 event text::data3(f: fa_file, data: string)
 	{
@@ -59,5 +74,7 @@ file analyzer spicy::Text3:
     parse with Text::Data3,
     mime-type text/plain3;
 
+on Text::Data1 -> event text::data1($file, self.data);
+on Text::Data2 -> event text::data2($file, self.data);
 on Text::Data3 -> event text::data3($file, self.data);
 # @TEST-END-FILE

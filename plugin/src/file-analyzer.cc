@@ -6,6 +6,8 @@
 #include <zeek-spicy/runtime-support.h>
 #include <zeek-spicy/zeek-reporter.h>
 
+#include "consts.bif.h"
+
 using namespace spicy::zeek;
 using namespace spicy::zeek::rt;
 using namespace plugin::Zeek_Spicy;
@@ -19,8 +21,13 @@ using namespace plugin::Zeek_Spicy;
 void FileState::debug(const std::string& msg) { spicy::zeek::rt::debug(_cookie, msg); }
 
 static auto create_file_state(FileAnalyzer* analyzer) {
-    cookie::FileAnalyzer cookie{.analyzer = analyzer, .fstate = cookie::FileState(analyzer->GetFile()->GetID())};
+    uint64_t depth = 0;
+    if ( auto current_cookie = static_cast<Cookie*>(hilti::rt::context::cookie()) ) {
+        if ( const auto f = std::get_if<cookie::FileAnalyzer>(current_cookie) )
+            depth = f->depth + 1;
+    }
 
+    cookie::FileAnalyzer cookie{.analyzer = analyzer, .depth = depth, .fstate = cookie::FileState(analyzer->GetFile()->GetID())};
     return FileState(cookie);
 }
 
@@ -64,6 +71,15 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
             _state.skipRemaining();
             return false;
         }
+    }
+
+#if ZEEK_VERSION_NUMBER < 30200
+    if ( _state.cookie().depth >= ::BifConst::Spicy::max_file_depth ) {
+#else
+    if ( _state.cookie().depth >= ::zeek::BifConst::Spicy::max_file_depth ) {
+#endif
+        reporter::analyzerError(_state.cookie().analyzer, "maximal file depth exceeded", "Spicy file analysis plugin");
+        return false;
     }
 
     try {
