@@ -1,4 +1,14 @@
 
+1.0.0-9 | 2021-05-26 11:14:38 +0200
+
+  * Update for current Zeek master. (Robin Sommer, Corelight)
+
+  * Add option `Spicy::max_file_depth` to limit maximum recursion of
+    file analysis. Default is 5. (Robin Sommer, Corelight)
+
+  * Extend `zeek_file::file_begin() to return the Zeek-side ID of the
+    new file. (Robin Sommer, Corelight)
+
 1.0.0-2 | 2021-05-25 11:48:22 +0200
 
   * Build package without parallelism. (Benjamin Bannier, Corelight)
