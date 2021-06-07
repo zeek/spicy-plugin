@@ -7,6 +7,7 @@
 #include <zeek-spicy/zeek-reporter.h>
 
 #include "consts.bif.h"
+#include "events.bif.h"
 
 using namespace spicy::zeek;
 using namespace spicy::zeek::rt;
@@ -27,7 +28,9 @@ static auto create_file_state(FileAnalyzer* analyzer) {
             depth = f->depth + 1;
     }
 
-    cookie::FileAnalyzer cookie{.analyzer = analyzer, .depth = depth, .fstate = cookie::FileState(analyzer->GetFile()->GetID())};
+    cookie::FileAnalyzer cookie{.analyzer = analyzer,
+                                .depth = depth,
+                                .fstate = cookie::FileState(analyzer->GetFile()->GetID())};
     return FileState(cookie);
 }
 
@@ -73,11 +76,32 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
         }
     }
 
+    auto* file = _state.cookie().analyzer->GetFile();
+
+    const auto& max_file_depth =
 #if ZEEK_VERSION_NUMBER < 30200
-    if ( _state.cookie().depth >= ::BifConst::Spicy::max_file_depth ) {
+        ::BifConst::Spicy::max_file_depth;
 #else
-    if ( _state.cookie().depth >= ::zeek::BifConst::Spicy::max_file_depth ) {
+        ::zeek::BifConst::Spicy::max_file_depth;
 #endif
+
+    if ( _state.cookie().depth >= max_file_depth ) {
+        const auto& file_val =
+#if ZEEK_VERSION_NUMBER < 30200
+            file->GetVal()->Ref();
+#else
+            file->ToVal();
+#endif
+
+        const auto analyzer_args =
+#if ZEEK_VERSION_NUMBER < 30200
+            _state.cookie().analyzer->Args()->Ref();
+#else
+            _state.cookie().analyzer->GetArgs();
+#endif
+
+        file->FileEvent(Spicy::max_file_depth_exceeded,
+                        {file_val, analyzer_args, compat::val_mgr_Count(_state.cookie().depth)});
         reporter::analyzerError(_state.cookie().analyzer, "maximal file depth exceeded", "Spicy file analysis plugin");
         return false;
     }
@@ -86,7 +110,7 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
         hilti::rt::context::CookieSetter _(&_state.cookie());
         _state.process(len, reinterpret_cast<const char*>(data));
     } catch ( const spicy::rt::ParseError& e ) {
-        reporter::weird(_state.cookie().analyzer->GetFile(), e.what());
+        reporter::weird(file, e.what());
     } catch ( const hilti::rt::Exception& e ) {
         STATE_DEBUG_MSG(e.what());
         reporter::analyzerError(_state.cookie().analyzer, e.description(),
