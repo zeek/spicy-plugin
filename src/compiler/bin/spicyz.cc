@@ -1,13 +1,13 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
-#include <compiler/debug.h>
-#include <compiler/driver.h>
 #include <getopt.h>
 
 #include <hilti/base/result.h>
 #include <hilti/base/util.h>
 
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/driver.h>
+#include <zeek-spicy/debug.h>
 
 const ::hilti::logging::DebugStream ZeekPlugin("zeek");
 
@@ -172,7 +172,7 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
 }
 
 int main(int argc, char** argv) {
-    auto plugin_path = hilti::util::currentExecutable().parent_path().parent_path();
+    auto plugin_path = hilti::util::currentExecutable().parent_path().parent_path() / spicy::zeek::configuration::InstallPrefix / "zeek-spicy";
     spicy::zeek::Driver driver("", plugin_path, spicy::zeek::configuration::ZeekVersionNumber);
 
     hilti::driver::Options driver_options;

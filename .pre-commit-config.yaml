@@ -5,7 +5,7 @@ repos:
   hooks:
   - id: clang-format
     name: Run clang-format on code
-    entry: ./scripts/run-clang-format
+    entry: ./ci/run-clang-format
     args: ["--pre-commit-hook"]
     files: ^(compiler|plugin)/.*\.(c|h|C|H|cpp|hpp|cc|hh|c\+\+|h\+\+|cxx|hxx)$
     language: script

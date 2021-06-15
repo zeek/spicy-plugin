@@ -1,8 +1,8 @@
 [package]
-script_dir = plugin/scripts
-plugin_dir = build/plugin
+script_dir = scripts/Zeek/Spicy
+plugin_dir = build
 
 build_command = mkdir -p build && cd build && cmake .. && make -j "${SPICY_ZKG_PROCESSES:-4}"
 test_command = cd tests && btest -d -j "${SPICY_ZKG_PROCESSES:-2}"
 
-executables = build/plugin/bin/spicyz
+executables = build/bin/spicyz
