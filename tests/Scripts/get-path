@@ -7,11 +7,11 @@ if [ "$1" = "--plugin-path" ]; then
     test -n "${SPICY_ZEEK_PLUGIN_PATH}" && echo "${SPICY_ZEEK_PLUGIN_PATH}" && exit 0
 
     # 2. Check for local build
-    dir=$(${base}/Scripts/build-directory)/plugin
+    dir=$(${base}/Scripts/build-directory)
     test -d ${dir} && echo ${dir} && exit 0
 
     # 3. Check for in Spicy in-tree build
-    dir=$(${base}/Scripts/build-directory)/zeek/spicy-plugin/plugin
+    dir=$(${base}/Scripts/build-directory)/zeek/spicy-plugin
     test -d ${dir} && echo ${dir} && exit 0
 
     # 4. Use Zeek default
@@ -20,15 +20,15 @@ if [ "$1" = "--plugin-path" ]; then
 
 elif [ "$1" = "--plugin-path-for-installation" ]; then
     # 1. Explicit override
-    test -n "${SPICY_INSTALLATION_DIRECTORY}" && ls -d ${SPICY_INSTALLATION_DIRECTORY}/lib*/spicy/_Zeek_Spicy && exit 0
+    test -n "${SPICY_INSTALLATION_DIRECTORY}" && ls -d ${SPICY_INSTALLATION_DIRECTORY}/lib*/zeek-spicy && exit 0
 
     # 2. Derive from Spicy prefix
-    ls -d $(${base}/Scripts/run-spicy-config --prefix)/lib*/spicy/_Zeek_Spicy 2>/dev/null && exit 0
+    ls -d $(${base}/Scripts/run-spicy-config --prefix)/lib*/zeek-spicy 2>/dev/null && exit 0
 
     # 3. If we have spicyz in path, derive from module path.
     # TODO: Could add seperate --print-plugin-dir to spicyz.
     spicyz=$(which spicyz 2>/dev/null)
-    test -n "${spicyz}" && echo $(cd $(${spicyz} --print-module-path)/../../_Zeek_Spicy && pwd) && exit 0
+    test -n "${spicyz}" && echo $(cd $(${spicyz} --print-module-path)/../zeek-spicy && pwd) && exit 0
 
     exit 1
 
@@ -81,6 +81,6 @@ elif [ "$1" = "--module-path" ]; then
 
     exit 1
 else
-    echo "usage: $(basename $0) --plugin-path{,for-installatio} | --zeek-path | --sh-path{,for-installation} | --module-path"
+    echo "usage: $(basename $0) --plugin-path{,for-installation} | --zeek-path | --sh-path{,for-installation} | --module-path"
     exit 1
 fi

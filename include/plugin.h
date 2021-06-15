@@ -14,7 +14,7 @@
 
 #include <zeek-spicy/zeek-compat.h>
 
-#ifdef SPICY_HAVE_TOOLCHAIN
+#ifdef SPICY_PLUGIN_USE_JIT
 #include <zeek-spicy/driver.h>
 #endif
 
@@ -317,7 +317,7 @@ private:
     std::set<std::string> _locations;
     std::unordered_map<std::string, ::zeek::detail::IDPtr> _events;
 
-#ifdef SPICY_HAVE_TOOLCHAIN
+#ifdef SPICY_PLUGIN_USE_JIT
     std::unique_ptr<Driver> _driver;
 #endif
 };

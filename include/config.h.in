@@ -5,6 +5,8 @@
 namespace spicy::zeek::configuration {
 
 #cmakedefine SPICY_HAVE_TOOLCHAIN
+#cmakedefine SPICY_PLUGIN_USE_JIT
+#cmakedefine SPICY_ZEEK_PLUGIN_INTERNAL_BUILD
 
 // We make sure this is always defined, either as 0 or 1, so that we
 // can catch when this header wasn't included.
@@ -13,6 +15,8 @@ namespace spicy::zeek::configuration {
 // Version of Zeek the plugin was compiled against.
 #define SPICY_ZEEK_VERSION_NUMBER ${ZEEK_VERSION_NUMBER}
 #define SPICY_ZEEK_BUILD_DIRECTORY "${CMAKE_BINARY_DIR}"
+
+inline const auto InstallPrefix = "${SPICY_ZEEK_INSTALL_PREFIX}";
 
 inline const auto PluginVersion = "${SPICY_ZEEK_PLUGIN_VERSION}";
 inline const int PluginVersionNumber = ${SPICY_ZEEK_PLUGIN_VERSION_NUMBER};
@@ -24,15 +28,8 @@ inline const int ZeekVersionNumber = ${ZEEK_VERSION_NUMBER};
 inline const auto ZeekConfig = "${ZEEK_CONFIG}";
 
 inline const auto CxxZeekIncludeDirectories = "${ZEEK_INCLUDE_DIRS}";
-
-inline const auto CxxRuntimeIncludeDirectoryBuild = "${CMAKE_CURRENT_SOURCE_DIR}/include";
-inline const auto CxxRuntimeIncludeDirectoryInstallation = "${PLUGIN_INSTALL_DIR}/include";
-inline const auto CxxAutogenIncludeDirectoryBuild = "${CMAKE_CURRENT_BINARY_DIR}";
-
 inline const auto CxxBrokerIncludeDirectory = "${BROKER_INCLUDE_DIR}";
 
-inline const auto PluginLibraryDirectoryBuild = "${CMAKE_CURRENT_SOURCE_DIR}/spicy";
-inline const auto PluginLibraryDirectoryInstallation = "${PLUGIN_INSTALL_DIR}/spicy";
 inline const auto PluginModuleDirectory = "${SPICY_ZEEK_MODULE_DIR}";
 inline const auto PluginScriptsDirectory = "${SPICY_ZEEK_SCRIPTS_DIR}";
 
