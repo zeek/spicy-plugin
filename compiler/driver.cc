@@ -107,6 +107,7 @@ Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int z
 #ifdef DEBUG
     ZEEK_DEBUG("Search paths:");
 
+    auto hilti_options = hiltiOptions();
     for ( const auto& x : hilti_options.library_paths ) {
         ZEEK_DEBUG(hilti::rt::fmt("  %s", x.native()));
     }

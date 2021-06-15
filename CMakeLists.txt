@@ -13,13 +13,13 @@ math(EXPR SPICY_ZEEK_PLUGIN_VERSION_NUMBER "${SPICY_ZEEK_PLUGIN_VERSION_MAJOR} *
 
 project(SpicyPlugin VERSION "${SPICY_ZEEK_PLUGIN_VERSION_MAIN}" LANGUAGES CXX)
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Spicy)
 find_package(Zeek)
 
 if ( NOT Zeek_FOUND )
     if ( "${SPICY_IN_TREE_BUILD}" )
-        # Ok to build without Zeek
+        # Ok to build without Zeek executable
         return ()
     else ()
         message(FATAL_ERROR "cannot find Zeek, aborting")

@@ -81,6 +81,12 @@ macro(configure)
 
         #list(TRANSFORM SPICY_INCLUDE_DIRS PREPEND "-I" OUTPUT_VARIABLE SPICY_CXX_FLAGS)
         #string(REPLACE ";" " " SPICY_CXX_FLAGS "${SPICY_CXX_FLAGS}")
+
+        # TODO: This should move over into Spicy; we should provide targets for the HILTI and Spicy libraries there.
+        find_library(libspicy spicy "${SPICY_LIBRARY_DIRS_TOOLCHAIN}")
+        add_library(spicy SHARED IMPORTED GLOBAL)
+        set_property(TARGET spicy PROPERTY IMPORTED_LOCATION ${libspicy})
+        set_property(TARGET spicy APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${SPICY_INCLUDE_DIRS_TOOLCHAIN}")
     endif ()
 endmacro ()
 

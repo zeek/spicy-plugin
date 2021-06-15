@@ -90,13 +90,19 @@ endif ()
 
 zeek_plugin_end()
 
-if ( SPICY_HAVE_TOOLCHAIN )
-    target_link_libraries(${_plugin_lib} zeek-compiler)
-endif ()
+if ( ZEEK_PLUGIN_INTERNAL_BUILD )
+    zeek_plugin_link_library($<TARGET_OBJECTS:zeek-compiler>)
+    set(zeekdeps "${zeekdeps};spicy" CACHE INTERNAL "")
+else ()
+    if ( SPICY_HAVE_TOOLCHAIN )
+        target_link_libraries(${_plugin_lib} zeek-compiler)
+    endif ()
+
+    spicy_link_libraries(${_plugin_lib})
+endif()
 
 spicy_include_directories(${_plugin_lib} PRIVATE)
-spicy_link_libraries(${_plugin_lib})
-target_include_directories(${_plugin_lib} BEFORE PRIVATE include)
+target_include_directories(${_plugin_lib} BEFORE PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 set_property(TARGET ${_plugin_lib} PROPERTY ENABLE_EXPORTS true)
 
 # Copy Spicy & Zeek scripts into plugin directory. This nixes the "scripts" symlink that
