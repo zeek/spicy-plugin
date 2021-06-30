@@ -26,9 +26,8 @@ elif [ "$1" = "--plugin-path-for-installation" ]; then
     ls -d $(${base}/Scripts/run-spicy-config --prefix)/lib*/zeek-spicy 2>/dev/null && exit 0
 
     # 3. If we have spicyz in path, derive from module path.
-    # TODO: Could add seperate --print-plugin-dir to spicyz.
     spicyz=$(which spicyz 2>/dev/null)
-    test -n "${spicyz}" && echo $(cd $(${spicyz} --print-module-path)/../zeek-spicy && pwd) && exit 0
+    test -n "${spicyz}" && echo $(cd $(${spicyz} --print-plugin-path) && pwd) && exit 0
 
     exit 1
 
@@ -51,7 +50,7 @@ elif [ "$1" = "--sh-path" ]; then
     exit 0
 
 elif [ "$1" = "--sh-path-for-installation" ]; then
-    plugin_bin="$($0 --plugin-path-for-installation)/bin"
+    plugin_bin="$($0 --plugin-path-for-installation)/../../bin"
     zeek_config="$(${plugin_bin}/spicyz --print-zeek-config)"
 
     # 1. Explicit override for prefix

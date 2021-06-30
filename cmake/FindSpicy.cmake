@@ -161,6 +161,9 @@ endfunction ()
 option(SPICY_IN_TREE_BUILD "Internal option to flag building from within the Spicy source tree" no)
 
 if ( "${SPICY_IN_TREE_BUILD}" )
+    # We don't have the Spicy version number available easily,
+    # but set a dummy number that's high enough to pass any tests.
+    set(SPICY_VERSION_NUMBER "9999999999")
 else ()
     configure ()
     include(FindPackageHandleStandardArgs)
