@@ -1,2 +1,2 @@
-compiler            compiler
-plugin/include      plugin/src
+include/compiler    src/compiler
+include             src

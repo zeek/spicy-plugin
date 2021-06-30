@@ -22,9 +22,9 @@ target_link_libraries(spicyz PRIVATE zeek-compiler)
 # so that you relative search paths keep working.
 
 if ( SPICY_IN_TREE_BUILD )
-    # By default, the spicyz binary will land only inside the plugin directory.
-    # Link it into the binary output directory as well.
-    add_custom_command(TARGET spicyz POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/spicyz
+     # By default, the spicyz binary will land only inside the plugin directory.
+     # Link it into the binary output directory as well.
+     add_custom_command(TARGET spicyz POST_BUILD
+         COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/spicyz
                                                    ${SPICY_CMAKE_RUNTIME_OUTPUT_DIRECTORY}/spicyz)
 endif ()
