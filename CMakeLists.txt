@@ -1,7 +1,6 @@
 # Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(ZeekSpicyPlugin CXX)
 
 ###
 ### Configure build.
@@ -12,11 +11,12 @@ OPTION(SPICY_ZEEK_INSTALL_PLUGIN "Install Zeek plugin into Zeek installation wit
 file(STRINGS "VERSION.dat" SPICY_ZEEK_PLUGIN_VERSION)
 
 string(REGEX MATCH "(([0-9]*)\.([0-9]*)\.([0-9]*)).*" _ ${SPICY_ZEEK_PLUGIN_VERSION})
-set(SPICY_ZEEK_PLUGIN_VERSION_MAIN  ${CMAKE_MATCH_1})
-set(SPICY_ZEEK_PLUGIN_VERSION_MAJOR ${CMAKE_MATCH_2})
-set(SPICY_ZEEK_PLUGIN_VERSION_MINOR ${CMAKE_MATCH_3})
-set(SPICY_ZEEK_PLUGIN_VERSION_PATCH ${CMAKE_MATCH_4})
+set(SPICY_ZEEK_PLUGIN_VERSION_MAIN  ${CMAKE_MATCH_1} CACHE STRING "")
+set(SPICY_ZEEK_PLUGIN_VERSION_MAJOR ${CMAKE_MATCH_2} CACHE STRING "")
+set(SPICY_ZEEK_PLUGIN_VERSION_MINOR ${CMAKE_MATCH_3} CACHE STRING "")
+set(SPICY_ZEEK_PLUGIN_VERSION_PATCH ${CMAKE_MATCH_4} CACHE STRING "")
 math(EXPR SPICY_ZEEK_PLUGIN_VERSION_NUMBER "${SPICY_ZEEK_PLUGIN_VERSION_MAJOR} * 10000 + ${SPICY_ZEEK_PLUGIN_VERSION_MINOR} * 100 + ${SPICY_ZEEK_PLUGIN_VERSION_PATCH}")
+set(SPICY_ZEEK_PLUGIN_VERSION_NUMBER "${SPICY_ZEEK_PLUGIN_VERSION_NUMBER}" CACHE STRING "")
 
 # Add the variable to the CMake cache so it becomes visible to other projects.
 set(SPICY_ZEEK_PLUGIN_VERSION_NUMBER "${SPICY_ZEEK_PLUGIN_VERSION_NUMBER}" CACHE STRING "")
@@ -144,6 +144,22 @@ set(HEADERS
     zeek-compat.h
     zeek-reporter.h)
 
+set(AUX_FILES
+    cmake/FindSpicy.cmake
+    cmake/FindZeek.cmake
+    tests/Scripts/build-directory
+    tests/Scripts/canonify-zeek-log
+    tests/Scripts/diff-remove-abspath
+    tests/Scripts/diff-remove-timestamps
+    tests/Scripts/diff-sort
+    tests/Scripts/get-path
+    tests/Scripts/run-spicy-config
+    tests/Scripts/run-zeek
+    tests/Scripts/run-zeek-config
+    tests/Scripts/spicy-version
+    tests/Scripts/zeek-version
+    )
+
 zeek_plugin_begin(_Zeek Spicy)
 
 if ( SPICY_HAVE_TOOLCHAIN )
@@ -166,17 +182,16 @@ if ( ZEEK_DEBUG_BUILD )
     set_source_files_properties(functions.bif.cc PROPERTIES COMPILE_DEFINITIONS DEBUG=1)
 endif ()
 
-zeek_plugin_dist_files(spicy/zeek.spicy)
-zeek_plugin_dist_files(spicy/zeek_file.spicy)
-zeek_plugin_dist_files(spicy/zeek_rt.hlt)
-zeek_plugin_dist_files(bin/spicyz)
-
 foreach (hdr ${HEADERS})
     zeek_plugin_dist_files(include/zeek-spicy/${hdr})
 endforeach()
 
 foreach (spcy ${HEADERS})
     zeek_plugin_dist_files({spcy})
+endforeach()
+
+foreach (aux ${AUX_FILES})
+    zeek_plugin_dist_files(${aux})
 endforeach()
 
 zeek_plugin_dist_files(include/zeek-spicy/autogen/config.h)
@@ -241,6 +256,11 @@ install(DIRECTORY DESTINATION "${SPICY_ZEEK_MODULE_DIR}")
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/spicy"       DESTINATION "${plugin_base}")
 install(DIRECTORY "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/include"  DESTINATION "${plugin_base}")
 
+foreach (aux ${AUX_FILES})
+    get_filename_component(dir "${aux}" DIRECTORY)
+    install(FILES "${aux}" DESTINATION "${plugin_base}/${dir}/")
+endforeach()
+
 install(TARGETS spicyz DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if ( SPICY_ZEEK_PLUGIN_INTERNAL_BUILD )
@@ -251,9 +271,9 @@ else ()
     set(PLUGIN_INSTALL_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/zeek-spicy")
     set(SPICY_ZEEK_SCRIPTS_DIR "${plugin_base}/scripts" CACHE PATH "")
 
-    install(DIRECTORY "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/lib"              DESTINATION "${plugin_base}")
-    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/scripts"             DESTINATION "${plugin_base}")
-    install(FILES     "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/__bro_plugin__"   DESTINATION "${plugin_base}")
+    install(DIRECTORY "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/lib"                  DESTINATION "${plugin_base}")
+    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/scripts"                 DESTINATION "${plugin_base}")
+    install(FILES     "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/__bro_plugin__"       DESTINATION "${plugin_base}")
 
     install(DIRECTORY DESTINATION "${plugin_base}/${CMAKE_INSTALL_LIBDIR}")
     install_symlink("${plugin_base}" "${plugin_base}/${CMAKE_INSTALL_LIBDIR}/zeek-spicy")
