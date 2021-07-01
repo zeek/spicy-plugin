@@ -3,6 +3,7 @@
 # Infers the build directory and returns it.
 
 base=$(cd $(dirname $0)/.. && pwd)
+test_base=${TEST_BASE-${base}}
 
 test_dir() {
     test -d $1 -a -e $1/CMakeCache.txt && cd $1 && pwd
@@ -15,9 +16,9 @@ if [ -n "${SPICY_ZEEK_BUILD_DIRECTORY}" ]; then
 fi
 
 # 2. Obviously named local build directory.
-test_dir ${base}/../build && exit 0
+test_dir ${test_base}/../build && exit 0
 
 # 3. In-tree Spicy build.
-test -x ${base}/../../../tests/Scripts/build-directory && ${base}/../../../tests/Scripts/build-directory && exit 0
+test -x ${test_base}/../../../tests/Scripts/build-directory && ${test_base}/../../../tests/Scripts/build-directory && exit 0
 
 exit 1

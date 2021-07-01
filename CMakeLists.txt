@@ -40,8 +40,8 @@ endif()
 include(InstallHelpers)
 include(GNUInstallDirs)
 
-spicy_require_version("0.4" 00400)
-zeek_require_version("3.0" 30000)
+spicy_require_version("0.4.0")
+zeek_require_version("3.0.0")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -147,8 +147,14 @@ set(HEADERS
 set(AUX_FILES
     cmake/FindSpicy.cmake
     cmake/FindZeek.cmake
+    cmake/SpicyZeekAnalyzers.cmake
+    tests/random.seed
+    )
+
+set(AUX_SCRIPTS
     tests/Scripts/build-directory
     tests/Scripts/canonify-zeek-log
+    tests/Scripts/canonify-zeek-log-sorted
     tests/Scripts/diff-remove-abspath
     tests/Scripts/diff-remove-timestamps
     tests/Scripts/diff-sort
@@ -191,6 +197,10 @@ foreach (spcy ${HEADERS})
 endforeach()
 
 foreach (aux ${AUX_FILES})
+    zeek_plugin_dist_files(${aux})
+endforeach()
+
+foreach (aux ${AUX_SCRIPTS})
     zeek_plugin_dist_files(${aux})
 endforeach()
 
@@ -242,6 +252,12 @@ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${SPICY_ZEEK_INSTALL_PREFIX}")
 file(CREATE_LINK "${ZEEK_SPICY_PLUGIN_BUILD_DIR}" "${build_base}" SYMBOLIC)
 file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}/spicy" "${build_base}/spicy" SYMBOLIC)
 
+if ( "${SPICY_IN_TREE_BUILD}" )
+    # TODO: Not quite sure why but these are only missing for the in-tree build.
+    file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${build_base}/cmake" SYMBOLIC)
+    file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}/tests" "${build_base}/tests" SYMBOLIC)
+endif ()
+
 # Note: We can't easily make the Zeek include headers available inside the build directory.
 # Either install them once, or set ZEEK_SPICY_INCLUDE_DIRS to the corresponding locations
 # inside the Zeek tree ("ZEEK_SPICY_INCLUDE_DIRS=<build>/../src:<build>/src:<build>/src/include").
@@ -258,7 +274,12 @@ install(DIRECTORY "${ZEEK_SPICY_PLUGIN_BUILD_DIR}/include"  DESTINATION "${plugi
 
 foreach (aux ${AUX_FILES})
     get_filename_component(dir "${aux}" DIRECTORY)
-    install(FILES "${aux}" DESTINATION "${plugin_base}/${dir}/")
+    install(FILES "${aux}" DESTINATION "${plugin_base}/${dir}/" )
+endforeach()
+
+foreach (aux ${AUX_SCRIPTS})
+    get_filename_component(dir "${aux}" DIRECTORY)
+    install(PROGRAMS "${aux}" DESTINATION "${plugin_base}/${dir}/" )
 endforeach()
 
 install(TARGETS spicyz DESTINATION ${CMAKE_INSTALL_BINDIR})

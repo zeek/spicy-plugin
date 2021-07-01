@@ -109,7 +109,9 @@ macro(configure_static_build_inside_zeek)
     set(BifCl_EXE "n/a") # don't have/need
 endmacro()
 
-function(zeek_require_version version version_number)
+function(zeek_require_version version)
+    string(REGEX MATCH "([0-9]*)\.([0-9]*)\.([0-9]*).*" _ ${version})
+    math(EXPR version_number "${CMAKE_MATCH_1} * 10000 + ${CMAKE_MATCH_2} * 100 + ${CMAKE_MATCH_3}")
     if ( "${ZEEK_VERSION_NUMBER}" LESS "${version_number}" )
         message(FATAL_ERROR "Package requires at least Zeek version ${version}, have ${ZEEK_VERSION}")
     endif ()
