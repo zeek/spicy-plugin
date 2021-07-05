@@ -1,6 +1,6 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
-#include <zeek-spicy/compiler/glue-compiler.h>
+#include "compiler/glue-compiler.h"
 
 #include <algorithm>
 #include <limits>

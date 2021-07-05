@@ -16,15 +16,15 @@
  * zeek-config.h, we can then use the standard ZEEK_VERSION_NUMBER. Both must
  * be the same.
  */
-#if SPICY_ZEEK_VERSION_NUMBER >= 30200 // Zeek >= 3.2
+#if ZEEK_SPICY_VERSION_NUMBER >= 30200 // Zeek >= 3.2
 #include <zeek/zeek-config.h>
 #else
 #include "zeek-config.h"
 #endif
 
 #ifdef ZEEK_VERSION_NUMBER
-#if SPICY_ZEEK_VERSION_NUMBER != ZEEK_VERSION_NUMBER
-#error "Mismatch in Zeek version numbers" SPICY_ZEEK_VERSION_NUMBER
+#if ZEEK_SPICY_VERSION_NUMBER != ZEEK_VERSION_NUMBER
+#error "Mismatch in Zeek version numbers" ZEEK_SPICY_VERSION_NUMBER
 #endif
 #endif
 

@@ -5,9 +5,8 @@
 #     - With a numerical Zeek version in $1, exit with true iff we have at least that version.
 
 base=$(cd $(dirname $0)/.. && pwd)
-test_base=${TEST_BASE-${base}}
 
-version=$(${base}/Scripts/run-zeek-config --version)
+version=$(zeek-config --version)
 major=$(echo ${version} | cut -d . -f 1)
 minor=$(echo ${version} | cut -d . -f 2)
 patch=$(echo ${version} | cut -d . -f 3)

@@ -3,11 +3,10 @@ all: test
 test: test-build
 
 test-build:
-	@btest -d
+	@btest -d -j "$${SPICY_ZKG_PROCESSES:-4}"
 
-# Might need to have SPICY_INSTALLATION_DIRECTORY set.
 test-install:
-	@btest -d -a installation
+	@btest -d -a installation -j "$${SPICY_ZKG_PROCESSES:-4}"
 
 clean:
 	@rm -f $(DIAG) .btest.failed.dat

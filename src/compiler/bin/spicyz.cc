@@ -25,10 +25,9 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"optimize", no_argument, nullptr, 'O'},
                                               {"output", required_argument, nullptr, 'o'},
                                               {"output-c++", required_argument, nullptr, 'c'},
-                                              {"print-cmake-path", no_argument, nullptr, 'K'},
                                               {"print-module-path", no_argument, nullptr, 'M'},
                                               {"print-plugin-path", no_argument, nullptr, 'P'},
-                                              {"print-test-path", no_argument, nullptr, 'E'},
+                                              {"print-prefix-path", no_argument, nullptr, 'p'},
                                               {"print-zeek-config", no_argument, nullptr, 'z'},
                                               {"report-times", required_argument, nullptr, 'R'},
                                               {"print-scripts-path", no_argument, nullptr, 'S'},
@@ -50,11 +49,10 @@ static void usage() {
                  "  -C | --dump-code                Dump all generated code to disk for debugging.\n"
                  "  -D | --compiler-debug <streams> Activate compile-time debugging output for given debug streams "
                  "(comma-separated; 'help' for list).\n"
-                 "  -E | --print-test-path          Print the path to plugin's testing support files.\n"
-                 "  -K | --print-cmake-path         Print the path to plugin's CMake support files.\n"
                  "  -L | --library-path <path>      Add path to list of directories to search when importing modules.\n"
                  "  -M | --print-module-path        Print the Zeek plugin's default module search path.\n"
                  "  -O | --optimize                 Build optimized release version of generated code.\n"
+                 "  -p | --print-prefix-path        Print installation prefix path.\n"
                  "  -P | --print-plugin-path        Print the path to plugin's base directory.\n"
                  "  -R | --report-times             Report a break-down of compiler's execution time.\n"
                  "  -S | --print-scripts-path       Print the path to Zeek scripts accompanying Spicy modules.\n"
@@ -69,8 +67,16 @@ static void usage() {
 using hilti::Nothing;
 
 static auto pluginPath() {
-    auto plugin_path = hilti::util::currentExecutable().parent_path().parent_path() /
-                       spicy::zeek::configuration::InstallPrefix / "zeek-spicy";
+    auto exec = hilti::util::currentExecutable();
+
+    hilti::rt::filesystem::path plugin_path;
+
+    if ( hilti::rt::filesystem::exists(exec.parent_path().parent_path() / "__bro_plugin__") )
+        // Running out of build directory.
+        plugin_path = exec.parent_path().parent_path();
+    else
+        // Installation otherwise.
+        plugin_path = exec.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
 
     try {
         return hilti::rt::filesystem::canonical(plugin_path);
@@ -85,7 +91,7 @@ static auto pluginPath() {
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:CdEX:D:KL:Mo:OPRSTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:CdX:D:L:Mo:OpPRSTvhz", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -111,9 +117,9 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
                 break;
             }
 
-            case 'K': std::cout << (pluginPath() / "cmake").native() << std::endl; return Nothing();
+            case 'p': std::cout << spicy::zeek::configuration::InstallPrefix << std::endl; return Nothing();
+
             case 'P': std::cout << pluginPath().native() << std::endl; return Nothing();
-            case 'E': std::cout << (pluginPath() / "tests").native() << std::endl; return Nothing();
 
             case 'X': {
                 auto arg = std::string(optarg);
@@ -196,9 +202,7 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
 }
 
 int main(int argc, char** argv) {
-    auto plugin_path = hilti::util::currentExecutable().parent_path().parent_path() /
-                       spicy::zeek::configuration::InstallPrefix / "zeek-spicy";
-    spicy::zeek::Driver driver("", plugin_path, spicy::zeek::configuration::ZeekVersionNumber);
+    spicy::zeek::Driver driver("", pluginPath(), spicy::zeek::configuration::ZeekVersionNumber);
 
     hilti::driver::Options driver_options;
     driver_options.execute_code = true;

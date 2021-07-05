@@ -28,7 +28,7 @@
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
 
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
 namespace spicy::zeek::debug {
 const hilti::logging::DebugStream ZeekPlugin("zeek");
 }
@@ -47,20 +47,38 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
                            ZEEK_VERSION_NUMBER, spicy::zeek::configuration::ZeekVersionNumber));
 #endif
 
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
+    hilti::rt::filesystem::path plugin_path;
+    std::string name;
+
+#ifdef ZEEK_SPICY_PLUGIN_INTERNAL_BUILD
+    auto zeek = hilti::util::currentExecutable();
+
+    if ( hilti::rt::filesystem::exists(zeek.parent_path() / "builtin-plugins/spicy-plugin") )
+        // Running out of build directory.
+        plugin_path = zeek.parent_path() / "builtin-plugins/spicy-plugin";
+    else
+        // Installation otherwise.
+        plugin_path = zeek.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
+
+    name = zeek.native();
+#else
     Dl_info info;
     if ( ! dladdr(&SpicyPlugin, &info) )
         reporter::fatalError("Spicy plugin cannot determine its file system path");
 
-    auto plugin_path = hilti::rt::filesystem::path(info.dli_fname).parent_path().parent_path();
-    _driver = std::make_unique<Driver>(info.dli_fname, plugin_path, spicy::zeek::configuration::ZeekVersionNumber);
+    plugin_path = hilti::rt::filesystem::path(info.dli_fname).parent_path().parent_path();
+    name = info.dli_fname;
+#endif
+
+    _driver = std::make_unique<Driver>(name.c_str(), plugin_path, spicy::zeek::configuration::ZeekVersionNumber);
 #endif
 }
 
 void ::spicy::zeek::debug::do_log(const std::string& msg) {
     PLUGIN_DBG_LOG(*plugin::Zeek_Spicy::OurPlugin, "%s", msg.c_str());
     HILTI_RT_DEBUG("zeek", msg);
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     HILTI_DEBUG(::spicy::zeek::debug::ZeekPlugin, msg);
 #endif
 }
@@ -71,7 +89,7 @@ void plugin::Zeek_Spicy::Plugin::addLibraryPaths(const std::string& dirs) {
     for ( const auto& dir : hilti::rt::split(dirs, ":") )
         ::zeek::util::detail::add_to_zeek_path(std::string(dir)); // Add to Zeek's search path.
 
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     _driver->addLibraryPaths(dirs);
 #endif
 }
@@ -448,18 +466,21 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
     ZEEK_DEBUG("Beginning pre-script initialization");
 
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     _driver->InitPreScript();
 #endif
 
-    if ( auto dir = getenv("ZEEK_SPICY_PATH") )
-        addLibraryPaths(dir);
+    // Note that, different from Spicy's own SPICY_PATH, this extends the
+    // search path, it doesn't replace it.
+    if ( auto dir = hilti::rt::getenv("ZEEK_SPICY_PATH") )
+        addLibraryPaths(*dir);
 
     addLibraryPaths(hilti::rt::normalizePath(OurPlugin->PluginDirectory()).string() + "/spicy");
     autoDiscoverModules();
 
     if ( strlen(spicy::zeek::configuration::PluginScriptsDirectory) &&
-         ! getenv("ZEEKPATH") ) { // similar to Zeek: don't touch ZEEKPATH if set to anything (including empty)
+         ! hilti::rt::getenv(
+             "ZEEKPATH") ) { // similar to Zeek: don't touch ZEEKPATH if set to anything (including empty)
         ZEEK_DEBUG(hilti::rt::fmt("Adding %s to ZEEKPATH", spicy::zeek::configuration::PluginScriptsDirectory));
         ::zeek::util::detail::add_to_zeek_path(spicy::zeek::configuration::PluginScriptsDirectory);
     }
@@ -485,7 +506,7 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 
     ZEEK_DEBUG("Beginning post-script initialization");
 
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     _driver->InitPostScript();
 #endif
 
@@ -659,7 +680,7 @@ void plugin::Zeek_Spicy::Plugin::loadModule(const hilti::rt::filesystem::path& p
 
 int plugin::Zeek_Spicy::Plugin::HookLoadFile(const LoadType type, const std::string& file,
                                              const std::string& resolved) {
-#ifdef SPICY_PLUGIN_USE_JIT
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     if ( int rc = _driver->HookLoadFile(type, file, resolved) >= 0 )
         return rc;
 #endif
@@ -703,9 +724,9 @@ void plugin::Zeek_Spicy::Plugin::searchModules(std::string paths) {
 }
 
 void plugin::Zeek_Spicy::Plugin::autoDiscoverModules() {
-    if ( const char* search_paths = getenv("SPICY_MODULE_PATH"); search_paths && *search_paths )
+    if ( auto search_paths = hilti::rt::getenv("ZEEK_SPICY_MODULE_PATH"); search_paths && search_paths->size() )
         // This overrides all other paths.
-        searchModules(search_paths);
+        searchModules(*search_paths);
     else {
         searchModules(spicy::zeek::configuration::PluginModuleDirectory);
         searchModules(zeek::util::zeek_plugin_path());

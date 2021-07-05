@@ -75,24 +75,16 @@ struct VisitorPostCompilation : public hilti::visitor::PreOrder<void, VisitorPos
 };
 
 Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int zeek_version)
-    : spicy::Driver("<Spicy Plugin for Zeek>", argv0) {
+    : spicy::Driver("<Spicy Plugin for Zeek>") {
     spicy::Configuration::extendHiltiConfiguration();
     auto options = hiltiOptions();
 
-    // TODO: Do we need this? There's already `HILTI_PATH` and `SPICY_PATH`.
-    if ( auto path = getenv("ZEEK_SPICY_PATH") ) {
-        for ( const auto& dir : hilti::rt::split(path, ":") ) {
+    // Note that, different from Spicy's own SPICY_PATH, this extends the
+    // search path, it doesn't replace it.
+    if ( auto path = hilti::rt::getenv("ZEEK_SPICY_PATH") ) {
+        for ( const auto& dir : hilti::rt::split(*path, ":") ) {
             if ( dir.size() )
                 options.library_paths.emplace_back(dir);
-        }
-    }
-
-    // TODO: Can remove this once HILTI provides an environment variable to
-    // speicy include directories.
-    if ( auto path = getenv("ZEEK_SPICY_INCLUDE_DIRS") ) {
-        for ( const auto& dir : hilti::rt::split(path, ":") ) {
-            if ( dir.size() )
-                options.cxx_include_paths.emplace_back(dir);
         }
     }
 

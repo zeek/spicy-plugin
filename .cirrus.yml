@@ -2,7 +2,14 @@ environment:
     # Enforce sequential JIT'ing of files for controlled memory usage.
     HILTI_JIT_SEQUENTIAL: 1
 
-package_ci_task:
+    # Images for macOS
+    IMAGE_MACOS_BIG_SUR:  big-sur-base
+    IMAGE_MACOS_CATALINA: catalina-base
+
+    # Branch of Zeek to use for the static plugin build.
+    ZEEK_STATIC_BRANCH: topic/robin/fix-plugin-port-registration
+
+zkg_ubuntu_task:
   timeout_in: 120m
   container:
     dockerfile: ci/Dockerfile
@@ -12,7 +19,7 @@ package_ci_task:
         - ZEEK_VERSION: 3.0.13-0
       - docker_arguments:
         - ZEEK_LTS: 1
-        - ZEEK_VERSION: 4.0.0-0
+        - ZEEK_VERSION: 4.0.3-0
     cpu: 2
     memory: 8G
 
@@ -35,14 +42,14 @@ package_ci_task:
   always:
       stderr_script: ./ci/show-zkg-stderr
 
-standalone_ci_task:
+standalone_ubuntu_task:
   timeout_in: 120m
   container:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
         - ZEEK_LTS:
-        - ZEEK_VERSION: 4.0.0-0
+        - ZEEK_VERSION: 4.0.3-0
     cpu: 2
     memory: 8G
 
@@ -51,10 +58,48 @@ standalone_ci_task:
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
+  build_script:
+    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja)
+
+  test_build_script:
+    - ZEEK_PLUGIN_PATH=$(pwd)/build zeek -N _Zeek::Spicy
+    - make -C tests test
+
   install_script:
-    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja && ninja install)
+    - (cd build && ninja install)
     - rm -rf build
 
-  check_script:
+  test_install_script:
     - zeek -N _Zeek::Spicy
     - PATH=/opt/spicy-plugin/bin:$PATH make -C tests test-install
+
+static_zeek_master_ubuntu:
+  timeout_in: 120m
+  container:
+    dockerfile: ci/Dockerfile
+    cpu: 2
+    memory: 8G
+
+  install_spicy_script:
+    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy-dev.deb
+    - dpkg --install spicy-dev.deb
+    - rm spicy-dev.deb
+
+  clone_zeek_script:
+    - git clone --recursive --branch $ZEEK_STATIC_BRANCH https://github.com/zeek/zeek
+
+  build_script:
+    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python && cd build && ninja)
+
+  install_script:
+    - (cd zeek/build && ninja install)
+
+  # Note that the build tests need the Zeek headers installed.
+  test_build_script:
+    - . zeek/build/zeek-path-dev.sh && ./zeek/build/src/zeek -N _Zeek::Spicy
+    - PATH=$(pwd)/zeek/build/src:$(pwd)/zeek/build/src/builtin-plugins/spicy-plugin/bin:$PATH make -C tests test
+
+  test_install_script:
+    - rm -rf zeek/build
+    - PATH=/opt/zeek-master/bin:$PATH zeek -N _Zeek::Spicy
+    - PATH=/opt/zeek-master/bin:$PATH make -C tests test-install
