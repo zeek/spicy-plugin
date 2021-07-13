@@ -79,7 +79,8 @@ void plugin::Zeek_Spicy::Plugin::addLibraryPaths(const std::string& dirs) {
 void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& name, hilti::rt::Protocol proto,
                                                           const hilti::rt::Vector<hilti::rt::Port>& ports,
                                                           const std::string& parser_orig,
-                                                          const std::string& parser_resp, const std::string& replaces) {
+                                                          const std::string& parser_resp, const std::string& replaces,
+                                                          const std::string& linker_scope) {
     ZEEK_DEBUG(hilti::rt::fmt("Have Spicy protocol analyzer %s", name));
 
     ProtocolAnalyzerInfo info;
@@ -90,6 +91,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.protocol = proto;
     info.ports = ports;
+    info.linker_scope = linker_scope;
 
     if ( replaces.size() ) {
         if ( auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(replaces.c_str()) ) {
@@ -128,7 +130,8 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
 
 void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
                                                       const hilti::rt::Vector<std::string>& mime_types,
-                                                      const std::string& parser, const std::string& replaces) {
+                                                      const std::string& parser, const std::string& replaces,
+                                                      const std::string& linker_scope) {
     ZEEK_DEBUG(hilti::rt::fmt("Have Spicy file analyzer %s", name));
 
     FileAnalyzerInfo info;
@@ -137,6 +140,7 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     info.name_replaces = replaces;
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.mime_types = mime_types;
+    info.linker_scope = linker_scope;
 
 #if ZEEK_VERSION_NUMBER >= 40100
     // Zeek does not have a way to disable file analyzers until 4.1.
@@ -173,13 +177,15 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
 }
 
 #ifdef HAVE_PACKET_ANALYZERS
-void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name, const std::string& parser) {
+void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name, const std::string& parser,
+                                                        const std::string& linker_scope) {
     ZEEK_DEBUG(hilti::rt::fmt("Have Spicy packet analyzer %s", name));
 
     PacketAnalyzerInfo info;
     info.name_analyzer = name;
     info.name_parser = parser;
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
+    info.linker_scope = linker_scope;
 
     auto instantiate = [info]() -> ::zeek::packet_analysis::AnalyzerPtr {
         return ::spicy::zeek::rt::PacketAnalyzer::Instantiate(info.name_analyzer);
@@ -524,17 +530,19 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     }
 
     // Fill in the parser information now that we derived from the ASTs.
-    auto find_parser = [](const std::string& analyzer, const std::string& parser) -> const spicy::rt::Parser* {
+    auto find_parser = [](const std::string& analyzer, const std::string& parser,
+                          const std::string& linker_scope) -> const spicy::rt::Parser* {
         if ( parser.empty() )
             return nullptr;
 
         for ( auto p : spicy::rt::parsers() ) {
-            if ( p->name == parser )
+            if ( p->name == parser && p->linker_scope == linker_scope )
                 return p;
         }
 
         reporter::internalError(
             hilti::rt::fmt("Unknown Spicy parser '%s' requested by analyzer '%s'", parser, analyzer));
+
         return nullptr; // cannot be reached
     };
 
@@ -545,8 +553,8 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 
         ZEEK_DEBUG(hilti::rt::fmt("Registering %s protocol analyzer %s with Zeek", p.protocol, p.name_analyzer));
 
-        p.parser_orig = find_parser(p.name_analyzer, p.name_parser_orig);
-        p.parser_resp = find_parser(p.name_analyzer, p.name_parser_resp);
+        p.parser_orig = find_parser(p.name_analyzer, p.name_parser_orig, p.linker_scope);
+        p.parser_resp = find_parser(p.name_analyzer, p.name_parser_resp, p.linker_scope);
 
         // Register analyzer for its well-known ports.
         auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(p.name_analyzer.c_str());
@@ -576,7 +584,7 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 
         ZEEK_DEBUG(hilti::rt::fmt("Registering file analyzer %s with Zeek", p.name_analyzer.c_str()));
 
-        p.parser = find_parser(p.name_analyzer, p.name_parser);
+        p.parser = find_parser(p.name_analyzer, p.name_parser, p.linker_scope);
 
         // Register analyzer for its MIME types.
         auto tag = ::zeek::file_mgr->GetComponentTag(p.name_analyzer.c_str());
@@ -613,7 +621,7 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
             continue;
 
         ZEEK_DEBUG(hilti::rt::fmt("Registering packet analyzer %s with Zeek", p.name_analyzer.c_str()));
-        p.parser = find_parser(p.name_analyzer, p.name_parser);
+        p.parser = find_parser(p.name_analyzer, p.name_parser, p.linker_scope);
     }
 #endif
 

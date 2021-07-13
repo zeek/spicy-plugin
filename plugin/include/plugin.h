@@ -48,10 +48,11 @@ public:
      * unit's parser with
      * @param replaces optional name of existing Zeek analyzer that this one replaces; the Zeek analyzer will
      * automatically be disabled
+     * @param linker_scope scope of current HLTO file, which will restrict visibility of the registration
      */
     void registerProtocolAnalyzer(const std::string& name, hilti::rt::Protocol proto,
                                   const hilti::rt::Vector<hilti::rt::Port>& ports, const std::string& parser_orig,
-                                  const std::string& parser_resp, const std::string& replaces = "");
+                                  const std::string& parser_resp, const std::string& replaces, const std::string& linker_scope);
 
     /**
      * Runtime method to register a file analyzer with its Zeek-side
@@ -65,9 +66,10 @@ public:
      * parser with
      * @param replaces optional name of existing Zeek analyzer that this one replaces; the Zeek analyzer will
      * automatically be disabled
+     * @param linker_scope scope of current HLTO file, which will restrict visibility of the registration
      */
     void registerFileAnalyzer(const std::string& name, const hilti::rt::Vector<std::string>& mime_types,
-                              const std::string& parser, const std::string& replaces = "");
+                              const std::string& parser, const std::string& replaces, const std::string& linker_scope);
 
     /**
      * Runtime method to register a packet analyzer with its Zeek-side
@@ -78,8 +80,9 @@ public:
      * @param parser name of the Spicy parser for parsing the packet; must
      * match the name that Spicy registers the unit's
      * parser with.
+     * @param linker_scope scope of current HLTO file, which will restrict visibility of the registration
      */
-    void registerPacketAnalyzer(const std::string& name, const std::string& parser);
+    void registerPacketAnalyzer(const std::string& name, const std::string& parser, const std::string& linker_scope);
 
     /**
      * Runtime method to register a Spicy-generted enum time with Zeek.
@@ -266,6 +269,7 @@ private:
         hilti::rt::Protocol protocol = hilti::rt::Protocol::Undef;
         hilti::rt::Vector<hilti::rt::Port> ports;
         ::zeek::analyzer::Tag::type_t type;
+        std::string linker_scope;
 
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser_orig;
@@ -282,6 +286,7 @@ private:
         std::string name_zeekygen;
         hilti::rt::Vector<std::string> mime_types;
         ::zeek::file_analysis::Tag::type_t type;
+        std::string linker_scope;
 
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser;
@@ -296,6 +301,7 @@ private:
         std::string name_parser;
         std::string name_zeekygen;
         ::zeek::packet_analysis::Tag::type_t type;
+        std::string linker_scope;
 
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser;
