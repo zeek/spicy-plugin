@@ -1,3 +1,17 @@
+
+1.1.1-5 | 2021-07-14 15:54:35 +0200
+
+  * Limit parsers available in EVT files to any coming from the same
+    HLTO file. This makes it possible to reuse parsers across HTLOs
+    without getting into conflicts. Previously, whether this would
+    work was dependent on loading order. (Robin Sommer, Corelight)
+
+  * Make plugin version available to other projects. (Robin Sommer,
+    Corelight)
+
+  * Remove outdated parsers from repository. (Benjamin Bannier,
+    Corelight)
+
 1.1.1 | 2021-05-31 11:50:02 +0200
 
   * Make parallel build and test opt-out instead of opt-in. (Benjamin Bannier,
