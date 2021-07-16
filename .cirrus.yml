@@ -73,7 +73,7 @@ standalone_ubuntu_task:
     - zeek -N _Zeek::Spicy
     - PATH=/opt/spicy-plugin/bin:$PATH make -C tests test-install
 
-static_zeek_master_ubuntu:
+static_zeek_master_ubuntu_task:
   timeout_in: 120m
   container:
     dockerfile: ci/Dockerfile
