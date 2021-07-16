@@ -59,7 +59,7 @@ standalone_ubuntu_task:
     - rm spicy-dev.deb
 
   build_script:
-    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja)
+    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja -j4)
 
   test_build_script:
     - ZEEK_PLUGIN_PATH=$(pwd)/build zeek -N _Zeek::Spicy
@@ -89,7 +89,7 @@ static_zeek_master_ubuntu_task:
     - git clone --recursive --branch $ZEEK_STATIC_BRANCH https://github.com/zeek/zeek
 
   build_script:
-    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python && cd build && ninja)
+    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python && cd build && ninja -j4)
 
   install_script:
     - (cd zeek/build && ninja install)
