@@ -1,13 +1,13 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
-#include <compiler/debug.h>
-#include <compiler/driver.h>
 #include <getopt.h>
 
 #include <hilti/base/result.h>
 #include <hilti/base/util.h>
 
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/driver.h>
+#include <zeek-spicy/debug.h>
 
 const ::hilti::logging::DebugStream ZeekPlugin("zeek");
 
@@ -25,8 +25,10 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"optimize", no_argument, nullptr, 'O'},
                                               {"output", required_argument, nullptr, 'o'},
                                               {"output-c++", required_argument, nullptr, 'c'},
-                                              {"print-zeek-config", no_argument, nullptr, 'z'},
                                               {"print-module-path", no_argument, nullptr, 'M'},
+                                              {"print-plugin-path", no_argument, nullptr, 'P'},
+                                              {"print-prefix-path", no_argument, nullptr, 'p'},
+                                              {"print-zeek-config", no_argument, nullptr, 'z'},
                                               {"report-times", required_argument, nullptr, 'R'},
                                               {"print-scripts-path", no_argument, nullptr, 'S'},
                                               {"version", no_argument, nullptr, 'v'},
@@ -50,10 +52,12 @@ static void usage() {
                  "  -L | --library-path <path>      Add path to list of directories to search when importing modules.\n"
                  "  -M | --print-module-path        Print the Zeek plugin's default module search path.\n"
                  "  -O | --optimize                 Build optimized release version of generated code.\n"
+                 "  -p | --print-prefix-path        Print installation prefix path.\n"
+                 "  -P | --print-plugin-path        Print the path to plugin's base directory.\n"
                  "  -R | --report-times             Report a break-down of compiler's execution time.\n"
                  "  -S | --print-scripts-path       Print the path to Zeek scripts accompanying Spicy modules.\n"
                  "  -T | --keep-tmps                Do not delete any temporary files created.\n"
-                 "  -X | --debug-addl <addl>        Implies -d and adds selected additional instrumentation "
+                 "  -X | --debug-addl <addl>        Implies -d and adds selected additional instrumentation."
                  "(comma-separated; see 'help' for list).\n"
                  "\n"
                  "Inputs can be *.spicy, *.evt, *.hlt, .cc/.cxx\n"
@@ -62,10 +66,32 @@ static void usage() {
 
 using hilti::Nothing;
 
+static auto pluginPath() {
+    auto exec = hilti::util::currentExecutable();
+
+    hilti::rt::filesystem::path plugin_path;
+
+    if ( hilti::rt::filesystem::exists(exec.parent_path().parent_path() / "__bro_plugin__") )
+        // Running out of build directory.
+        plugin_path = exec.parent_path().parent_path();
+    else
+        // Installation otherwise.
+        plugin_path = exec.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
+
+    try {
+        return hilti::rt::filesystem::canonical(plugin_path);
+    } catch ( const hilti::rt::filesystem::filesystem_error& e ) {
+        ::hilti::logger().fatalError(
+            hilti::util::fmt("invalid plugin base directory %s: %s", plugin_path.native(), e.what()));
+    }
+
+    hilti::rt::cannot_be_reached();
+}
+
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:CdX:D:L:Mo:ORSTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:CdX:D:L:Mo:OpPRSTvhz", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -90,6 +116,10 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
                 compiler_options->debug = true;
                 break;
             }
+
+            case 'p': std::cout << spicy::zeek::configuration::InstallPrefix << std::endl; return Nothing();
+
+            case 'P': std::cout << pluginPath().native() << std::endl; return Nothing();
 
             case 'X': {
                 auto arg = std::string(optarg);
@@ -172,8 +202,7 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
 }
 
 int main(int argc, char** argv) {
-    auto plugin_path = hilti::util::currentExecutable().parent_path().parent_path();
-    spicy::zeek::Driver driver("", plugin_path, spicy::zeek::configuration::ZeekVersionNumber);
+    spicy::zeek::Driver driver("", pluginPath(), spicy::zeek::configuration::ZeekVersionNumber);
 
     hilti::driver::Options driver_options;
     driver_options.execute_code = true;

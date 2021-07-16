@@ -14,7 +14,7 @@
 
 #include <zeek-spicy/zeek-compat.h>
 
-#ifdef SPICY_HAVE_TOOLCHAIN
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
 #include <zeek-spicy/driver.h>
 #endif
 
@@ -249,7 +249,7 @@ private:
     // Load one *.hlto module.
     void loadModule(const hilti::rt::filesystem::path& path);
 
-    // Search SPICY_MODULE_PATH for pre-compiled *.hlto modules and load them.
+    // Search ZEEK_SPICY_MODULE_PATH for pre-compiled *.hlto modules and load them.
     void autoDiscoverModules();
 
     // Recursively search pre-compiled *.hlto in colon-separated paths.
@@ -317,7 +317,7 @@ private:
     std::set<std::string> _locations;
     std::unordered_map<std::string, ::zeek::detail::IDPtr> _events;
 
-#ifdef SPICY_HAVE_TOOLCHAIN
+#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     std::unique_ptr<Driver> _driver;
 #endif
 };

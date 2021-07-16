@@ -17,14 +17,5 @@ spicy_include_directories(spicyz PRIVATE)
 spicy_link_executable(spicyz)
 target_compile_options(spicyz PRIVATE "-Wall")
 target_link_libraries(spicyz PRIVATE zeek-compiler)
+install(TARGETS spicyz DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-# Note we don't install spicyz, but instead symlink it into the plugin directory
-# so that you relative search paths keep working.
-
-if ( SPICY_IN_TREE_BUILD )
-    # By default, the spicyz binary will land only inside the plugin directory.
-    # Link it into the binary output directory as well.
-    add_custom_command(TARGET spicyz POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/spicyz
-                                                   ${SPICY_CMAKE_RUNTIME_OUTPUT_DIRECTORY}/spicyz)
-endif ()

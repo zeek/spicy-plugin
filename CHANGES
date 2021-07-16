@@ -1,4 +1,23 @@
 
+1.1.1-11 | 2021-07-16 11:45:30 +0200
+
+  * Reorganize plugin structure to work with Zeek's new
+    ``--include-plugins`` option for building the plugin statically
+    into Zeek. (Robin Sommer, Corelight)
+
+  * Remove support of Spicy in-tree build, and general cleanup. (Robin
+    Sommer, Corelight)
+
+  * Rename the environment variables `SPICY_MODULE_PATH` and
+    `SPICY_PLUGIN_OPTIONS` to `ZEEK_SPICY_MODULE_PATH` and
+    `ZEEK_SPICY_PLUGIN_OPTIONS`, respectively. (Robin Sommer,
+    Corelight)
+
+  * Extend `--print-*` options of `spicyz`. (Robin Sommer, Corelight)
+
+  * Install selected CMake and testing files along with the plugin for
+    use by analyzer packages. (Robin Sommer, Corelight)
+
 1.1.1-5 | 2021-07-14 15:54:35 +0200
 
   * Limit parsers available in EVT files to any coming from the same

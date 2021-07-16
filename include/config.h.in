@@ -1,0 +1,37 @@
+// Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
+
+#pragma once
+
+namespace spicy::zeek::configuration {
+
+#cmakedefine SPICY_HAVE_TOOLCHAIN
+#cmakedefine ZEEK_SPICY_PLUGIN_USE_JIT
+#cmakedefine ZEEK_SPICY_PLUGIN_INTERNAL_BUILD
+
+// We make sure this is always defined, either as 0 or 1, so that we
+// can catch when this header wasn't included.
+#cmakedefine01 ZEEK_DEBUG_BUILD
+
+// Version of Zeek the plugin was compiled against.
+#define ZEEK_SPICY_VERSION_NUMBER ${ZEEK_VERSION_NUMBER}
+#define ZEEK_SPICY_BUILD_DIRECTORY "${CMAKE_BINARY_DIR}"
+
+inline const auto InstallLibDir = "${CMAKE_INSTALL_LIBDIR}";
+inline const auto InstallPrefix = "${CMAKE_INSTALL_PREFIX}";
+
+inline const auto PluginVersion = "${ZEEK_SPICY_PLUGIN_VERSION}";
+inline const int PluginVersionNumber = ${ZEEK_SPICY_PLUGIN_VERSION_NUMBER};
+inline const int PluginVersionMajor = ${ZEEK_SPICY_PLUGIN_VERSION_MAJOR};
+inline const int PluginVersionMinor = ${ZEEK_SPICY_PLUGIN_VERSION_MINOR};
+inline const int PluginVersionPatch = ${ZEEK_SPICY_PLUGIN_VERSION_PATCH};
+
+inline const int ZeekVersionNumber = ${ZEEK_VERSION_NUMBER};
+inline const auto ZeekConfig = "${ZEEK_CONFIG}";
+
+inline const auto CxxZeekIncludeDirectories = "${ZEEK_INCLUDE_DIRS}";
+inline const auto CxxBrokerIncludeDirectory = "${BROKER_INCLUDE_DIR}";
+
+inline const auto PluginModuleDirectory = "${ZEEK_SPICY_MODULE_DIR}";
+inline const auto PluginScriptsDirectory = "${ZEEK_SPICY_SCRIPTS_DIR}";
+
+}

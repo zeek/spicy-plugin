@@ -12,9 +12,9 @@ const hilti::logging::DebugStream ZeekPlugin("zeek");
 using namespace spicy::zeek;
 
 void plugin::Zeek_Spicy::Driver::InitPreScript() {
-    if ( auto opts = getenv("SPICY_PLUGIN_OPTIONS") ) {
-        if ( auto rc = Driver::parseOptionsPreScript(opts); ! rc )
-            reporter::fatalError(hilti::rt::fmt("error parsing SPICY_PLUGIN_OPTIONS, %s", rc.error()));
+    if ( auto opts = hilti::rt::getenv("ZEEK_SPICY_PLUGIN_OPTIONS") ) {
+        if ( auto rc = Driver::parseOptionsPreScript(*opts); ! rc )
+            reporter::fatalError(hilti::rt::fmt("error parsing ZEEK_SPICY_PLUGIN_OPTIONS, %s", rc.error()));
     }
 }
 
@@ -121,9 +121,9 @@ void plugin::Zeek_Spicy::Driver::_initialize() {
     // As it can be tricky on the Zeek side to set options from the command
     // line, we also support passing them in through environment variables.
     // This takes the same options as spicyc on the command line.
-    if ( auto opts = getenv("SPICY_PLUGIN_OPTIONS") ) {
-        if ( auto rc = parseOptionsPostScript(opts, &driver_options, &hilti_options); ! rc )
-            reporter::fatalError(hilti::rt::fmt("error parsing SPICY_PLUGIN_OPTIONS, %s", rc.error()));
+    if ( auto opts = hilti::rt::getenv("ZEEK_SPICY_PLUGIN_OPTIONS") ) {
+        if ( auto rc = parseOptionsPostScript(*opts, &driver_options, &hilti_options); ! rc )
+            reporter::fatalError(hilti::rt::fmt("error parsing ZEEK_SPICY_PLUGIN_OPTIONS, %s", rc.error()));
     }
 
     setCompilerOptions(std::move(hilti_options));

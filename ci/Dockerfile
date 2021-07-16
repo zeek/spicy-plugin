@@ -10,7 +10,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG SKIP_BUILD=
 ARG ZEEK_LTS=1
-ARG ZEEK_VERSION=3.0.11-0
+ARG ZEEK_VERSION=4.0.3-0
 
 CMD ["sh"]
 ENV DEBIAN_FRONTEND=noninteractive

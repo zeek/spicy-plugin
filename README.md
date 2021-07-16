@@ -13,7 +13,7 @@ package.
 In addition to Zeek, you will first need to install Spicy. Please
 follow [its instructions](https://docs.zeek.org/projects/spicy/en/latest/installation.html).
 Ensure that the Spicy toolchain is in your ``PATH``. For example, with
-it installed to `/opt/spicy` and using `bash`:
+Spicy installed to `/opt/spicy` and using `bash`:
 
     export PATH=/opt/spicy/bin:$PATH
 
@@ -61,7 +61,7 @@ The tests should now pass:
 
     # make -C tests
 
-You can then install the plugin (you may need to do this as root so
+You can then install the plugin (which you may need to do as root so
 that you can write to the Zeek plugin directory):
 
     # make -C build install
@@ -72,6 +72,10 @@ Zeek should now show it:
     _Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
 
 You will also find `spicyz` in `${prefix}/bin` now.
+
+By default, the plugin will search for precompiled `*.hlto` files in
+`<prefix>/lib/zeek-spicy/modules`. You change that path by setting
+`ZEEK_SPICY_MODULE_DIR` through CMake.
 
 ## Documentation
 

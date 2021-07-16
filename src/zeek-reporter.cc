@@ -59,7 +59,7 @@ static std::unique_ptr<::zeek::detail::Location> _makeLocation(const std::string
                 loc->first_line = loc->last_line = std::stoi(std::string(y[0]));
         }
 
-        return std::move(loc);
+        return loc;
     };
 
     if ( location.size() )

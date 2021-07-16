@@ -3,5 +3,5 @@
 # Wrapper around Zeek to set environment.
 
 base=$(cd $(dirname $0)/.. && pwd)
-zeek="$(${base}/Scripts/run-zeek-config --prefix)/bin/zeek -G ${base}/random.seed"
-LD_PRELOAD=${ZEEK_LD_PRELOAD} DYLD_INSERT_LIBRARIES=${ZEEK_LD_PRELOAD} ASAN_OPTIONS=detect_leaks=0:detect_odr_violation=0 ${zeek} $@
+
+LD_PRELOAD=${ZEEK_LD_PRELOAD} DYLD_INSERT_LIBRARIES=${ZEEK_LD_PRELOAD} ASAN_OPTIONS=detect_leaks=0:detect_odr_violation=0 zeek $@

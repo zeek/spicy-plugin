@@ -1,4 +1,7 @@
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace ssh.spicy ./ssh-cond.evt %INPUT Spicy::enable_print=T | sort  >output
+#
+# Pick only a couple fields from x509.log as specifics changed with Zeek >= 4.1
+# @TEST-EXEC: cat x509.log | grep -v ^# | cut -f 4-5 >x509.log.tmp && mv x509.log.tmp x509.log
 # @TEST-EXEC: btest-diff x509.log
 # @TEST-EXEC: btest-diff output
 

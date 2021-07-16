@@ -1,7 +1,5 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
-#include "driver.h"
-
 #include <getopt.h>
 
 #include <algorithm>
@@ -16,9 +14,9 @@
 #include <spicy/ast/types/unit.h>
 #include <spicy/autogen/config.h>
 #include <zeek-spicy/autogen/config.h>
-
-#include "debug.h"
-#include "glue-compiler.h"
+#include <zeek-spicy/compiler/driver.h>
+#include <zeek-spicy/compiler/glue-compiler.h>
+#include <zeek-spicy/debug.h>
 
 // Must come after Bro includes to avoid namespace conflicts.
 #include <spicy/rt/libspicy.h>
@@ -77,17 +75,30 @@ struct VisitorPostCompilation : public hilti::visitor::PreOrder<void, VisitorPos
 };
 
 Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int zeek_version)
-    : spicy::Driver("<Spicy Plugin for Zeek>", argv0) {
+    : spicy::Driver("<Spicy Plugin for Zeek>") {
     spicy::Configuration::extendHiltiConfiguration();
-
-    plugin_path = hilti::rt::filesystem::canonical(plugin_path);
-
     auto options = hiltiOptions();
 
-    // We make our search paths relative to the plugin library, so that the
-    // plugin instalation can move around.
-    options.cxx_include_paths.push_back(plugin_path / "include");
-    options.library_paths.push_back(plugin_path / "spicy");
+    // Note that, different from Spicy's own SPICY_PATH, this extends the
+    // search path, it doesn't replace it.
+    if ( auto path = hilti::rt::getenv("ZEEK_SPICY_PATH") ) {
+        for ( const auto& dir : hilti::rt::split(*path, ":") ) {
+            if ( dir.size() )
+                options.library_paths.emplace_back(dir);
+        }
+    }
+
+    try {
+        plugin_path = hilti::rt::filesystem::canonical(plugin_path);
+
+        // We make our search paths relative to the plugin library, so that the
+        // plugin instalation can move around.
+        options.cxx_include_paths.push_back(plugin_path / "include");
+        options.library_paths.push_back(plugin_path / "spicy");
+    } catch ( const hilti::rt::filesystem::filesystem_error& e ) {
+        ::hilti::logger().warning(
+            hilti::util::fmt("invalid plugin base directory %s: %s", plugin_path.native(), e.what()));
+    }
 
     for ( auto i : hilti::util::split(spicy::zeek::configuration::CxxZeekIncludeDirectories, ":") ) {
         if ( i.size() )
@@ -97,16 +108,10 @@ Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int z
     if ( strlen(spicy::zeek::configuration::CxxBrokerIncludeDirectory) )
         options.cxx_include_paths.emplace_back(spicy::zeek::configuration::CxxBrokerIncludeDirectory);
 
-    if ( auto path = getenv("ZEEK_SPICY_PATH") ) {
-        for ( const auto& dir : hilti::rt::split(path, ":") ) {
-            if ( dir.size() )
-                options.library_paths.emplace_back(dir);
-        }
-    }
-
 #ifdef DEBUG
     ZEEK_DEBUG("Search paths:");
 
+    auto hilti_options = hiltiOptions();
     for ( const auto& x : hilti_options.library_paths ) {
         ZEEK_DEBUG(hilti::rt::fmt("  %s", x.native()));
     }
