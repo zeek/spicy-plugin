@@ -34,4 +34,6 @@ inline const auto CxxBrokerIncludeDirectory = "${BROKER_INCLUDE_DIR}";
 inline const auto PluginModuleDirectory = "${ZEEK_SPICY_MODULE_DIR}";
 inline const auto PluginScriptsDirectory = "${ZEEK_SPICY_SCRIPTS_DIR}";
 
+inline const auto StaticBuildName = "${ZEEK_SPICY_STATIC_BUILD_NAME}";
+
 }
