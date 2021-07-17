@@ -242,6 +242,7 @@ endforeach()
 if ( ZEEK_SPICY_PLUGIN_INTERNAL_BUILD )
     # Install along with Zeek.
     set(ZEEK_SPICY_SCRIPTS_DIR "" CACHE PATH "") # not needed when running from inside Zeek
+    get_filename_component(ZEEK_SPICY_STATIC_BUILD_NAME "${PROJECT_SOURCE_DIR}" NAME)
 else ()
     # Standard standalone install.
     set(PLUGIN_INSTALL_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/zeek-spicy")

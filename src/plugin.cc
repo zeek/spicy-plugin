@@ -53,10 +53,13 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
 
 #ifdef ZEEK_SPICY_PLUGIN_INTERNAL_BUILD
     auto zeek = hilti::util::currentExecutable();
+    auto build_path = zeek.parent_path() / "builtin-plugins" / spicy::zeek::configuration::StaticBuildName;
 
-    if ( hilti::rt::filesystem::exists(zeek.parent_path() / "builtin-plugins/spicy-plugin") )
-        // Running out of build directory.
-        plugin_path = zeek.parent_path() / "builtin-plugins/spicy-plugin";
+    if ( hilti::rt::filesystem::exists(build_path) )
+        // Running out of build directory. Note that the path below
+        // "builtin-plugins/" depends on the directory name where the
+        // spicy-plugin code resaides.
+        plugin_path = build_path;
     else
         // Installation otherwise.
         plugin_path = zeek.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
