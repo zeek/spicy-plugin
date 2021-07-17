@@ -1,13 +1,17 @@
 # @TEST-REQUIRES: spicy-version 10100
+# @TEST-REQUIRES: zeek-version 40000
+
 # @TEST-EXEC: spicyz -o text.hlto text.spicy ./text.evt
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::enable_print=T | sort -k 3 >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff files.log
 #
-# Check that exceeding max-file-depth leads to aborting.
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
+# Check that exceeding max-file-depth leads to aborting and an event.
+# @TEST-EXEC: ${ZEEK} -t /tmp/zeek.trace -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
 # @TEST-EXEC: cat weird.log | zeek-cut addl | grep -q "maximal file depth exceeded"
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output-max
+# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff weird.log
+# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff notice.log
 
 event text::data1(f: fa_file, data: string)
 	{
@@ -22,6 +26,11 @@ event text::data2(f: fa_file, data: string)
 event text::data3(f: fa_file, data: string)
 	{
 	print "data3", f$id, data;
+	}
+
+event Spicy::max_file_depth_exceeded(f: fa_file, args: Files::AnalyzerArgs, limit: count)
+	{
+	print "depth warning", f$id, args, limit;
 	}
 
 # @TEST-START-FILE text.spicy

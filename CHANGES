@@ -1,4 +1,12 @@
 
+1.1.1-18 | 2021-07-17 13:53:19 +0200
+
+  * GH-42: Trigger a notice of file analyzer recursion limit.
+    (Benjamin Bannier, Corelight)
+
+  * Update `update-changes` config for new VERSION location. (Robin
+    Sommer, Corelight)
+
 1.1.1-15 | 2021-07-17 10:04:53 +0200
 
   * Reorganize plugin structure to work with Zeek's new

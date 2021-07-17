@@ -1,2 +1,3 @@
-
 module Spicy;
+
+event max_file_depth_exceeded%(f: fa_file, args: Files::AnalyzerArgs, limit: count%);
