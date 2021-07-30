@@ -71,7 +71,7 @@ list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Spicy REQUIRED)
 find_package(Zeek REQUIRED)
 
-spicy_require_version("0.4.0")
+spicy_require_version("1.2.0")
 zeek_require_version("3.0.0")
 
 ###
