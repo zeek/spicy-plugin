@@ -54,17 +54,15 @@ struct VisitorPostCompilation : public hilti::visitor::PreOrder<void, VisitorPos
         : driver(driver), module(std::move(module)), path(std::move(path)) {}
 
     void operator()(const hilti::declaration::Type& t) {
-        if ( const auto& orig = t.type().originalNode() ) {
-            if ( auto ut = orig->tryAs<spicy::type::Unit>() ) {
-                auto ui = UnitInfo{
-                    .id = *t.type().typeID(),
-                    .type = *ut,
-                    .module_id = module,
-                    .module_path = path,
-                };
+        if ( auto ut = t.type().tryAs<spicy::type::Unit>() ) {
+            auto ui = UnitInfo{
+                .id = *t.type().typeID(),
+                .type = *ut,
+                .module_id = module,
+                .module_path = path,
+            };
 
-                units.emplace_back(std::move(ui));
-            }
+            units.emplace_back(std::move(ui));
         }
     }
 
@@ -335,31 +333,42 @@ hilti::Result<UnitInfo> Driver::lookupUnit(const hilti::ID& unit) {
         return hilti::result::Error("unknown unit");
 }
 
-void Driver::hookNewASTPreCompilation(const ID& id, const std::optional<hilti::rt::filesystem::path>& path,
-                                      const hilti::Node& root) {
-    if ( ! path )
+void Driver::hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) {
+    if ( unit->extension() != ".spicy" )
+        return;
+
+    if ( unit->path().empty() )
         // Ignore modules constructed in memory.
         return;
 
-    auto v = VisitorPreCompilation(this, id, *path);
-    for ( auto i : v.walk(root) )
+    auto v = VisitorPreCompilation(this, unit->id(), unit->path());
+    for ( auto i : v.walk(unit->module()) )
         v.dispatch(i);
 
     for ( const auto& e : v.enums ) {
+        if ( e.id.namespace_() == ID("hilti") || e.id.namespace_() == ID("spicy_rt") )
+            continue;
+
         ZEEK_DEBUG(hilti::util::fmt("  Got public enum type '%s'", e.id));
         hookNewEnumType(e);
         _enums.push_back(e);
     }
 }
 
-void Driver::hookNewASTPostCompilation(const ID& id, const std::optional<hilti::rt::filesystem::path>& path,
-                                       const hilti::Node& root) {
-    if ( ! path )
+void Driver::hookNewASTPostCompilation(std::shared_ptr<hilti::Unit> unit) {
+    if ( unit->extension() != ".spicy" )
+        return;
+
+    if ( unit->id() == ID("spicy_rt") || unit->id() == ID("hilti") || unit->id() == ID("zeek_rt") ||
+         unit->id() == ID("zeek") )
+        return;
+
+    if ( unit->path().empty() )
         // Ignore modules constructed in memory.
         return;
 
-    auto v = VisitorPostCompilation(this, id, *path);
-    for ( auto i : v.walk(root) )
+    auto v = VisitorPostCompilation(this, unit->id(), unit->path());
+    for ( auto i : v.walk(unit->module()) )
         v.dispatch(i);
 
     for ( auto&& u : v.units ) {
@@ -368,11 +377,10 @@ void Driver::hookNewASTPostCompilation(const ID& id, const std::optional<hilti::
         _units[u.id] = std::move(u);
     }
 
-    if ( path.has_value() )
-        _glue->addSpicyModule(id, *path);
+    _glue->addSpicyModule(unit->id(), unit->path());
 }
 
-hilti::Result<hilti::Nothing> Driver::hookCompilationFinished() {
+hilti::Result<hilti::Nothing> Driver::hookCompilationFinished(const hilti::Plugin& plugin) {
     if ( ! _need_glue )
         return hilti::Nothing();
 

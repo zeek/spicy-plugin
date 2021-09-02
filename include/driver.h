@@ -37,7 +37,7 @@ protected:
     void hookAddInput(const hilti::rt::filesystem::path& path) override;
 
     /** Overridden from Spicy driver class. */
-    void hookAddInput(const hilti::Module& m, const hilti::rt::filesystem::path& path) override;
+    void hookAddInput(std::shared_ptr<hilti::Unit> unit) override;
 
     /** Overridden from Spicy driver class. */
     void hookNewEnumType(const spicy::zeek::EnumInfo& e) override;

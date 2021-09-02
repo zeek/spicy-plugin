@@ -734,7 +734,10 @@ glue::Event GlueCompiler::parseEvent(const std::string& chunk) {
 bool GlueCompiler::compile() {
     auto init_module = hilti::Module(hilti::ID("spicy_init"));
 
-    auto import_ = hilti::declaration::ImportedModule(ID("zeek_rt"), std::string(".hlt"));
+    auto import_ = hilti::builder::import(ID("zeek_rt"), ".hlt");
+    init_module.add(std::move(import_));
+
+    import_ = hilti::builder::import(ID("hilti"), ".hlt");
     init_module.add(std::move(import_));
 
     auto preinit_body = hilti::builder::Builder(_driver->context());
@@ -850,7 +853,7 @@ bool GlueCompiler::compile() {
     // registering twice isn't a problem.)
     for ( auto&& e : _driver->publicEnumTypes() ) {
         auto labels = hilti::rt::transform(e.type.as<type::Enum>().labels(), [](const auto& l) {
-            return builder::tuple({builder::string(l.id()), builder::integer(l.value())});
+            return builder::tuple({builder::string(l.get().id()), builder::integer(l.get().value())});
         });
 
         preinit_body.addCall("zeek_rt::register_enum_type", {builder::string(e.id.namespace_()),
@@ -860,7 +863,7 @@ bool GlueCompiler::compile() {
 
     for ( auto&& [id, m] : _spicy_modules ) {
         // Import runtime module.
-        auto import_ = hilti::declaration::ImportedModule(ID("zeek_rt"), std::string(".hlt"));
+        auto import_ = hilti::builder::import(ID("zeek_rt"), ".hlt");
         m->spicy_module->add(std::move(import_));
 
         // Create a vector of unique parent paths from all EVTs files going into this module.
@@ -873,17 +876,19 @@ bool GlueCompiler::compile() {
             m->spicy_module->add(std::move(import_));
         }
 
-        _driver->addInput(std::move(*m->spicy_module));
+        auto unit = hilti::Unit::fromModule(_driver->context(), std::move(*m->spicy_module), ".spicy");
+        _driver->addInput(std::move(unit));
     }
 
     if ( ! preinit_body.empty() ) {
         auto preinit_function =
-            hilti::builder::function("zeek_preinit", type::Void(), {}, preinit_body.block(),
+            hilti::builder::function("zeek_preinit", type::void_, {}, preinit_body.block(),
                                      hilti::type::function::Flavor::Standard, declaration::Linkage::PreInit);
         init_module.add(std::move(preinit_function));
     }
 
-    _driver->addInput(std::move(init_module));
+    auto unit = hilti::Unit::fromModule(_driver->context(), std::move(init_module), ".hlt");
+    _driver->addInput(std::move(unit));
     return true;
 }
 
@@ -1089,8 +1094,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     auto attrs = hilti::AttributeSet({hilti::Attribute("&priority", builder::integer(ev->priority))});
     auto unit_hook = spicy::Hook({}, body.block(), spicy::Engine::All, {}, meta);
-    auto hook = spicy::type::unit::item::UnitHook(ev->hook.local(), std::move(unit_hook), meta);
-    auto hook_decl = spicy::declaration::UnitHook(ev->hook, builder::typeByID(ev->unit), std::move(hook), meta);
+    auto hook_decl = spicy::declaration::UnitHook(ev->hook, std::move(unit_hook), meta);
     ev->spicy_module->spicy_module->add(Declaration(hook_decl));
 
     return true;

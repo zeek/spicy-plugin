@@ -74,7 +74,7 @@ void plugin::Zeek_Spicy::Driver::hookAddInput(const hilti::rt::filesystem::path&
     _initialize();
 }
 
-void plugin::Zeek_Spicy::Driver::hookAddInput(const hilti::Module& m, const hilti::rt::filesystem::path& path) {
+void plugin::Zeek_Spicy::Driver::hookAddInput(std::shared_ptr<hilti::Unit> unit) {
     // Need to initialized before 1st input gets added, as the options need
     // to be in place.
     _initialize();
@@ -139,7 +139,7 @@ void plugin::Zeek_Spicy::Driver::hookNewEnumType(const EnumInfo& e) {
     // parsed. (When running offline, the driver adds registration to the
     // Spicy code's initialization code.)
     auto labels = hilti::rt::transform(e.type.as<hilti::type::Enum>().labels(), [](const auto& l) {
-        return std::make_tuple(l.id().str(), hilti::rt::integer::safe<int64_t>(l.value()));
+        return std::make_tuple(l.get().id().str(), hilti::rt::integer::safe<int64_t>(l.get().value()));
     });
 
     hilti::rt::Vector<decltype(labels)::value_type> xs;

@@ -138,15 +138,13 @@ protected:
     virtual void hookNewEnumType(const EnumInfo& e){};
 
     /** Overidden from HILTI driver. */
-    void hookNewASTPreCompilation(const hilti::ID& id, const std::optional<hilti::rt::filesystem::path>& path,
-                                  const hilti::Node& root) override;
+    void hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) override;
 
     /** Overidden from HILTI driver. */
-    void hookNewASTPostCompilation(const hilti::ID& id, const std::optional<hilti::rt::filesystem::path>& path,
-                                   const hilti::Node& root) override;
+    void hookNewASTPostCompilation(std::shared_ptr<hilti::Unit> unit) override;
 
     /** Overidden from HILTI driver. */
-    hilti::Result<hilti::Nothing> hookCompilationFinished() override;
+    hilti::Result<hilti::Nothing> hookCompilationFinished(const hilti::Plugin& plugin) override;
 
     /** Overidden from HILTI driver. */
     void hookInitRuntime() override;
