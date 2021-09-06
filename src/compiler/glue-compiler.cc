@@ -346,14 +346,9 @@ void GlueCompiler::preprocessEvtFile(hilti::rt::filesystem::path& path, std::ist
     hilti::util::SourceCodePreprocessor pp({{"ZEEK_VERSION", _zeek_version}});
     int lineno = 0;
 
-    while ( true ) {
+    std::string line;
+    while ( std::getline(in, line) ) {
         lineno++;
-
-        std::string line;
-        std::getline(in, line);
-
-        if ( in.eof() )
-            break;
 
         auto trimmed = hilti::util::trim(line);
         _locations.emplace_back(path, lineno);
