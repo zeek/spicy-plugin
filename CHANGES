@@ -1,3 +1,7 @@
+1.2.1 | 2021-09-07 09:11:12 +0200
+
+  * GH-56: Fix parsing of evt files not ending in newlines. (Benjamin Bannier, Corelight)
+
 1.2.0 | 2021-07-30 16:07:33 +0200
 
   * Bump minimum Spicy version to 1.2.0. (Benjamin Bannier, Corelight)
