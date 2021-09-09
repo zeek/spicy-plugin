@@ -245,6 +245,9 @@ void file_end();
 /** Specifies the next-layer packet analyzer. */
 void forward_packet(uint32_t identifier);
 
+/** Gets the network time from Zeek. */
+hilti::rt::Time network_time();
+
 // Forward-declare to_val() functions.
 template<typename T, typename std::enable_if_t<hilti::rt::is_tuple<T>::value>* = nullptr>
 ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);

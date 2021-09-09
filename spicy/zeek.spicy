@@ -50,3 +50,6 @@ public function file_end() : void &cxxname="spicy::zeek::rt::file_end";
 ## Inside a packet analyzer, forwards what data remains after parsing the top-level unit
 ## on to another analyzer. The index specifies the target, per the current dispatcher table.
 public function forward_packet(identifier: uint32) : void &cxxname="spicy::zeek::rt::forward_packet";
+
+# Gets the network time from Zeek.
+public function network_time() : time &cxxname="spicy::zeek::rt::network_time";

@@ -281,6 +281,8 @@ inline auto val_mgr_Int(int64_t i) { return ::zeek::val_mgr->Int(i); }
 inline auto val_mgr_Port(uint32_t p, TransportProto t) { return ::zeek::val_mgr->Port(p, t); }
 inline auto TypeList_GetTypesSize(const std::vector<::zeek::TypePtr>& t) { return static_cast<uint64_t>(t.size()); }
 
+inline auto networkTime() { return ::zeek::run_state::network_time; }
+
 } // namespace spicy::zeek::compat
 #endif
 
@@ -366,5 +368,7 @@ inline auto val_mgr_Int(int64_t i) { return ::val_mgr->GetInt(i); }
 inline auto val_mgr_Port(uint32_t p, TransportProto t) { return ::val_mgr->GetPort(p, t); }
 inline auto TypeList_GetTypesSize(const ::type_list* t) { return static_cast<uint64_t>(t->length()); }
 
+
+inline auto networkTime() { return network_time; }
 } // namespace spicy::zeek::compat
 #endif
