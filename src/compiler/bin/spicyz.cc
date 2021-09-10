@@ -18,6 +18,7 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"compiler-debug", required_argument, nullptr, 'D'},
                                               {"debug", no_argument, nullptr, 'd'},
                                               {"debug-addl", required_argument, nullptr, 'X'},
+                                              {"disable-optimizations", no_argument, nullptr, 'g'},
                                               {"dump-code", no_argument, nullptr, 'C'},
                                               {"help", no_argument, nullptr, 'h'},
                                               {"keep-tmps", no_argument, nullptr, 'T'},
@@ -31,6 +32,7 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"print-zeek-config", no_argument, nullptr, 'z'},
                                               {"report-times", required_argument, nullptr, 'R'},
                                               {"print-scripts-path", no_argument, nullptr, 'S'},
+                                              {"skip-validation", no_argument, nullptr, '!'},
                                               {"version", no_argument, nullptr, 'v'},
                                               {"version-number", no_argument, nullptr, 'V'},
                                               {nullptr, 0, nullptr, 0}};
@@ -40,6 +42,7 @@ static void usage() {
                  "\n"
                  "  -c | --output-c++ <prefix>      Output generated C++ code.\n"
                  "  -d | --debug                    Include debug instrumentation into generated code.\n"
+                 "  -g | --disable-optimizations    Disable HILTI-side optimizations of the generated code.\n"
                  "  -o | --output-to <path>         Path for saving output.\n"
                  "  -v | --version                  Print version information.\n"
                  "  -z | --print-zeek-config        Print path to zeek-config.\n"
@@ -57,6 +60,7 @@ static void usage() {
                  "  -R | --report-times             Report a break-down of compiler's execution time.\n"
                  "  -S | --print-scripts-path       Print the path to Zeek scripts accompanying Spicy modules.\n"
                  "  -T | --keep-tmps                Do not delete any temporary files created.\n"
+                 "       --skip-validation          Don't validate ASTs (for debugging only).\n"
                  "  -X | --debug-addl <addl>        Implies -d and adds selected additional instrumentation."
                  "(comma-separated; see 'help' for list).\n"
                  "\n"
@@ -91,7 +95,7 @@ static auto pluginPath() {
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:CdX:D:L:Mo:OpPRSTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:CdgX:D:L:Mo:OpPRSTvhz", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -114,6 +118,11 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
 
             case 'd': {
                 compiler_options->debug = true;
+                break;
+            }
+
+            case 'g': {
+                driver_options->global_optimizations = false;
                 break;
             }
 
@@ -184,6 +193,8 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'z': std::cout << spicy::zeek::configuration::ZeekConfig << std::endl; return Nothing();
 
             case 'h': usage(); return Nothing();
+
+            case '!': compiler_options->skip_validation = true; break;
 
             default: usage(); return hilti::result::Error("could not parse options");
         }

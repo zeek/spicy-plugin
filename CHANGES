@@ -1,3 +1,13 @@
+
+1.2.3-10 | 2021-09-21 12:13:54 +0200
+
+  * Add two options to spicyz. (Robin Sommer, Corelight)
+
+        -g | --disable-optimizations    Disable HILTI-side optimizations of the generated code.
+             --skip-validation          Don't validate ASTs (for debugging only).
+
+  * Update to new Spicy-side AST API. (Robin Sommer, Corelight)
+
 1.2.3-8 | 2021-09-20 10:45:16 +0200
 
   * Share ccache cache in CI where possible. (Benjamin Bannier, Corelight)

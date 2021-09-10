@@ -16,10 +16,10 @@
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
 
+#include <hilti/autogen/config.h>
+
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/file-analyzer.h>
-
-#include "hilti/autogen/config.h"
 #ifdef HAVE_PACKET_ANALYZERS
 #include <zeek-spicy/packet-analyzer.h>
 #endif
