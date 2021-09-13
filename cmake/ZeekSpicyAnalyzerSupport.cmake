@@ -56,16 +56,16 @@ function(spicy_add_analyzer)
 
     if ( SPICY_MODULE_OUTPUT_DIR_INSTALL )
         install(FILES ${OUTPUT} DESTINATION "${SPICY_MODULE_OUTPUT_DIR_INSTALL}")
+    endif()
 
-        if ( DEFINED SPICY_ANALYZER_SCRIPTS )
-            if ( NOT DEFINED SPICY_ANALYZER_PACKAGE_NAME )
-                message(FATAL_ERROR "SCRIPTS argument requires PACKAGE_NAME")
-            endif()
-            install(
-                FILES ${SPICY_ANALYZER_SCRIPTS}
-                DESTINATION "${SPICY_SCRIPTS_OUTPUT_DIR_INSTALL}/${SPICY_ANALYZER_PACKAGE_NAME}/${NAME}")
+    if ( SPICY_SCRIPTS_OUTPUT_DIR_INSTALL AND DEFINED SPICY_ANALYZER_SCRIPTS )
+        if ( NOT DEFINED SPICY_ANALYZER_PACKAGE_NAME )
+            message(FATAL_ERROR "SCRIPTS argument requires PACKAGE_NAME")
         endif()
-    endif ()
+        install(
+            FILES ${SPICY_ANALYZER_SCRIPTS}
+            DESTINATION "${SPICY_SCRIPTS_OUTPUT_DIR_INSTALL}/${SPICY_ANALYZER_PACKAGE_NAME}/${NAME_LOWER}")
+    endif()
 
     get_property(tmp GLOBAL PROPERTY __spicy_included_analyzers)
     list(APPEND tmp "${SPICY_ANALYZER_NAME}")
