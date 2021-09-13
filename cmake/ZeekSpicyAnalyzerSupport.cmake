@@ -6,32 +6,69 @@
 
 include(GNUInstallDirs)
 
-# Add target to build an analyzer. Arguments are the name of the analyzer and a
-# variable number of source files for `spicyz`.
-function(spicy_add_analyzer name)
-    set(sources "${ARGN}")
-    string(TOLOWER "${name}" name_lower)
-    set(output "${SPICY_MODULE_OUTPUT_DIR_BUILD}/${name_lower}.hlto")
-    set(output_install "${SPICY_MODULE_OUTPUT_DIR_INSTALL}/${name_lower}.hlto")
-    set(deps "spicyz")
+# Add target to build an analyzer.
+#
+# Usage:
+#
+#     spicy_add_analyzer(
+#         NAME <analyzer_name>
+#         [SOURCES <source files for spicyz>...]
+#         [PACKAGE_NAME <package_name>]
+#         [SCRIPTS <additional script files to install>...]
+#     )
+function(spicy_add_analyzer)
+    set(options)
+    set(oneValueArgs NAME PACKAGE_NAME)
+    set(multiValueArgs SOURCES SCRIPTS)
+
+    cmake_parse_arguments(PARSE_ARGV 0 SPICY_ANALYZER "${options}" "${oneValueArgs}" "${multiValueArgs}")
+
+    # We also support the legacy behavior where the first arg is
+    # the analyzer NAME and all remaining arguments are SOURCES.
+    if ( SPICY_ANALYZER_UNPARSED_ARGUMENTS )
+        if (SPICY_ANALYZER_NAME OR SPICY_ANALYZER_SOURCES OR SPICY_ANALYZER_SCRIPTS)
+            message(FATAL_ERROR "named an unnamed arguments cannot be mixed")
+        endif()
+
+        list(GET ARGN 0 SPICY_ANALYZER_NAME)
+        list(POP_FRONT ARGN)
+
+        set(SPICY_ANALYZER_SOURCES ${ARGN})
+    endif()
+
+    if ( NOT DEFINED SPICY_ANALYZER_NAME )
+        message(FATAL_ERROR "NAME is required")
+    endif()
+
+    string(TOLOWER "${SPICY_ANALYZER_NAME}" NAME_LOWER)
+    set(OUTPUT "${SPICY_MODULE_OUTPUT_DIR_BUILD}/${NAME_LOWER}.hlto")
 
     add_custom_command(
-        OUTPUT ${output}
-        DEPENDS ${sources} ${deps}
-        COMMENT "Compiling ${name} analyzer"
+        OUTPUT ${OUTPUT}
+        DEPENDS ${SPICY_ANALYZER_SOURCES} spicyz
+        COMMENT "Compiling ${SPICY_ANALYZER_NAME} analyzer"
         COMMAND mkdir -p ${SPICY_MODULE_OUTPUT_DIR_BUILD}
-        COMMAND spicyz -o ${output} ${SPICYZ_FLAGS} ${sources}
+        COMMAND spicyz -o ${OUTPUT} ${SPICYZ_FLAGS} ${SPICY_ANALYZER_SOURCES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
-    add_custom_target(${name} ALL DEPENDS ${output})
+    add_custom_target(${SPICY_ANALYZER_NAME} ALL DEPENDS ${OUTPUT})
 
     if ( SPICY_MODULE_OUTPUT_DIR_INSTALL )
-        install(FILES ${output} DESTINATION "${SPICY_MODULE_OUTPUT_DIR_INSTALL}")
+        install(FILES ${OUTPUT} DESTINATION "${SPICY_MODULE_OUTPUT_DIR_INSTALL}")
+
+        if ( DEFINED SPICY_ANALYZER_SCRIPTS )
+            if ( NOT DEFINED SPICY_ANALYZER_PACKAGE_NAME )
+                message(FATAL_ERROR "SCRIPTS argument requires PACKAGE_NAME")
+            endif()
+            install(
+                FILES ${SPICY_ANALYZER_SCRIPTS}
+                DESTINATION "${SPICY_SCRIPTS_OUTPUT_DIR_INSTALL}/${SPICY_ANALYZER_PACKAGE_NAME}/${NAME}")
+        endif()
     endif ()
 
     get_property(tmp GLOBAL PROPERTY __spicy_included_analyzers)
-    list(APPEND tmp "${name}")
+    list(APPEND tmp "${SPICY_ANALYZER_NAME}")
     set_property(GLOBAL PROPERTY __spicy_included_analyzers "${tmp}")
 endfunction()
 
