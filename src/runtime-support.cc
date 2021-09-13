@@ -348,3 +348,7 @@ void rt::forward_packet(uint32_t identifier) {
     throw Unsupported("packet analyzer functionality requires Zeek >= 4.0");
 #endif
 }
+
+hilti::rt::Time rt::network_time() {
+    return hilti::rt::Time(zeek::compat::networkTime(), hilti::rt::Time::SecondTag());
+}

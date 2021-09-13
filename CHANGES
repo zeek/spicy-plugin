@@ -1,3 +1,10 @@
+1.2.2 | 2021-09-13 09:26:30 +0200
+
+  * GH-53: Expose Zeek's `network_time` in Spicy. (Benjamin Bannier, Corelight)
+
+    This adds a Spicy function `zeek::network_time` which returns Zeek's
+    current `network_time` as a Spicy `time`.
+
 1.2.1-2 | 2021-09-13 09:25:21 +0200
 
   * GH-60: Extend `spicy_add_analyzer` to allow installing additional Zeek scripts. (Benjamin Bannier, Corelight)
