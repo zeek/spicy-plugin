@@ -6,10 +6,6 @@ environment:
     IMAGE_MACOS_BIG_SUR:  big-sur-base
     IMAGE_MACOS_CATALINA: catalina-base
 
-    # Branch of Zeek to use for the static plugin build.
-    # TODO: Revert to 'main' once Zeek's #1676 is merged.
-    ZEEK_STATIC_BRANCH: topic/robin/fix-plugin-port-registration
-
 zkg_ubuntu_task:
   timeout_in: 120m
   container:
@@ -87,7 +83,7 @@ static_zeek_master_ubuntu_task:
     - rm spicy-dev.deb
 
   clone_zeek_script:
-    - git clone --recursive --branch $ZEEK_STATIC_BRANCH https://github.com/zeek/zeek
+    - git clone --recursive https://github.com/zeek/zeek
 
   build_script:
     - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python && cd build && ninja -j4)
