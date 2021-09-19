@@ -39,6 +39,13 @@ RUN apt-get update \
  && rm -rf /tmp/zeek-packages \
  # Spicy build and test dependencies.
  && apt-get install -y --no-install-recommends git cmake ninja-build ccache bison flex g++ libfl-dev zlib1g-dev jq locales-all make \
+ # Install clang-format.
+ && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' >> /etc/apt/sources.list.d/llvm12.list \
+ && echo 'deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' >> /etc/apt/sources.list.d/llvm12.list \
+ && curl https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends clang-format-12 \
+ && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-12 20 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  # Configure zkg \
