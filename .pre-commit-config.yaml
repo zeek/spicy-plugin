@@ -7,7 +7,7 @@ repos:
     name: Run clang-format on code
     entry: ./ci/run-clang-format
     args: ["--pre-commit-hook"]
-    files: ^(compiler|plugin)/.*\.(c|h|C|H|cpp|hpp|cc|hh|c\+\+|h\+\+|cxx|hxx)$
+    types: ["c++"]
     language: script
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
