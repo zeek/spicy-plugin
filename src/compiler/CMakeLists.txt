@@ -18,4 +18,3 @@ spicy_link_executable(spicyz)
 target_compile_options(spicyz PRIVATE "-Wall")
 target_link_libraries(spicyz PRIVATE zeek-compiler)
 install(TARGETS spicyz DESTINATION ${CMAKE_INSTALL_BINDIR})
-
