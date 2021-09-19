@@ -48,6 +48,8 @@ RUN apt-get update \
  && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-12 20 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
+ # Pre-commit.
+ && pip3 install --no-cache-dir "pre-commit==2.15.0" \
  # Configure zkg \
  && zkg autoconfig \
  && echo "@load packages" >>"$(zeek-config --site_dir)"/local.zeek
