@@ -26,30 +26,31 @@
 
 ### Functions
 
-macro(configure)
+macro (configure)
     ### Find spicy-config
-    if ( NOT SPICY_CONFIG )
+    if (NOT SPICY_CONFIG)
         set(SPICY_CONFIG "$ENV{SPICY_CONFIG}")
     endif ()
 
-    if ( SPICY_CONFIG )
-        if ( EXISTS "${SPICY_CONFIG}" )
+    if (SPICY_CONFIG)
+        if (EXISTS "${SPICY_CONFIG}")
             set(spicy_config "${SPICY_CONFIG}")
         else ()
             message(STATUS "'${SPICY_CONFIG}' does not exist")
         endif ()
     else ()
-        find_program(spicy_config spicy-config
+        find_program(
+            spicy_config spicy-config
             HINTS
                 ${SPICY_ROOT_DIR}/bin
                 ${SPICY_ROOT_DIR}/build/bin
                 $ENV{SPICY_ROOT_DIR}/bin
                 $ENV{SPICY_ROOT_DIR}/build/bin
-                ${PROJECT_SOURCE_DIR}/../../build/bin   # Try build directory of Spicy distribution we may be part of
-            )
+                ${PROJECT_SOURCE_DIR}/../../build/bin # Try build directory of Spicy distribution we may be part of
+        )
     endif ()
 
-    if ( NOT spicy_config )
+    if (NOT spicy_config)
         message(STATUS "cannot determine location of Spicy installation")
         set(HAVE_SPICY no)
     else ()
@@ -81,62 +82,62 @@ macro(configure)
 
         # Note: This should probably move over into Spicy proper, and then also
         # add imported targets for the libraries.
-        find_library(SPICY_LIBRARY NAMES spicy HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
-        find_library(HILTI_LIBRARY NAMES hilti HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+        find_library(SPICY_LIBRARY NAMES spicy HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}"
+                                                     "${SPICY_LIBRARY_DIRS_RUNTIME}")
+        find_library(HILTI_LIBRARY NAMES hilti HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}"
+                                                     "${SPICY_LIBRARY_DIRS_RUNTIME}")
     endif ()
 endmacro ()
 
-function(spicy_require_version version)
+function (spicy_require_version version)
     string(REGEX MATCH "([0-9]*)\.([0-9]*)\.([0-9]*).*" _ ${version})
     math(EXPR version_number "${CMAKE_MATCH_1} * 10000 + ${CMAKE_MATCH_2} * 100 + ${CMAKE_MATCH_3}")
-    if ( "${SPICY_VERSION_NUMBER}" LESS "${version_number}" )
-        message(FATAL_ERROR "Package requires at least Spicy version ${version}, have ${SPICY_VERSION}")
+    if ("${SPICY_VERSION_NUMBER}" LESS "${version_number}")
+        message(
+            FATAL_ERROR "Package requires at least Spicy version ${version}, have ${SPICY_VERSION}")
     endif ()
-endfunction()
-
-function(spicy_include_directories target)
-    target_include_directories(${target} "${ARGN}" ${SPICY_INCLUDE_DIRS_TOOLCHAIN} ${SPICY_INCLUDE_DIRS_RUNTIME})
 endfunction ()
 
-function(spicy_link_libraries lib)
-    target_link_directories(${lib} PRIVATE ${SPICY_LIBRARY_DIRS_TOOLCHAIN} ${SPICY_LIBRARY_DIRS_RUNTIME})
+function (spicy_include_directories target)
+    target_include_directories(${target} "${ARGN}" ${SPICY_INCLUDE_DIRS_TOOLCHAIN}
+                               ${SPICY_INCLUDE_DIRS_RUNTIME})
+endfunction ()
 
-    if ( SPICY_HAVE_TOOLCHAIN )
+function (spicy_link_libraries lib)
+    target_link_directories(${lib} PRIVATE ${SPICY_LIBRARY_DIRS_TOOLCHAIN}
+                            ${SPICY_LIBRARY_DIRS_RUNTIME})
+
+    if (SPICY_HAVE_TOOLCHAIN)
         target_link_libraries(${lib} "${ARGN}" hilti spicy)
     endif ()
 endfunction ()
 
-function(spicy_link_executable exe)
+function (spicy_link_executable exe)
     spicy_link_libraries(${exe} PRIVATE)
     set_property(TARGET ${exe} PROPERTY ENABLE_EXPORTS true)
 endfunction ()
 
-function(run_spicy_config output)
-    execute_process(COMMAND "${spicy_config}" ${ARGN}
-        OUTPUT_VARIABLE output_
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
+function (run_spicy_config output)
+    execute_process(COMMAND "${spicy_config}" ${ARGN} OUTPUT_VARIABLE output_
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
     string(STRIP "${output_}" output_)
     set(${output} "${output_}" PARENT_SCOPE)
 endfunction ()
 
-function(spicy_print_summary)
-    message(
-        "\n====================|  Spicy Installation Summary  |===================="
-        "\n"
-        "\nFound Spicy:           ${HAVE_SPICY}"
-        )
+function (spicy_print_summary)
+    message("\n====================|  Spicy Installation Summary  |====================" "\n"
+            "\nFound Spicy:           ${HAVE_SPICY}")
 
-    if ( HAVE_SPICY )
+    if (HAVE_SPICY)
         message(
             "\nVersion:               ${SPICY_VERSION} (${SPICY_VERSION_NUMBER})"
             "\nPrefix:                ${SPICY_PREFIX}"
             "\nBuild type:            ${SPICY_BUILD_MODE}"
             "\nHave toolchain:        ${SPICY_HAVE_TOOLCHAIN}"
-            "\nSpicy compiler:        ${SPICYC}"
-            )
+            "\nSpicy compiler:        ${SPICYC}")
     else ()
-        message("\n    Make sure spicy-config is in your PATH, or set SPICY_CONFIG to its location.")
+        message(
+            "\n    Make sure spicy-config is in your PATH, or set SPICY_CONFIG to its location.")
     endif ()
 
     message("\n========================================================================\n")
@@ -144,6 +145,6 @@ endfunction ()
 
 ### Main
 
-configure ()
+configure()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Spicy DEFAULT_MSG HAVE_SPICY SPICY_CONFIG)

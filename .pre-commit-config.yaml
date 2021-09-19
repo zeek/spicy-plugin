@@ -32,4 +32,9 @@ repos:
   hooks:
   - id: gitlint
 
+- repo: https://github.com/cheshirekow/cmake-format-precommit
+  rev: v0.6.13
+  hooks:
+  - id: cmake-format
+
 exclude: 3rdparty/|/Baseline/|(\.svg$)|(\.dat$)
