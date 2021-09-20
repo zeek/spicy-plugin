@@ -78,6 +78,7 @@ macro (configure_standard_build)
 
         # Copied from Zeek to generate numeric version number.
         string(REGEX REPLACE "[.-]" " " version_numbers "${ZEEK_VERSION}")
+        # cmake-lint: disable=E1120
         separate_arguments(version_numbers)
         list(GET version_numbers 0 VERSION_MAJOR)
         list(GET version_numbers 1 VERSION_MINOR)
