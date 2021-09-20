@@ -52,7 +52,8 @@ function (spicy_add_analyzer)
         COMMAND spicyz -o ${OUTPUT} ${SPICYZ_FLAGS} ${SPICY_ANALYZER_SOURCES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    add_custom_target(${SPICY_ANALYZER_NAME} ALL DEPENDS ${OUTPUT})
+    add_custom_target(${SPICY_ANALYZER_NAME} ALL DEPENDS ${OUTPUT}
+                      COMMENT "Preparing dependencies of ${SPICY_ANALYZER_NAME}")
 
     if (SPICY_MODULE_OUTPUT_DIR_INSTALL)
         install(FILES ${OUTPUT} DESTINATION "${SPICY_MODULE_OUTPUT_DIR_INSTALL}")

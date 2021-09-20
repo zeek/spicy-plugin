@@ -205,6 +205,7 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
 
     add_custom_target(
         copy-zeek-spicy-dist-files ALL
+        COMMENT "Copying distribution files"
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_HEADERS} ${PROJECT_BINARY_DIR}/include/zeek-spicy/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_CMAKE} ${PROJECT_BINARY_DIR}/cmake/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_SPICY} ${PROJECT_BINARY_DIR}/spicy/
