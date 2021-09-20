@@ -254,7 +254,7 @@ private:
     void autoDiscoverModules();
 
     // Recursively search pre-compiled *.hlto in colon-separated paths.
-    void searchModules(std::string paths);
+    void searchModules(const std::string& paths);
 
     // Return a Zeek location object for the given file name that will stay valid.
     ::zeek::detail::Location makeLocation(const std::string& fname);

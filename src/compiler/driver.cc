@@ -98,7 +98,7 @@ Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int z
             hilti::util::fmt("invalid plugin base directory %s: %s", plugin_path.native(), e.what()));
     }
 
-    for ( auto i : hilti::util::split(spicy::zeek::configuration::CxxZeekIncludeDirectories, ":") ) {
+    for ( const auto& i : hilti::util::split(spicy::zeek::configuration::CxxZeekIncludeDirectories, ":") ) {
         if ( i.size() )
             options.cxx_include_paths.emplace_back(i);
     }

@@ -19,7 +19,7 @@ void plugin::Zeek_Spicy::Driver::InitPreScript() {
 }
 
 void plugin::Zeek_Spicy::Driver::InitPostScript() {
-    for ( auto p : driverOptions().inputs ) {
+    for ( const auto& p : driverOptions().inputs ) {
         ZEEK_DEBUG(hilti::rt::fmt("Loading input file %s", p));
         if ( auto rc = loadFile(p); ! rc )
             reporter::fatalError(hilti::rt::fmt("error loading %s: %s", p, rc.error().description()));
@@ -146,5 +146,5 @@ void plugin::Zeek_Spicy::Driver::hookNewEnumType(const EnumInfo& e) {
     xs.reserve(labels.size());
     std::copy(std::move_iterator(labels.begin()), std::move_iterator(labels.end()), std::back_inserter(xs));
 
-    ::SpicyPlugin.registerEnumType(e.id.namespace_(), e.id.local(), std::move(xs));
+    ::SpicyPlugin.registerEnumType(e.id.namespace_(), e.id.local(), xs);
 }

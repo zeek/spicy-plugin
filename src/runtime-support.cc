@@ -63,7 +63,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
                            location);
 
     ::zeek::Args vl = zeek::compat::ZeekArgs_New();
-    for ( auto v : args ) {
+    for ( const auto& v : args ) {
         if ( v )
             zeek::compat::ZeekArgs_Append(vl, v);
         else

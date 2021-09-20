@@ -286,7 +286,7 @@ hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* 
         char cur;
         in.get(cur);
         if ( in.eof() ) {
-            chunk = hilti::util::trim(std::move(chunk));
+            chunk = hilti::util::trim(chunk);
             if ( chunk.empty() )
                 // Legitimate end of data.
                 return std::string();
@@ -310,7 +310,7 @@ hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* 
 
                 if ( cur == ';' ) {
                     // End of block found.
-                    chunk = hilti::util::trim(std::move(chunk));
+                    chunk = hilti::util::trim(chunk);
                     if ( chunk.size() )
                         return chunk + ';';
                     else
@@ -1047,7 +1047,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
         auto fmt_str = hilti::util::fmt("-> event %%s(%s)", hilti::util::join(fmt_ctrls, ", "));
         auto msg = builder::modulo(builder::string(fmt_str), builder::tuple(std::move(fmt_args)));
         auto call = builder::call("zeek_rt::debug", {std::move(msg)});
-        body.addExpression(std::move(call));
+        body.addExpression(call);
     }
 
     // Nothing to do if there's not handler defined.

@@ -630,11 +630,11 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
             ::spicy::zeek::compat::event_mgr_Enqueue(handler, vals);
         };
 
-        for ( auto mt : p.mime_types )
+        for ( const auto& mt : p.mime_types )
             register_analyzer_for_mime_type(tag, mt);
 
         if ( p.parser ) {
-            for ( auto mt : p.parser->mime_types )
+            for ( const auto& mt : p.parser->mime_types )
                 register_analyzer_for_mime_type(tag, mt);
         }
     }
@@ -701,7 +701,7 @@ int plugin::Zeek_Spicy::Plugin::HookLoadFile(const LoadType type, const std::str
     return -1;
 }
 
-void plugin::Zeek_Spicy::Plugin::searchModules(std::string paths) {
+void plugin::Zeek_Spicy::Plugin::searchModules(const std::string& paths) {
     for ( const auto& dir : hilti::rt::split(paths, ":") ) {
         auto trimmed_dir = hilti::rt::trim(dir);
         if ( trimmed_dir.empty() )

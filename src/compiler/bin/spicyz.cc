@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
     driver.setCompilerOptions(std::move(compiler_options));
     driver.initialize();
 
-    for ( auto p : driver.driverOptions().inputs ) {
+    for ( const auto& p : driver.driverOptions().inputs ) {
         if ( auto rc = driver.loadFile(p); ! rc ) {
             hilti::logger().error(rc.error().description());
             return 1;
