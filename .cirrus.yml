@@ -81,7 +81,7 @@ standalone_ubuntu_task:
     - rm spicy-dev.deb
 
   build_script:
-    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -G Ninja .. && ninja -j4)
+    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -G Ninja .. && ninja -j4)
 
   test_build_script:
     - ZEEK_PLUGIN_PATH=$(pwd)/build zeek -N _Zeek::Spicy
