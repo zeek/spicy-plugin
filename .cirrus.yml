@@ -83,6 +83,9 @@ standalone_ubuntu_task:
   build_script:
     - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -G Ninja .. && ninja -j4)
 
+  clang_tidy_script:
+    - (cd build && run-clang-tidy -j $(nproc) $(jq -r '.[].file | select(contains(".bif") | not)' <compile_commands.json ))
+
   test_build_script:
     - ZEEK_PLUGIN_PATH=$(pwd)/build zeek -N _Zeek::Spicy
     - make -C tests test
