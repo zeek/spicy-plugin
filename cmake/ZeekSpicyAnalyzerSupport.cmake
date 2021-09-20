@@ -93,8 +93,8 @@ function (print_analyzers)
         "\nSpicy compiler:        ${SPICYZ}"
         "\nModule directory:      ${SPICY_MODULE_OUTPUT_DIR_INSTALL}"
         "\nScripts directory:     ${SPICY_SCRIPTS_OUTPUT_DIR_INSTALL}"
-        "\nPlugin version:        ${ZEEK_SPICY_PLUGIN_VERSION} (${ZEEK_SPICY_PLUGIN_VERSION_NUMBER})"
-    )
+        "\nPlugin version:        "
+        "${ZEEK_SPICY_PLUGIN_VERSION} (${ZEEK_SPICY_PLUGIN_VERSION_NUMBER})")
 
     if (NOT SPICYZ)
         message("\n    Make sure spicyz is in your PATH, or set SPICYZ to its location.")

@@ -41,13 +41,12 @@ macro (configure)
     else ()
         find_program(
             spicy_config spicy-config
-            HINTS
-                ${SPICY_ROOT_DIR}/bin
-                ${SPICY_ROOT_DIR}/build/bin
-                $ENV{SPICY_ROOT_DIR}/bin
-                $ENV{SPICY_ROOT_DIR}/build/bin
-                ${PROJECT_SOURCE_DIR}/../../build/bin # Try build directory of Spicy distribution we may be part of
-        )
+            HINTS ${SPICY_ROOT_DIR}/bin
+                  ${SPICY_ROOT_DIR}/build/bin
+                  $ENV{SPICY_ROOT_DIR}/bin
+                  $ENV{SPICY_ROOT_DIR}/build/bin
+                  # Try build directory of Spicy distribution we may be part of.
+                  ${PROJECT_SOURCE_DIR}/../../build/bin)
     endif ()
 
     if (NOT spicy_config)

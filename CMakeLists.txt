@@ -12,11 +12,9 @@ set(ZEEK_SPICY_PLUGIN_VERSION_MAIN "${CMAKE_MATCH_1}" CACHE STRING "")
 set(ZEEK_SPICY_PLUGIN_VERSION_MAJOR "${CMAKE_MATCH_2}" CACHE STRING "")
 set(ZEEK_SPICY_PLUGIN_VERSION_MINOR "${CMAKE_MATCH_3}" CACHE STRING "")
 set(ZEEK_SPICY_PLUGIN_VERSION_PATCH "${CMAKE_MATCH_4}" CACHE STRING "")
-math(
-    EXPR
-    ZEEK_SPICY_PLUGIN_VERSION_NUMBER
-    "${ZEEK_SPICY_PLUGIN_VERSION_MAJOR} * 10000 + ${ZEEK_SPICY_PLUGIN_VERSION_MINOR} * 100 + ${ZEEK_SPICY_PLUGIN_VERSION_PATCH}"
-)
+math(EXPR ZEEK_SPICY_PLUGIN_VERSION_NUMBER "${ZEEK_SPICY_PLUGIN_VERSION_MAJOR} * 10000 \
+    + ${ZEEK_SPICY_PLUGIN_VERSION_MINOR} * 100 \
+    + ${ZEEK_SPICY_PLUGIN_VERSION_PATCH}")
 
 # Add the variable to the CMake cache so it becomes visible to other projects.
 set(ZEEK_SPICY_PLUGIN_VERSION_NUMBER "${ZEEK_SPICY_PLUGIN_VERSION_NUMBER}" CACHE STRING "")
@@ -193,7 +191,8 @@ set(AUTOGEN_H "${PROJECT_BINARY_DIR}/include/zeek-spicy/autogen")
 file(MAKE_DIRECTORY ${AUTOGEN_H})
 
 if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    # The static build doesn't put the aux files into the build directory. We create links to get the same effect.
+    # The static build doesn't put the aux files into the build directory
+    # We create links to get the same effect.
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
     file(CREATE_LINK "${PROJECT_BINARY_DIR}"
          "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/zeek-spicy" SYMBOLIC)
