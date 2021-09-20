@@ -1,0 +1,5 @@
+---
+Checks: '-clang-analyzer-cplusplus.NewDeleteLeaks,
+         -misc-unused-parameters,
+         -modernize-use-trailing-return-type,
+         '
