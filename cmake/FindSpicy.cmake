@@ -26,6 +26,7 @@
 
 ### Functions
 
+# Configure build against Spicy.
 macro (configure)
     ### Find spicy-config
     if (NOT SPICY_CONFIG)
@@ -88,6 +89,7 @@ macro (configure)
     endif ()
 endmacro ()
 
+# Checks that the Spicy version it at least the given version.
 function (spicy_require_version version)
     string(REGEX MATCH "([0-9]*)\.([0-9]*)\.([0-9]*).*" _ ${version})
     math(EXPR version_number "${CMAKE_MATCH_1} * 10000 + ${CMAKE_MATCH_2} * 100 + ${CMAKE_MATCH_3}")
@@ -97,11 +99,13 @@ function (spicy_require_version version)
     endif ()
 endfunction ()
 
+# Add Spicy include directories to given target.
 function (spicy_include_directories target)
     target_include_directories(${target} "${ARGN}" ${SPICY_INCLUDE_DIRS_TOOLCHAIN}
                                ${SPICY_INCLUDE_DIRS_RUNTIME})
 endfunction ()
 
+# Add Spicy links to given target.
 function (spicy_link_libraries lib)
     target_link_directories(${lib} PRIVATE ${SPICY_LIBRARY_DIRS_TOOLCHAIN}
                             ${SPICY_LIBRARY_DIRS_RUNTIME})
@@ -111,11 +115,13 @@ function (spicy_link_libraries lib)
     endif ()
 endfunction ()
 
+# Link given executable against Spicy.
 function (spicy_link_executable exe)
     spicy_link_libraries(${exe} PRIVATE)
     set_property(TARGET ${exe} PROPERTY ENABLE_EXPORTS true)
 endfunction ()
 
+# Runs `spicy-config` and stores its result in the given output variable.
 function (run_spicy_config output)
     execute_process(COMMAND "${spicy_config}" ${ARGN} OUTPUT_VARIABLE output_
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -123,6 +129,7 @@ function (run_spicy_config output)
     set(${output} "${output_}" PARENT_SCOPE)
 endfunction ()
 
+# Prints a summary of detected Spicy.
 function (spicy_print_summary)
     message("\n====================|  Spicy Installation Summary  |====================" "\n"
             "\nFound Spicy:           ${HAVE_SPICY}")

@@ -24,6 +24,7 @@
 
 ### Functions
 
+# Configure build against Zeek.
 macro (configure)
     if (ZEEK_PLUGIN_INTERNAL_BUILD)
         configure_static_build_inside_zeek()
@@ -38,6 +39,7 @@ macro (configure)
     endif ()
 endmacro ()
 
+# Set variables for configuration inside a standard Zeek build.
 macro (configure_standard_build)
     ### Find zeek-config
     if (NOT ZEEK_CONFIG)
@@ -92,6 +94,7 @@ macro (configure_standard_build)
     endif ()
 endmacro ()
 
+# Set variables for configuration inside a static Zeek build.
 macro (configure_static_build_inside_zeek)
     set(HAVE_ZEEK yes)
     set(ZEEK_INCLUDE_DIRS "${CMAKE_INSTALL_PREFIX}/include")
@@ -106,6 +109,7 @@ macro (configure_static_build_inside_zeek)
     set(BifCl_EXE "n/a") # don't have/need
 endmacro ()
 
+# Checks that the Zeek version it at least the given version.
 function (zeek_require_version version)
     string(REGEX MATCH "([0-9]*)\.([0-9]*)\.([0-9]*).*" _ ${version})
     math(EXPR version_number "${CMAKE_MATCH_1} * 10000 + ${CMAKE_MATCH_2} * 100 + ${CMAKE_MATCH_3}")
@@ -115,12 +119,14 @@ function (zeek_require_version version)
     endif ()
 endfunction ()
 
+# Runs `zeek-config` and stores its result in the given output variable.
 function (run_zeek_config output)
     execute_process(COMMAND "${zeek_config}" ${ARGN} OUTPUT_VARIABLE output_
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(${output} "${output_}" PARENT_SCOPE)
 endfunction ()
 
+# Prints a summary of detected Zeek.
 function (zeek_print_summary)
     message("\n====================|  Spicy-side Zeek Installation Summary  |===================="
             "\n" "\nFound Zeek:            ${HAVE_ZEEK}")

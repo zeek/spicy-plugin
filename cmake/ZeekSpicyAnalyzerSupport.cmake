@@ -84,6 +84,7 @@ function (spicy_skip_analyzer name reason)
     set_property(GLOBAL PROPERTY __spicy_skipped_analyzers "${tmp}")
 endfunction ()
 
+# Prints a summary of configured analyzers.
 function (print_analyzers)
     message("\n======================|  Spicy Analyzer Summary  |======================")
 
