@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -76,7 +77,8 @@ private:
  */
 void register_protocol_analyzer(const std::string& name, hilti::rt::Protocol proto,
                                 const hilti::rt::Vector<hilti::rt::Port>& ports, const std::string& parser_orig,
-                                const std::string& parser_resp, const std::string& replaces, const std::string& linker_scope);
+                                const std::string& parser_resp, const std::string& replaces,
+                                const std::string& linker_scope);
 
 /**
  * Registers a Spicy file analyzer with its EVT meta information with the
@@ -566,7 +568,6 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
  */
 template<typename T, typename std::enable_if_t<std::is_enum<T>::value>*>
 inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location) {
-
     if ( target->Tag() != ::zeek::TYPE_ENUM )
         throw TypeMismatch("enum", target, location);
 

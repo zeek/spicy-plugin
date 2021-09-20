@@ -1,3 +1,15 @@
+1.2.3-8 | 2021-09-20 10:45:16 +0200
+
+  * Share ccache cache in CI where possible. (Benjamin Bannier, Corelight)
+
+  * Fix issues flags by pre-commit hooks. (Benjamin Bannier, Corelight)
+
+  * Fix which files clang-format pre-commit hook runs on. (Benjamin Bannier, Corelight)
+
+  * Add Cirrus CI task exercising pre-commit. (Benjamin Bannier, Corelight)
+
+  * Add clang-format to CI container image. (Benjamin Bannier, Corelight)
+
 1.2.3-2 | 2021-09-15 11:44:18 +0200
 
   * GH-63: Revert setting a specific branch for Zeek master Cirrus CI job. (Benjamin Bannier, Corelight)

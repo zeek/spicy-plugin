@@ -52,7 +52,8 @@ public:
      */
     void registerProtocolAnalyzer(const std::string& name, hilti::rt::Protocol proto,
                                   const hilti::rt::Vector<hilti::rt::Port>& ports, const std::string& parser_orig,
-                                  const std::string& parser_resp, const std::string& replaces, const std::string& linker_scope);
+                                  const std::string& parser_resp, const std::string& replaces,
+                                  const std::string& linker_scope);
 
     /**
      * Runtime method to register a file analyzer with its Zeek-side
