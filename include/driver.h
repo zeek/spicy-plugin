@@ -4,6 +4,7 @@
 
 #include <compiler/driver.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
