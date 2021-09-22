@@ -30,22 +30,27 @@ RUN apt-get update \
     https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-core-dev_${ZEEK_VERSION}_amd64.deb \
     https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/libbroker${ZEEK_LTS}-dev_${ZEEK_VERSION}_amd64.deb \
     https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-libcaf-dev_${ZEEK_VERSION}_amd64.deb \
- && [[ ${ZEEK_VERSION} = 4.* ]] && curl -L --remote-name-all \
-    https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-btest_${ZEEK_VERSION}_amd64.deb \
-    https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-zkg_${ZEEK_VERSION}_amd64.deb \
- ||  pip3 install --no-cache-dir "btest>=0.66" zkg \
+ && if echo ${ZEEK_VERSION} | grep -q '^4\.'; then \
+        curl -L --remote-name-all \
+        https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-btest_${ZEEK_VERSION}_amd64.deb \
+        https://download.zeek.org/binary-packages/xUbuntu_20.04/amd64/zeek${ZEEK_LTS}-zkg_${ZEEK_VERSION}_amd64.deb; \
+    else \
+        pip3 install --no-cache-dir "btest>=0.66" zkg; \
+    fi \
  && dpkg -i ./*.deb \
  && cd - \
  && rm -rf /tmp/zeek-packages \
  # Spicy build and test dependencies.
  && apt-get install -y --no-install-recommends git cmake ninja-build ccache bison flex g++ libfl-dev zlib1g-dev jq locales-all make \
- # Install clang-format.
+ # Install clang-format and clang-tidy.
  && echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' >> /etc/apt/sources.list.d/llvm12.list \
  && echo 'deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main' >> /etc/apt/sources.list.d/llvm12.list \
  && curl https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
  && apt-get update \
- && apt-get install -y --no-install-recommends clang-format-12 \
+ && apt-get install -y --no-install-recommends clang-format-12 clang-tidy-12 \
  && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-12 20 \
+ && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-12 20 \
+ && update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/lib/llvm-12/share/clang/run-clang-tidy.py 20 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  # Pre-commit.

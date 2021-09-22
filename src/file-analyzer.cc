@@ -1,5 +1,7 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
+#include <utility>
+
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/file-analyzer.h>
 #include <zeek-spicy/plugin.h>
@@ -35,7 +37,7 @@ static auto create_file_state(FileAnalyzer* analyzer) {
 }
 
 FileAnalyzer::FileAnalyzer(::zeek::RecordValPtr args, ::zeek::file_analysis::File* file)
-    : ::zeek::file_analysis::Analyzer(args, file), _state(create_file_state(this)) {}
+    : ::zeek::file_analysis::Analyzer(std::move(args), file), _state(create_file_state(this)) {}
 
 FileAnalyzer::~FileAnalyzer() {}
 
@@ -134,5 +136,5 @@ void FileAnalyzer::Finish() {
 
 ::zeek::file_analysis::Analyzer* FileAnalyzer::InstantiateAnalyzer(::zeek::RecordValPtr args,
                                                                    ::zeek::file_analysis::File* file) {
-    return new FileAnalyzer(args, file);
+    return new FileAnalyzer(std::move(args), file);
 }

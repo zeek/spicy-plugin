@@ -1,3 +1,17 @@
+1.2.3-18 | 2021-09-22 12:38:28 +0200
+
+  * GH-18: Exercise clang-tidy in CI. (Benjamin Bannier, Corelight)
+
+  * Address `performance` issues flagged by `clang-tidy`. (Benjamin Bannier, Corelight)
+
+  * Add clang-tidy configuration. (Benjamin Bannier, Corelight)
+
+  * Add clang-tidy to image. (Benjamin Bannier, Corelight)
+
+  * Run compiler via ccache if possible. (Benjamin Bannier, Corelight)
+
+  * Remove Bash constructs in Dockerfile. (Benjamin Bannier, Corelight)
+
 1.2.3-11 | 2021-09-22 10:28:11 +0200
 
   * Add missing header. (Benjamin Bannier, Corelight)
