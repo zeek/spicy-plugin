@@ -168,8 +168,8 @@ zeek_plugin_end()
 if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     if (SPICY_HAVE_TOOLCHAIN)
         zeek_plugin_link_library($<TARGET_OBJECTS:zeek-compiler>)
-        set(zeekdeps ${zeekdeps} ${HILTI_LIBRARY} ${SPICY_LIBRARY} PARENT_SCOPE
-        )# this gets picked up when linking the "zeek" binary
+        # This gets picked up when linking the "zeek" binary.
+        set(zeekdeps ${zeekdeps} ${HILTI_LIBRARY} ${SPICY_LIBRARY} PARENT_SCOPE)
     endif ()
 else ()
     if (SPICY_HAVE_TOOLCHAIN)
