@@ -1,3 +1,19 @@
+1.2.3-26 | 2021-09-29 09:12:55 +0200
+
+  * Fix comment placement. (Benjamin Bannier, Corelight)
+
+  * Add docstrings to CMake functions and macros. (Benjamin Bannier, Corelight)
+
+  * Break overlong strings. (Benjamin Bannier, Corelight)
+
+  * Add COMMENT to targets where possible. (Benjamin Bannier, Corelight)
+
+  * Locally disable cmake-lint for required argument check. (Benjamin Bannier, Corelight)
+
+  * Reformat CMake files with cmake-format. (Benjamin Bannier, Corelight)
+
+  * Update pre-commit hooks. (Benjamin Bannier, Corelight)
+
 1.2.3-18 | 2021-09-22 12:38:28 +0200
 
   * GH-18: Exercise clang-tidy in CI. (Benjamin Bannier, Corelight)
