@@ -2,7 +2,7 @@
 script_dir = scripts/Zeek/Spicy
 plugin_dir = build
 
-build_command = mkdir -p build && cd build && cmake .. && make -j "${SPICY_ZKG_PROCESSES:-4}"
-test_command = cd tests && btest -d -j "${SPICY_ZKG_PROCESSES:-4}"
+build_command = unset -v CXX CXXFLAGS LD LDFLAGS && mkdir -p build && cd build && cmake .. && make -j "${SPICY_ZKG_PROCESSES:-4}"
+test_command = unset -v CXX CXXFLAGS LD LDFLAGS && cd tests && btest -d -j "${SPICY_ZKG_PROCESSES:-4}"
 
 executables = build/bin/spicyz
