@@ -337,7 +337,7 @@ void rt::file_end() {
     ::zeek::file_mgr->EndOfFile(_file_id(cookie));
 }
 
-void rt::forward_packet(uint32_t identifier) {
+void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
 #ifdef HAVE_PACKET_ANALYZERS
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);

@@ -245,7 +245,7 @@ void file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt:
 void file_end();
 
 /** Specifies the next-layer packet analyzer. */
-void forward_packet(uint32_t identifier);
+void forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier);
 
 /** Gets the network time from Zeek. */
 hilti::rt::Time network_time();
