@@ -8,10 +8,6 @@ spicy_link_libraries(zeek-compiler PRIVATE)
 target_compile_options(zeek-compiler PRIVATE "-fPIC")
 target_link_libraries(zeek-compiler PRIVATE spicy)
 
-if (${ZEEK_VERSION_NUMBER} GREATER_EQUAL 30300) # Zeek >= 3.3 (aka 4.0)
-    target_compile_definitions(zeek-compiler PUBLIC "HAVE_PACKET_ANALYZERS")
-endif ()
-
 add_executable(spicyz bin/spicyz.cc)
 target_link_libraries(spicyz PRIVATE zeek-compiler)
 spicy_include_directories(spicyz PRIVATE)

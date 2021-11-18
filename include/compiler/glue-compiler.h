@@ -22,6 +22,7 @@
 
 #include <spicy/ast/declarations/unit-hook.h>
 #include <spicy/ast/types/unit.h>
+#include <zeek-spicy/autogen/config.h>
 
 #include "driver.h"
 

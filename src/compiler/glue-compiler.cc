@@ -13,6 +13,7 @@
 #include <hilti/compiler/unit.h>
 
 #include <spicy/global.h>
+#include <zeek-spicy/autogen/config.h>
 
 #include "debug.h"
 
