@@ -11,7 +11,8 @@
 # @TEST-EXEC: cat weird.log | zeek-cut addl | grep -q "maximal file depth exceeded"
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output-max
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff weird.log
-# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff notice.log
+# @TEST-EXEC: cat notice.log | zeek-cut note >notice.log.filtered
+# @TEST-EXEC: btest-diff notice.log.filtered
 
 event text::data1(f: fa_file, data: string)
 	{
