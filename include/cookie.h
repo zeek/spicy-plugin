@@ -58,6 +58,8 @@ struct FileAnalyzer {
 /** State on the current file analyzer. */
 struct PacketAnalyzer {
     ::zeek::packet_analysis::Analyzer* analyzer = nullptr; /**< current analyzer */
+    ::zeek::Packet* packet = nullptr;                      /**< current packet */
+    ::zeek::ValPtr packet_val = nullptr;                   /**< cached "raw_pkt_hdr" val for packet */
     std::optional<uint32_t> next_analyzer;
 };
 #endif

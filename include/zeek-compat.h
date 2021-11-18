@@ -271,9 +271,11 @@ inline auto event_mgr_Enqueue(const ::zeek::EventHandlerPtr& h, ::zeek::Args vl)
 #if ZEEK_VERSION_NUMBER >= 40000 // Zeek >= 4.0
 inline auto event_register_Register(const std::string& x) { return ::zeek::event_registry->Register(x); }
 inline auto event_register_Lookup(const std::string& x) { return ::zeek::event_registry->Lookup(x); }
+inline auto Packet_ToRawPktHdrVal(::zeek::Packet* packet) { return packet->ToRawPktHdrVal(); }
 #else
 inline auto event_register_Register(const std::string& x) { return ::event_registry->Register(x); }
 inline auto event_register_Lookup(const std::string& x) { return ::event_registry->Lookup(x); }
+inline auto Packet_ToRawPktHdrVal(::Packet* packet) { return packet->BuildPktHdrVal(); }
 #endif
 inline auto val_mgr_Bool(bool b) { return ::zeek::val_mgr->Bool(b); }
 inline auto val_mgr_Count(uint64_t i) { return ::zeek::val_mgr->Count(i); }
@@ -367,7 +369,6 @@ inline auto val_mgr_Count(uint64_t i) { return ::val_mgr->GetCount(i); }
 inline auto val_mgr_Int(int64_t i) { return ::val_mgr->GetInt(i); }
 inline auto val_mgr_Port(uint32_t p, TransportProto t) { return ::val_mgr->GetPort(p, t); }
 inline auto TypeList_GetTypesSize(const ::type_list* t) { return static_cast<uint64_t>(t->length()); }
-
 
 inline auto networkTime() { return network_time; }
 } // namespace spicy::zeek::compat

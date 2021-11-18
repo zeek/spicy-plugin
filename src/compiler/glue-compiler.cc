@@ -1067,6 +1067,8 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
             val = builder::call("zeek_rt::current_conn", {location(e)}, meta);
         else if ( e.expression == "$file" )
             val = builder::call("zeek_rt::current_file", {location(e)}, meta);
+        else if ( e.expression == "$packet" )
+            val = builder::call("zeek_rt::current_packet", {location(e)}, meta);
         else if ( e.expression == "$is_orig" )
             val = builder::call("zeek_rt::current_is_orig", {location(e)}, meta);
         else {

@@ -148,6 +148,25 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
         throw ValueUnavailable("$file not available", location);
 }
 
+::zeek::ValPtr rt::current_packet(const std::string& location) {
+#ifdef HAVE_PACKET_ANALYZERS
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( auto c = std::get_if<cookie::PacketAnalyzer>(cookie) ) {
+        if ( ! c->packet_val )
+            // We cache the built value in case we need it multiple times.
+            c->packet_val = zeek::compat::Packet_ToRawPktHdrVal(c->packet);
+
+        return c->packet_val;
+    }
+    else
+        throw ValueUnavailable("$packet not available", location);
+#else
+    throw Unsupported("packet analyzer functionality requires Zeek >= 4.0");
+#endif
+}
+
 hilti::rt::Bool rt::is_orig() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);

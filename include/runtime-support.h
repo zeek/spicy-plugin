@@ -163,6 +163,14 @@ void debug(const std::string& msg);
 ::zeek::ValPtr current_file(const std::string& location);
 
 /**
+ * Retrieves a `raw_pkt_hdr` instance for the currently processed Zeek packet.
+ * Assumes that the HILTI context's cookie value has been set accordingly.
+ *
+ * @return Zeek value of record type
+ */
+::zeek::ValPtr current_packet(const std::string& location);
+
+/**
  * Returns true if we're currently parsing the originator side of a
  * connection.
  */
