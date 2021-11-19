@@ -163,6 +163,14 @@ void debug(const std::string& msg);
 ::zeek::ValPtr current_file(const std::string& location);
 
 /**
+ * Retrieves a `raw_pkt_hdr` instance for the currently processed Zeek packet.
+ * Assumes that the HILTI context's cookie value has been set accordingly.
+ *
+ * @return Zeek value of record type
+ */
+::zeek::ValPtr current_packet(const std::string& location);
+
+/**
  * Returns true if we're currently parsing the originator side of a
  * connection.
  */
@@ -245,7 +253,7 @@ void file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt:
 void file_end();
 
 /** Specifies the next-layer packet analyzer. */
-void forward_packet(uint32_t identifier);
+void forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier);
 
 /** Gets the network time from Zeek. */
 hilti::rt::Time network_time();

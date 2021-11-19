@@ -24,6 +24,7 @@ declare public Val to_val(any x, BroType target, string location) &cxxname="spic
 
 declare public Val current_conn(string location) &cxxname="spicy::zeek::rt::current_conn" &have_prototype;
 declare public Val current_file(string location) &cxxname="spicy::zeek::rt::current_file" &have_prototype;
+declare public Val current_packet(string location) &cxxname="spicy::zeek::rt::current_packet" &have_prototype;
 declare public Val current_is_orig(string location) &cxxname="spicy::zeek::rt::current_is_orig" &have_prototype;
 
 declare public void debug(string msg) &cxxname="spicy::zeek::rt::debug" &have_prototype;

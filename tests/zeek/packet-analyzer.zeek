@@ -16,8 +16,9 @@ event zeek_init()
 		print "cannot register IP analyzer";
 	}
 
-event raw::data(data: string)
+event raw::data(p: raw_pkt_hdr, data: string)
 	{
+    print fmt("MACs: src=%s dst=%s", p$l2$src, p$l2$dst);
 	print "raw data", data;
 	}
 
@@ -40,5 +41,5 @@ public type Packet = unit {
 packet analyzer spicy::RawLayer:
     parse with RawLayer::Packet;
 
-on RawLayer::Packet::data -> event raw::data(self.data);
+on RawLayer::Packet::data -> event raw::data($packet, self.data);
 # @TEST-END-FILE

@@ -41,9 +41,12 @@ bool PacketAnalyzer::AnalyzePacket(size_t len, const uint8_t* data, ::zeek::Pack
     try {
         hilti::rt::context::CookieSetter _(&_state.cookie());
         _state.cookie().next_analyzer.reset();
+        _state.cookie().packet = packet;
         _state.process(len, reinterpret_cast<const char*>(data));
         auto offset = _state.finish();
         assert(offset);
+        _state.cookie().packet = nullptr;
+        _state.cookie().packet_val = nullptr;
         _state.reset();
         auto num_processed = offset->Ref();
         const auto& next_analyzer = _state.cookie().next_analyzer;
