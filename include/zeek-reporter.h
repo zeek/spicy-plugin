@@ -11,7 +11,6 @@
 
 #include <string>
 
-#include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/debug.h>
 
 #include "plugin.h"

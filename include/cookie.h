@@ -14,7 +14,6 @@
 
 #include <hilti/rt/fmt.h>
 
-#include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/zeek-compat.h>
 
 namespace spicy::zeek::rt {

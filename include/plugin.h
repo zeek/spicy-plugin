@@ -12,7 +12,6 @@
 #include <hilti/rt/library.h>
 #include <hilti/rt/types/port.h>
 
-#include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/zeek-compat.h>
 
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT
