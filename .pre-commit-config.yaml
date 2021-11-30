@@ -1,14 +1,10 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-- repo: local
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: 'v13.0.0'
   hooks:
   - id: clang-format
-    name: Run clang-format on code
-    entry: ./ci/run-clang-format
-    args: ["--pre-commit-hook"]
-    types: ["c++"]
-    language: script
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.0.1

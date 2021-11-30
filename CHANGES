@@ -1,3 +1,7 @@
+1.3.3-4 | 2021-11-30 12:47:39 +0100
+
+  * Use pre-commit-provisioned clang-format. (Benjamin Bannier, Corelight)
+
 1.3.3-2 | 2021-11-22 09:44:03 +0100
 
   * GH-78: Reduce amount of ifdef'd code in headers. (Benjamin Bannier, Corelight)
