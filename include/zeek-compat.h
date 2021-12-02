@@ -40,6 +40,16 @@
 #include <zeek/packet_analysis/Analyzer.h>
 #endif
 
+#if ZEEK_VERSION_NUMBER < 40200 // Zeek < 4.2
+#include <zeek/analyzer/Tag.h>
+#include <zeek/file_analysis/Tag.h>
+#if ZEEK_VERSION_NUMBER >= 30300 // Zeek >= 3.3 (aka 4.0)
+#include <zeek/packet_analysis/Tag.h>
+#endif
+#else
+#include <zeek/Tag.h>
+#endif
+
 #if ZEEK_VERSION_NUMBER >= 30200 // Zeek >= 3.2
 #include <zeek/Conn.h>
 #include <zeek/DebugLogger.h>
@@ -200,6 +210,42 @@ using ::attr_tag::ATTR_OPTIONAL;
 
 //// Wrapper functions for functionality that differs by version.
 
+namespace spicy::zeek::compat {
+#if ZEEK_VERSION_NUMBER < 40200 // Zeek < 4.2
+using AnalyzerTag = ::zeek::analyzer::Tag;
+using FileAnalysisTag = ::zeek::file_analysis::Tag;
+
+#if ZEEK_VERSION_NUMBER >= 30300 // Zeek >= 3.3 (aka 4.0)
+using PacketAnalysisTag = ::zeek::packet_analysis::Tag;
+#endif
+#else
+class AnalyzerTag : public ::zeek::Tag {
+public:
+    using ::zeek::Tag::Tag;
+    AnalyzerTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)){};
+};
+
+class FileAnalysisTag : public ::zeek::Tag {
+public:
+    using ::zeek::Tag::Tag;
+    FileAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)){};
+};
+
+class PacketAnalysisTag : public ::zeek::Tag {
+public:
+    using ::zeek::Tag::Tag;
+    PacketAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)){};
+};
+#endif
+
+inline AnalyzerTag analyzer_mgr_AnalyzerTag(const char* name) { return ::zeek::analyzer_mgr->GetAnalyzerTag(name); }
+inline AnalyzerTag ComponentTag(const ::zeek::analyzer::Component& component) { return component.Tag(); }
+inline FileAnalysisTag ComponentTag(const ::zeek::file_analysis::Component& component) { return component.Tag(); }
+#if ZEEK_VERSION_NUMBER >= 30300 // Zeek >= 3.3 (aka 4.0)
+inline PacketAnalysisTag ComponentTag(const ::zeek::packet_analysis::Component& component) { return component.Tag(); }
+#endif
+} // namespace spicy::zeek::compat
+
 #if ZEEK_VERSION_NUMBER >= 30200 // Zeek >= 3.2
 
 namespace spicy::zeek::compat {
@@ -242,14 +288,13 @@ inline auto Connection_ConnVal(::zeek::Connection* c) { return c->GetVal(); }
 #else
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->ConnVal(); }
 #endif
-
 inline auto AnalyzerMgr_GetTagType() { return ::zeek::analyzer_mgr->GetTagType(); }
 inline auto EnumTypeGetEnumVal(::zeek::EnumType* t, ::bro_int_t i) { return t->GetEnumVal(i); }
 inline auto EnumVal_GetType(::zeek::EnumVal* v) { return v->GetType(); }
 inline auto EventHandler_GetType(::zeek::EventHandlerPtr ev, bool check_export = true) {
     return ev->GetType(check_export);
 }
-inline auto FileAnalysisComponentTag_AsVal(const ::zeek::file_analysis::Tag& t) { return t.AsVal(); }
+inline auto FileAnalysisComponentTag_AsVal(const FileAnalysisTag& t) { return t.AsVal(); }
 inline auto FileMgr_GetTagType() { return ::zeek::file_mgr->GetTagType(); }
 inline auto File_ToVal(::zeek::file_analysis::File* f) { return f->ToVal(); }
 inline auto FuncType_ArgTypes(::zeek::FuncTypePtr f) { return f->ParamList(); }

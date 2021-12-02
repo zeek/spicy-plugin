@@ -112,7 +112,7 @@ public:
      * @return parser, or null if we don't have one for this tag. The pointer will remain valid for the life-time of the
      * process.
      */
-    const spicy::rt::Parser* parserForProtocolAnalyzer(const ::zeek::analyzer::Tag& tag, bool is_orig);
+    const spicy::rt::Parser* parserForProtocolAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag, bool is_orig);
 
     /**
      * Runtime method to retrieve the Spicy parser for a given Zeek file analyzer tag.
@@ -121,7 +121,7 @@ public:
      * @return parser, or null if we don't have one for this tag. The pointer will remain valid for the life-time of the
      * process.
      */
-    const spicy::rt::Parser* parserForFileAnalyzer(const ::zeek::file_analysis::Tag& tag);
+    const spicy::rt::Parser* parserForFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag);
 
 #ifdef HAVE_PACKET_ANALYZERS
     /**
@@ -131,7 +131,7 @@ public:
      * @return parser, or null if we don't have one for this tag. The pointer will remain
      * valid for the life-time of the process.
      */
-    const spicy::rt::Parser* parserForPacketAnalyzer(const ::zeek::packet_analysis::Tag& tag);
+    const spicy::rt::Parser* parserForPacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag);
 #endif
 
     /**
@@ -143,7 +143,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    ::zeek::analyzer::Tag tagForProtocolAnalyzer(const ::zeek::analyzer::Tag& tag);
+    spicy::zeek::compat::AnalyzerTag tagForProtocolAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag);
 
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
@@ -154,7 +154,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    ::zeek::file_analysis::Tag tagForFileAnalyzer(const ::zeek::file_analysis::Tag& tag);
+    spicy::zeek::compat::FileAnalysisTag tagForFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag);
 
 #ifdef HAVE_PACKET_ANALYZERS
     /**
@@ -166,7 +166,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    ::zeek::analyzer::Tag tagForPacketAnalyzer(const ::zeek::analyzer::Tag& tag);
+    spicy::zeek::compat::AnalyzerTag tagForPacketAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag);
 #endif
 
     /**
@@ -177,7 +177,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleAnalyzer(const ::zeek::analyzer::Tag& tag, bool enable);
+    bool toggleAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag, bool enable);
 
     /**
      * Explicitly enable/disable a file analyzer. By default, all analyzers
@@ -189,7 +189,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleAnalyzer(const ::zeek::file_analysis::Tag& tag, bool enable);
+    bool toggleAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag, bool enable);
 
 #ifdef HAVE_PACKET_ANALYZERS
     /**
@@ -203,7 +203,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleAnalyzer(const ::zeek::packet_analysis::Tag& tag, bool enable);
+    bool toggleAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag, bool enable);
 #endif
 
     /**
@@ -269,13 +269,13 @@ private:
         std::string name_zeekygen;
         hilti::rt::Protocol protocol = hilti::rt::Protocol::Undef;
         hilti::rt::Vector<hilti::rt::Port> ports;
-        ::zeek::analyzer::Tag::type_t type;
+        spicy::zeek::compat::AnalyzerTag::type_t type;
         std::string linker_scope;
 
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser_orig;
         const spicy::rt::Parser* parser_resp;
-        ::zeek::analyzer::Tag replaces;
+        spicy::zeek::compat::AnalyzerTag replaces;
     };
 
     /** Captures a registered file analyzer. */
@@ -286,12 +286,12 @@ private:
         std::string name_replaces;
         std::string name_zeekygen;
         hilti::rt::Vector<std::string> mime_types;
-        ::zeek::file_analysis::Tag::type_t type;
+        spicy::zeek::compat::FileAnalysisTag::type_t type;
         std::string linker_scope;
 
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser;
-        ::zeek::file_analysis::Tag replaces;
+        spicy::zeek::compat::FileAnalysisTag replaces;
     };
 
 #ifdef HAVE_PACKET_ANALYZERS
@@ -301,7 +301,7 @@ private:
         std::string name_analyzer;
         std::string name_parser;
         std::string name_zeekygen;
-        ::zeek::packet_analysis::Tag::type_t type;
+        spicy::zeek::compat::PacketAnalysisTag::type_t type;
         std::string linker_scope;
 
         // Filled in during InitPostScript().
