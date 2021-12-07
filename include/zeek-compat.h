@@ -65,6 +65,7 @@
 #include <zeek/Var.h>
 #include <zeek/analyzer/Analyzer.h>
 #include <zeek/analyzer/Manager.h>
+#include <zeek/analyzer/protocol/pia/PIA.h>
 #include <zeek/analyzer/protocol/tcp/TCP.h>
 #if ZEEK_VERSION_NUMBER < 40100 // Zeek < 4.1
 #include <zeek/analyzer/protocol/udp/UDP.h>
@@ -88,6 +89,7 @@
 #include "Var.h"
 #include "analyzer/Analyzer.h"
 #include "analyzer/Manager.h"
+#include "analyzer/protocol/pia/PIA.h"
 #include "analyzer/protocol/tcp/TCP.h"
 #include "analyzer/protocol/udp/UDP.h"
 #include "bro-bif.h" // actually want "Event.h", but that clashes
@@ -103,7 +105,7 @@
 
 //// Import types and globals into the new namespaces.
 
-#if ZEEK_VERSION_NUMBER < 30300 // Zeek <= 3.3 (aka 4.0)
+#if ZEEK_VERSION_NUMBER < 30300 // Zeek < 3.3 (aka 4.0)
 namespace zeek {
 using ::Connection;
 using ::EventHandlerPtr;
@@ -120,6 +122,10 @@ namespace analyzer {
 using Analyzer = ::analyzer::Analyzer;
 using Component = ::analyzer::Component;
 using Tag = ::analyzer::Tag;
+
+namespace pia {
+using PIA_TCP = ::analyzer::pia::PIA_TCP;
+};
 
 namespace tcp {
 using TCP_ApplicationAnalyzer = ::analyzer::tcp::TCP_ApplicationAnalyzer;
