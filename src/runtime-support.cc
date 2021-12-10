@@ -1,5 +1,7 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
+#include <memory>
+
 #include <hilti/rt/util.h>
 
 #include <zeek-spicy/autogen/config.h>
@@ -7,6 +9,8 @@
 #include <zeek-spicy/runtime-support.h>
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
+
+#include "zeek/analyzer/Analyzer.h"
 
 using namespace spicy::zeek;
 using namespace plugin::Zeek_Spicy;
@@ -231,6 +235,74 @@ void rt::reject_protocol(const std::string& reason) {
         throw ValueUnavailable("no current connection available");
 }
 
+void rt::protocol_begin(const std::optional<std::string>& analyzer) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    if ( ! c )
+        throw ValueUnavailable("no current connection available");
+
+    if ( analyzer ) {
+        auto child = ::zeek::analyzer_mgr->InstantiateAnalyzer(analyzer->c_str(), c->analyzer->Conn());
+        if ( ! child )
+            throw ZeekError(::hilti::rt::fmt("unknown analyzer '%s' requested", *analyzer));
+
+        if ( ! c->analyzer->AddChildAnalyzer(child) )
+            // AddChildAnalyzer() will have deleted child
+            throw ZeekError(::hilti::rt::fmt("could not add analyzer '%s' to connection", *analyzer));
+    }
+    else {
+        // Use a Zeek PIA stream analyzer performing DPD.
+        auto child = new ::zeek::analyzer::pia::PIA_TCP(c->analyzer->Conn());
+
+        if ( ! c->analyzer->AddChildAnalyzer(child) )
+            // AddChildAnalyzer() will have deleted child
+            throw ZeekError(::hilti::rt::fmt("could not add DPD analyzer to connection"));
+
+        child->FirstPacket(true, nullptr);
+        child->FirstPacket(false, nullptr);
+    }
+}
+
+void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    if ( ! c )
+        throw ValueUnavailable("no current connection available");
+
+    c->analyzer->ForwardStream(data.size(), reinterpret_cast<const u_char*>(data.data()), is_orig);
+}
+
+void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::safe<uint64_t>& offset,
+                      const hilti::rt::integer::safe<uint64_t>& len) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    if ( ! c )
+        throw ValueUnavailable("no current connection available");
+
+    c->analyzer->ForwardUndelivered(is_orig, offset, len);
+}
+
+void rt::protocol_end() {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    if ( ! c )
+        throw ValueUnavailable("no current connection available");
+
+    c->analyzer->ForwardEndOfData(true);
+    c->analyzer->ForwardEndOfData(false);
+
+    for ( const auto& i : c->analyzer->GetChildren() )
+        c->analyzer->RemoveChildAnalyzer(i);
+}
+
 inline rt::cookie::FileState* _file_state(rt::Cookie* cookie) {
     if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
         return c->is_orig ? &c->fstate_orig : &c->fstate_resp;
@@ -315,7 +387,6 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
         rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
                      zeek::compat::RecordVal_GetField(current, "is_orig")); // copy from parent
     }
-
 
     return file->GetID();
 }

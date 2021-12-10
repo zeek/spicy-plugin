@@ -1,3 +1,31 @@
+1.3.4 | 2021-12-10 10:49:54 +0100
+
+  * GH-76: Add runtime functions to pass data back into Zeek's
+    protocol analysis. (Robin Sommer, Corelight)
+
+    This allows to feed data from Spicy into dynamically instantiated
+    child analyzers on the Zeek side that will process the input
+    through Zeek's standard protocol analysis pipeline (including
+    performing DPD if desired).
+
+    The new functions are:
+
+        function protocol_begin(analyzer: optional<string> = Null)
+        function protocol_data_in(is_orig: bool, data: bytes) : void
+        function protocol_gap(is_orig: bool, offset: uint64, len: uint64) : void
+        function protocol_end() : void
+
+    See https://docs.zeek.org/projects/spicy/en/latest/zeek.html#spicy-protocol-begin
+    for more.
+
+  * Fix include order. (Robin Sommer, Corelight)
+
+  * Prevent linking against unexpected HILTI/Spicy libraries. (Robin
+    Sommer, Corelight)
+
+  * Add display of version numbers when Zeek versions don't match.
+    (Robin Sommer, Corelight)
+
 1.3.3-7 | 2021-12-10 09:19:39 +0100
 
   * Move pre-commit CI check to GH action. (Benjamin Bannier, Corelight)

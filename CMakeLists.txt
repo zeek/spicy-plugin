@@ -77,8 +77,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # CMake uses -O2 by default with RelWithDebInfo.
 string(REPLACE "-O2" "-O3" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 
-include_directories(BEFORE ${PROJECT_SOURCE_DIR}/include)
 include_directories(BEFORE ${PROJECT_BINARY_DIR}/include)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/include)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 

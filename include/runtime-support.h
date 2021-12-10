@@ -72,6 +72,14 @@ private:
 };
 
 /**
+ * Exception thrown by the runtime library when Zeek has flagged a problem.
+ */
+class ZeekError : public hilti::rt::UserException {
+public:
+    using hilti::rt::UserException::UserException;
+};
+
+/**
  * Registers a Spicy protocol analyzer with its EVT meta information with the
  * plugin's runtime.
  */
@@ -204,6 +212,42 @@ void confirm_protocol();
  * @param reason short description of what went wrong
  */
 void reject_protocol(const std::string& reason);
+
+/**
+ * Adds a Zeek-side child protocol analyzer to the current connection.
+ *
+ * @param analyzer if given, the Zeek-side name of the analyzer to instantiate;
+ * if not given, DPD will be used
+ */
+void protocol_begin(const std::optional<std::string>& analyzer);
+
+/**
+ * Forwards data to all previously instantiated Zeek-side child protocol
+ * analyzers.
+ *
+ * @param is_orig true to feed data to originator side, false for responder
+ * @param data next chunk of stream data for child analyzer to process
+ */
+void protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data);
+
+/**
+ * Signals a gap in input data to all previously instantiated Zeek-side child
+ * protocol analyzers.
+ *
+ * @param is_orig true to signal gap to originator side, false for responder
+ * @param offset of the gap inside the protocol stream
+ * @param length of the gap
+ */
+void protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::safe<uint64_t>& offset,
+                  const hilti::rt::integer::safe<uint64_t>& len);
+
+/**
+ * Signals EOD to all previously instantiated Zeek-side child protocol
+ * analyzers and removes them.
+ *
+ * @param analyzer ID of analyzer previously instantiated through `protocol_begin()`.
+ */
+void protocol_end();
 
 /**
  * Signals the beginning of a file to Zeek's file analysis, associating it
