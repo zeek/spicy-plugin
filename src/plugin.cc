@@ -283,32 +283,36 @@ void plugin::Zeek_Spicy::Plugin::registerEvent(const std::string& name) {
         _events[name] = ::zeek::detail::install_ID(name.c_str(), mod.c_str(), false, true);
 }
 
-const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForProtocolAnalyzer(const ::zeek::analyzer::Tag& tag,
-                                                                               bool is_orig) {
+const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForProtocolAnalyzer(
+    const ::spicy::zeek::compat::AnalyzerTag& tag, bool is_orig) {
     if ( is_orig )
         return _protocol_analyzers_by_type[tag.Type()].parser_orig;
     else
         return _protocol_analyzers_by_type[tag.Type()].parser_resp;
 }
 
-const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForFileAnalyzer(const ::zeek::file_analysis::Tag& tag) {
+const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForFileAnalyzer(
+    const ::spicy::zeek::compat::FileAnalysisTag& tag) {
     return _file_analyzers_by_type[tag.Type()].parser;
 }
 
 #ifdef HAVE_PACKET_ANALYZERS
-const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(const ::zeek::packet_analysis::Tag& tag) {
+const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(
+    const ::spicy::zeek::compat::PacketAnalysisTag& tag) {
     return _packet_analyzers_by_type[tag.Type()].parser;
 }
 #endif
 
-::zeek::analyzer::Tag plugin::Zeek_Spicy::Plugin::tagForProtocolAnalyzer(const ::zeek::analyzer::Tag& tag) {
+::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForProtocolAnalyzer(
+    const ::spicy::zeek::compat::AnalyzerTag& tag) {
     if ( auto r = _protocol_analyzers_by_type[tag.Type()].replaces )
         return r;
     else
         return tag;
 }
 
-::zeek::file_analysis::Tag plugin::Zeek_Spicy::Plugin::tagForFileAnalyzer(const ::zeek::file_analysis::Tag& tag) {
+::spicy::zeek::compat::FileAnalysisTag plugin::Zeek_Spicy::Plugin::tagForFileAnalyzer(
+    const ::spicy::zeek::compat::FileAnalysisTag& tag) {
     if ( auto r = _file_analyzers_by_type[tag.Type()].replaces )
         return r;
     else
@@ -316,13 +320,14 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(con
 }
 
 #ifdef HAVE_PACKET_ANALYZERS
-::zeek::analyzer::Tag plugin::Zeek_Spicy::Plugin::tagForPacketAnalyzer(const ::zeek::analyzer::Tag& tag) {
+::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForPacketAnalyzer(
+    const ::spicy::zeek::compat::AnalyzerTag& tag) {
     // Don't have a replacement mechanism currently.
     return tag;
 }
 #endif
 
-bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::analyzer::Tag& tag, bool enable) {
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::AnalyzerTag& tag, bool enable) {
     auto type = tag.Type();
 
     if ( type >= _protocol_analyzers_by_type.size() )
@@ -356,7 +361,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::analyzer::Tag& tag
     return true;
 }
 
-bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::file_analysis::Tag& tag, bool enable) {
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::FileAnalysisTag& tag, bool enable) {
     auto type = tag.Type();
 
     if ( type >= _file_analyzers_by_type.size() )
@@ -407,7 +412,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::file_analysis::Tag
 }
 
 #ifdef HAVE_PACKET_ANALYZERS
-bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::packet_analysis::Tag& tag, bool enable) {
+bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::PacketAnalysisTag& tag, bool enable) {
     auto type = tag.Type();
 
     if ( type >= _packet_analyzers_by_type.size() )
@@ -427,14 +432,14 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::zeek::packet_analysis::T
 bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enable) {
     if ( ::spicy::zeek::compat::EnumVal_GetType(tag) == ::spicy::zeek::compat::AnalyzerMgr_GetTagType() ) {
         if ( auto analyzer = ::zeek::analyzer_mgr->Lookup(tag) )
-            return toggleAnalyzer(analyzer->Tag(), enable);
+            return toggleAnalyzer(::spicy::zeek::compat::ComponentTag(*analyzer), enable);
         else
             return false;
     }
 
     if ( ::spicy::zeek::compat::EnumVal_GetType(tag) == ::spicy::zeek::compat::FileMgr_GetTagType() ) {
         if ( auto analyzer = ::zeek::file_mgr->Lookup(tag) )
-            return toggleAnalyzer(analyzer->Tag(), enable);
+            return toggleAnalyzer(::spicy::zeek::compat::ComponentTag(*analyzer), enable);
         else
             return false;
     }
@@ -442,7 +447,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enabl
 #ifdef HAVE_PACKET_ANALYZERS
     if ( tag->GetType() == ::zeek::packet_mgr->GetTagType() ) {
         if ( auto analyzer = ::zeek::file_mgr->Lookup(tag) )
-            return toggleAnalyzer(analyzer->Tag(), enable);
+            return toggleAnalyzer(::spicy::zeek::compat::ComponentTag(*analyzer), enable);
         else
             return false;
     }

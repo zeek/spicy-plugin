@@ -262,9 +262,10 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
     }
     else {
         if ( offset )
-            ::zeek::file_mgr->DataIn(data_, len, *offset, ::zeek::analyzer::Tag(), nullptr, false, fid, mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, *offset, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid,
+                                     mime_type);
         else
-            ::zeek::file_mgr->DataIn(data_, len, ::zeek::analyzer::Tag(), nullptr, false, fid, mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid, mime_type);
     }
 }
 
@@ -328,7 +329,7 @@ void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size) {
         ::zeek::file_mgr->SetSize(size, tag, c->analyzer->Conn(), c->is_orig, fid);
     }
     else
-        ::zeek::file_mgr->SetSize(size, ::zeek::analyzer::Tag(), nullptr, false, fid);
+        ::zeek::file_mgr->SetSize(size, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid);
 }
 
 void rt::file_data_in(const hilti::rt::Bytes& data) { _data_in(data.data(), data.size()); }
@@ -346,7 +347,7 @@ void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti:
         ::zeek::file_mgr->Gap(offset, len, tag, c->analyzer->Conn(), c->is_orig, fid);
     }
     else
-        ::zeek::file_mgr->Gap(offset, len, ::zeek::analyzer::Tag(), nullptr, false, fid);
+        ::zeek::file_mgr->Gap(offset, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid);
 }
 
 void rt::file_end() {
