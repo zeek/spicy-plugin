@@ -82,10 +82,16 @@ macro (configure)
 
         # Note: This should probably move over into Spicy proper, and then also
         # add imported targets for the libraries.
-        find_library(SPICY_LIBRARY NAMES spicy HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}"
-                                                     "${SPICY_LIBRARY_DIRS_RUNTIME}")
-        find_library(HILTI_LIBRARY NAMES hilti HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}"
-                                                     "${SPICY_LIBRARY_DIRS_RUNTIME}")
+        find_library(
+            SPICY_LIBRARY
+            NAMES spicy
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+        find_library(
+            HILTI_LIBRARY
+            NAMES hilti
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
     endif ()
 endmacro ()
 

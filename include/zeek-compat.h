@@ -24,7 +24,12 @@
 
 #ifdef ZEEK_VERSION_NUMBER
 #if ZEEK_SPICY_VERSION_NUMBER != ZEEK_VERSION_NUMBER
-#error "Mismatch in Zeek version numbers" ZEEK_SPICY_VERSION_NUMBER
+#define STR(x) __STR(x)
+#define __STR(x) #x
+#pragma message "Zeek version " STR(ZEEK_SPICY_VERSION_NUMBER) " vs " STR(ZEEK_VERSION_NUMBER) ")"
+#error "Mismatch in Zeek version numbers"
+#undef __STR
+#undef STR
 #endif
 #endif
 
