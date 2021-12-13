@@ -1,3 +1,10 @@
+1.3.4-2 | 2021-12-13 10:44:38 +0100
+
+  * Remove duplicate declaration of `file_end`. (Benjamin Bannier, Corelight)
+
+    While this duplicate declaration is inconsequential on the Spicy side, it
+    causes issues when generating docs.
+
 1.3.4 | 2021-12-10 10:49:54 +0100
 
   * GH-76: Add runtime functions to pass data back into Zeek's
