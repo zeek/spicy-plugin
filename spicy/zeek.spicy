@@ -73,7 +73,7 @@ public function file_set_size(size: uint64) : void &cxxname="spicy::zeek::rt::fi
 public function file_data_in(data: bytes) : void &cxxname="spicy::zeek::rt::file_data_in";
 
 ## Passes file content at a specific offset on to Zeek's file analysis.
-public function file_data_in_at_offset(data: bytes, offset: uint64) : void &cxxname="spicy::zeek::rt::data_in_at_offset";
+public function file_data_in_at_offset(data: bytes, offset: uint64) : void &cxxname="spicy::zeek::rt::file_data_in_at_offset";
 
 ## Signals a gap in a file to Zeek's file analysis.
 public function file_gap(offset: uint64, len: uint64) : void &cxxname="spicy::zeek::rt::file_gap";
