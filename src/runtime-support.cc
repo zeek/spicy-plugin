@@ -312,17 +312,20 @@ inline rt::cookie::FileStateStack* _file_state_stack(rt::Cookie* cookie) {
         throw rt::ValueUnavailable("no current connection or file available");
 }
 
-inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie) {
+inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optional<std::string> fid) {
     auto* stack = _file_state_stack(cookie);
-    if ( stack->isEmpty() )
-        throw rt::ValueUnavailable("no file analysis currently in flight");
+    if ( fid ) {
+        if ( auto* fstate = stack->find(*fid) )
+            return fstate;
+        else
+            throw rt::ValueUnavailable(hilti::rt::fmt("no file analysis currently in flight for file ID %s", fid));
+    }
+    else {
+        if ( stack->isEmpty() )
+            throw rt::ValueUnavailable("no file analysis currently in flight");
 
-    return stack->current();
-}
-
-inline std::string _file_id(rt::Cookie* cookie) {
-    assert(cookie);
-    return _file_state(cookie)->fid;
+        return stack->current();
+    }
 }
 
 rt::cookie::FileState* rt::cookie::FileStateStack::push() {
@@ -351,10 +354,10 @@ void rt::cookie::FileStateStack::remove(const std::string& fid) {
     }
 }
 
-static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> offset = {}) {
+static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> offset,
+                     const std::optional<std::string>& fid) {
     auto cookie = static_cast<rt::Cookie*>(hilti::rt::context::cookie());
-    auto* fstate = _file_state(cookie);
-    auto fid = fstate->fid;
+    auto* fstate = _file_state(cookie, fid);
     auto data_ = reinterpret_cast<const unsigned char*>(data);
     auto mime_type = (fstate->mime_type ? *fstate->mime_type : std::string());
 
@@ -362,16 +365,17 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
         auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
 
         if ( offset )
-            ::zeek::file_mgr->DataIn(data_, len, *offset, tag, c->analyzer->Conn(), c->is_orig, fid, mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, *offset, tag, c->analyzer->Conn(), c->is_orig, fstate->fid, mime_type);
         else
-            ::zeek::file_mgr->DataIn(data_, len, tag, c->analyzer->Conn(), c->is_orig, fid, mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, tag, c->analyzer->Conn(), c->is_orig, fstate->fid, mime_type);
     }
     else {
         if ( offset )
-            ::zeek::file_mgr->DataIn(data_, len, *offset, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid,
-                                     mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, *offset, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false,
+                                     fstate->fid, mime_type);
         else
-            ::zeek::file_mgr->DataIn(data_, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid, mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid,
+                                     mime_type);
     }
 }
 
@@ -393,10 +397,9 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
     fstate->mime_type = mime_type;
 
     // Feed an empty chunk into the analysis to force creating the file state inside Zeek.
-    _data_in("", 0);
+    _data_in("", 0, {}, {});
 
-    auto fid = _file_id(cookie);
-    auto file = ::zeek::file_mgr->LookupFile(fid);
+    auto file = ::zeek::file_mgr->LookupFile(fstate->fid);
     assert(file); // passing in empty data ensures that this is now available
 
     if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) ) {
@@ -422,47 +425,50 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
     }
 
     // Double check everybody agrees on the file ID.
-    assert(fid == fstate->fid);
     assert(fstate->fid == file->GetID());
-    return fid;
+    return fstate->fid;
 }
 
-void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size) {
+void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size, const std::optional<std::string>& fid) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    auto fid = _file_id(cookie);
+    auto* fstate = _file_state(cookie, fid);
 
     if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
-        ::zeek::file_mgr->SetSize(size, tag, c->analyzer->Conn(), c->is_orig, fid);
+        ::zeek::file_mgr->SetSize(size, tag, c->analyzer->Conn(), c->is_orig, fstate->fid);
     }
     else
-        ::zeek::file_mgr->SetSize(size, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid);
+        ::zeek::file_mgr->SetSize(size, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid);
 }
 
-void rt::file_data_in(const hilti::rt::Bytes& data) { _data_in(data.data(), data.size()); }
-
-void rt::file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset) {
-    _data_in(data.data(), data.size(), offset);
+void rt::file_data_in(const hilti::rt::Bytes& data, const std::optional<std::string>& fid) {
+    _data_in(data.data(), data.size(), {}, fid);
 }
 
-void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len) {
+void rt::file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset,
+                                const std::optional<std::string>& fid) {
+    _data_in(data.data(), data.size(), offset, fid);
+}
+
+void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len,
+                  const std::optional<std::string>& fid) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    auto fid = _file_id(cookie);
+    auto* fstate = _file_state(cookie, fid);
 
     if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
-        ::zeek::file_mgr->Gap(offset, len, tag, c->analyzer->Conn(), c->is_orig, fid);
+        ::zeek::file_mgr->Gap(offset, len, tag, c->analyzer->Conn(), c->is_orig, fstate->fid);
     }
     else
-        ::zeek::file_mgr->Gap(offset, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fid);
+        ::zeek::file_mgr->Gap(offset, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid);
 }
 
-void rt::file_end() {
+void rt::file_end(const std::optional<std::string>& fid) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
-    auto fid = _file_id(cookie);
+    auto* fstate = _file_state(cookie, fid);
 
-    ::zeek::file_mgr->EndOfFile(_file_id(cookie));
-    _file_state_stack(cookie)->remove(fid);
+    ::zeek::file_mgr->EndOfFile(fstate->fid);
+    _file_state_stack(cookie)->remove(fstate->fid);
 }
 
 void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {

@@ -267,34 +267,44 @@ std::string fuid();
  * Signals the expected size of a file to Zeek's file analysis.
  *
  * @param size expected final size of the file
+ * @param fid ID of the file to operate on; if unset, the most recently begun file is used
  */
-void file_set_size(const hilti::rt::integer::safe<uint64_t>& size);
+void file_set_size(const hilti::rt::integer::safe<uint64_t>& size, const std::optional<std::string>& fid = {});
 
 /**
  * Passes file content on to Zeek's file analysis.
  *
  * @param data next chunk of data
+ * @param fid ID of the file to operate on; if unset, the most recently begun file is used
  */
-void file_data_in(const hilti::rt::Bytes& data);
+void file_data_in(const hilti::rt::Bytes& data, const std::optional<std::string>& fid = {});
 
 /**
  * Passes file content at a specific offset on to Zeek's file analysis.
  *
  * @param data next chunk of data
  * @param offset file offset of the data geing passed in
+ * @param fid ID of the file to operate on; if unset, the most recently begun file is used
  */
-void file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset);
+void file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset,
+                            const std::optional<std::string>& fid = {});
 
 /**
  * Signals a gap in a file to Zeek's file analysis.
  *
  * @param offset of the gap
  * @param length of the gap
+ * @param fid ID of the file to operate on; if unset, the most recently begun file is used
  */
-void file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len);
+void file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len,
+              const std::optional<std::string>& fid = {});
 
-/** Signals the end of a file to Zeek's file analysis. */
-void file_end();
+/**
+ * Signals the end of a file to Zeek's file analysis.
+ *
+ * @param fid ID of the file to operate on; if unset, the most recently begun file is used
+ */
+void file_end(const std::optional<std::string>& fid = {});
 
 /** Specifies the next-layer packet analyzer. */
 void forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier);

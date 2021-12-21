@@ -60,23 +60,39 @@ public function protocol_end() : void &cxxname="spicy::zeek::rt::protocol_end";
 ## Returns the Zeek-side file ID of the new file.
 public function file_begin(mime_type: optional<string> = Null) : string &cxxname="spicy::zeek::rt::file_begin";
 
-## Signals the end of a file to Zeek's file analysis.
-public function file_end() : void &cxxname="spicy::zeek::rt::file_end";
-
 ## Returns the current file's FUID.
 public function fuid() : string &cxxname="spicy::zeek::rt::fuid";
 
 ## Signals the expected size of a file to Zeek's file analysis.
-public function file_set_size(size: uint64) : void &cxxname="spicy::zeek::rt::file_set_size";
+##
+## size: expected size of file
+## fid: Zeek-side ID of the file to operate on; if not given, the file started by the most recent file_begin() will be used
+public function file_set_size(size: uint64, fid: optional<string> = Null) : void &cxxname="spicy::zeek::rt::file_set_size";
 
 ## Passes file content on to Zeek's file analysis.
-public function file_data_in(data: bytes) : void &cxxname="spicy::zeek::rt::file_data_in";
+##
+## data: chunk of raw data to pass into analysis
+## fid: Zeek-side ID of the file to operate on; if not given, the file started by the most recent file_begin() will be used
+public function file_data_in(data: bytes, fid: optional<string> = Null) : void &cxxname="spicy::zeek::rt::file_data_in";
 
 ## Passes file content at a specific offset on to Zeek's file analysis.
-public function file_data_in_at_offset(data: bytes, offset: uint64) : void &cxxname="spicy::zeek::rt::file_data_in_at_offset";
+##
+## data: chunk of raw data to pass into analysis
+## offset: position in file where data starts
+## fid: Zeek-side ID of the file to operate on; if not given, the file started by the most recent file_begin() will be used
+public function file_data_in_at_offset(data: bytes, offset: uint64, fid: optional<string> = Null) : void &cxxname="spicy::zeek::rt::file_data_in_at_offset";
 
 ## Signals a gap in a file to Zeek's file analysis.
-public function file_gap(offset: uint64, len: uint64) : void &cxxname="spicy::zeek::rt::file_gap";
+##
+## offset: position in file where gap starts
+## len: size of gap
+## fid: Zeek-side ID of the file to operate on; if not given, the file started by the most recent file_begin() will be used
+public function file_gap(offset: uint64, len: uint64, fid: optional<string> = Null) : void &cxxname="spicy::zeek::rt::file_gap";
+
+## Signals the end of a file to Zeek's file analysis.
+##
+## fid: Zeek-side ID of the file to operate on; if not given, the file started by the most recent file_begin() will be used
+public function file_end(fid: optional<string> = Null) : void &cxxname="spicy::zeek::rt::file_end";
 
 ## Inside a packet analyzer, forwards what data remains after parsing the top-level unit
 ## on to another analyzer. The index specifies the target, per the current dispatcher table.
