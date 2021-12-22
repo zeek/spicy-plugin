@@ -32,7 +32,7 @@ static auto create_file_state(FileAnalyzer* analyzer) {
 
     cookie::FileAnalyzer cookie{.analyzer = analyzer,
                                 .depth = depth,
-                                .fstate = cookie::FileState(analyzer->GetFile()->GetID())};
+                                .fstate = cookie::FileStateStack(analyzer->GetFile()->GetID())};
     return FileState(cookie);
 }
 

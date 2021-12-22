@@ -21,8 +21,9 @@ void EndpointState::debug(const std::string& msg) { spicy::zeek::rt::debug(_cook
 static auto create_endpoint(bool is_orig, ::zeek::analyzer::Analyzer* analyzer, spicy::rt::driver::ParsingType type) {
     cookie::ProtocolAnalyzer cookie{.analyzer = analyzer,
                                     .is_orig = is_orig,
-                                    .fstate_orig = cookie::FileState(hilti::rt::fmt("%x.orig", analyzer->GetID())),
-                                    .fstate_resp = cookie::FileState(hilti::rt::fmt("%x.resp", analyzer->GetID()))};
+                                    .fstate_orig = cookie::FileStateStack(hilti::rt::fmt("%x.orig", analyzer->GetID())),
+                                    .fstate_resp =
+                                        cookie::FileStateStack(hilti::rt::fmt("%x.resp", analyzer->GetID()))};
 
     // Cannot get parser here yet, analyzer may not have been fully set up.
     return EndpointState(cookie, type);
