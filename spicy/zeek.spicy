@@ -82,5 +82,5 @@ public function file_gap(offset: uint64, len: uint64) : void &cxxname="spicy::ze
 ## on to another analyzer. The index specifies the target, per the current dispatcher table.
 public function forward_packet(identifier: uint32) : void &cxxname="spicy::zeek::rt::forward_packet";
 
-# Gets the network time from Zeek.
+## Gets the network time from Zeek.
 public function network_time() : time &cxxname="spicy::zeek::rt::network_time";
