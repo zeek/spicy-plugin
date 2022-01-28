@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -90,6 +91,8 @@ struct ProtocolAnalyzer {
     uint64_t num_packets = 0;                       /**< number of packets seen so far */
     FileStateStack fstate_orig;                     /**< file analysis state for originator side */
     FileStateStack fstate_resp;                     /**< file analysis state for responder side */
+    std::shared_ptr<::zeek::packet_analysis::TCP::TCPSessionAdapter>
+        fake_tcp; /**< fake TPC analyzer created internally */
 };
 
 /** State on the current file analyzer. */
