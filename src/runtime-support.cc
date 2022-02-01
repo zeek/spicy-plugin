@@ -264,8 +264,13 @@ void rt::protocol_begin(const std::optional<std::string>& analyzer) {
                 ::hilti::rt::fmt("could not add analyzer '%s' to connection; not a TCP-based analyzer", *analyzer));
 
         if ( ! c->analyzer->AddChildAnalyzer(child) )
-            // AddChildAnalyzer() will have deleted child
-            throw ZeekError(::hilti::rt::fmt("could not add analyzer '%s' to connection", *analyzer));
+            // Child of this type already exists. We ignore this silently
+            // because that makes usage nicer if either side of the connection
+            // might end up creating the analyzer; this way the user doesn't
+            // need to track what the other side already did. Note that
+            // AddChildAnalyzer() will have deleted child already, so nothing
+            // for us to clean up here.
+            return;
 
         if ( c->fake_tcp )
             child_as_tcp->SetTCP(c->fake_tcp.get());
@@ -276,8 +281,8 @@ void rt::protocol_begin(const std::optional<std::string>& analyzer) {
         auto child = new ::zeek::analyzer::pia::PIA_TCP(c->analyzer->Conn());
 
         if ( ! c->analyzer->AddChildAnalyzer(child) )
-            // AddChildAnalyzer() will have deleted child
-            throw ZeekError(::hilti::rt::fmt("could not add DPD analyzer to connection"));
+            // Same comment as above re/ ignoring the error and memory mgmt.
+            return;
 
         child->FirstPacket(true, nullptr);
         child->FirstPacket(false, nullptr);

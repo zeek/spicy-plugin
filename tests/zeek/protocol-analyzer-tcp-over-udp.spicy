@@ -1,29 +1,16 @@
 # @TEST-EXEC: ${ZEEK} -Cr ${TRACES}/ssh-over-udp.pcap ./foo.evt %INPUT
 # @TEST-EXEC: btest-diff ssh.log
 #
-# @TEST-DOC: Pass data from inside a UDP analyzer to a Zeek analyzers that works on top of TCP.
+# @TEST-DOC: Pass data from inside a UDP analyzer to a Zeek analyzers that works on top of TCP. Regression tests for #92 and also #91.
+#
 
 module Foo;
 
 import spicy;
 import zeek;
 
-type Context = tuple<initialized: bool>;
-
-function initialize(inout ctx: Context) {
-    if ( ! ctx.initialized ) {
-        ctx.initialized = True;
-        zeek::protocol_begin("SSH");
-    }
-}
-
 public type Bar = unit {
-    %context = Context;
-
-    on %init {
-        initialize(self.context());
-    }
-
+    on %init { zeek::protocol_begin("SSH"); }
     data: bytes &eod { zeek::protocol_data_in(zeek::is_orig(), $$); }
 };
 
