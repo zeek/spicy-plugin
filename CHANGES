@@ -1,3 +1,11 @@
+1.3.7 | 2022-02-02 11:18:53 +0100
+
+  * GH-91: Ignore additional calls protocol_begin() with the same
+    analyzer. (Robin Sommer, Corelight)
+
+  * GH-92: Support forwarding to Zeek TCP-level application data from
+    a UDP analyzer. (Robin Sommer, Corelight)
+
 1.3.6 | 2021-12-22 10:33:28 +0100
 
   * GH-86: Extend file analysis API functions to support feeding data

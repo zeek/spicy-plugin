@@ -244,21 +244,45 @@ void rt::protocol_begin(const std::optional<std::string>& analyzer) {
         throw ValueUnavailable("no current connection available");
 
     if ( analyzer ) {
+        if ( c->analyzer->Conn()->ConnTransport() != TRANSPORT_TCP ) {
+            // Some TCP application analyzer may expect to have access to a TCP
+            // analyzer. To make that work, we'll create a fake TCP analyzer,
+            // just so that they have something to access. It won't
+            // semantically have any "TCP" to analyze obviously.
+            c->fake_tcp = std::make_shared<::zeek::packet_analysis::TCP::TCPSessionAdapter>(c->analyzer->Conn());
+            static_cast<::zeek::analyzer::Analyzer*>(c->fake_tcp.get())
+                ->Done(); // will never see packets; cast to get around protected inheritance
+        }
+
         auto child = ::zeek::analyzer_mgr->InstantiateAnalyzer(analyzer->c_str(), c->analyzer->Conn());
         if ( ! child )
             throw ZeekError(::hilti::rt::fmt("unknown analyzer '%s' requested", *analyzer));
 
+        auto* child_as_tcp = dynamic_cast<::zeek::analyzer::tcp::TCP_ApplicationAnalyzer*>(child);
+        if ( ! child_as_tcp )
+            throw ZeekError(
+                ::hilti::rt::fmt("could not add analyzer '%s' to connection; not a TCP-based analyzer", *analyzer));
+
         if ( ! c->analyzer->AddChildAnalyzer(child) )
-            // AddChildAnalyzer() will have deleted child
-            throw ZeekError(::hilti::rt::fmt("could not add analyzer '%s' to connection", *analyzer));
+            // Child of this type already exists. We ignore this silently
+            // because that makes usage nicer if either side of the connection
+            // might end up creating the analyzer; this way the user doesn't
+            // need to track what the other side already did. Note that
+            // AddChildAnalyzer() will have deleted child already, so nothing
+            // for us to clean up here.
+            return;
+
+        if ( c->fake_tcp )
+            child_as_tcp->SetTCP(c->fake_tcp.get());
     }
+
     else {
         // Use a Zeek PIA stream analyzer performing DPD.
         auto child = new ::zeek::analyzer::pia::PIA_TCP(c->analyzer->Conn());
 
         if ( ! c->analyzer->AddChildAnalyzer(child) )
-            // AddChildAnalyzer() will have deleted child
-            throw ZeekError(::hilti::rt::fmt("could not add DPD analyzer to connection"));
+            // Same comment as above re/ ignoring the error and memory mgmt.
+            return;
 
         child->FirstPacket(true, nullptr);
         child->FirstPacket(false, nullptr);

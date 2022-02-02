@@ -219,6 +219,16 @@ using ::attr_tag::ATTR_OPTIONAL;
 } // namespace zeek
 #endif
 
+#if ZEEK_VERSION_NUMBER < 40100 // Zeek < 4.1
+namespace zeek::packet_analysis::TCP {
+#if ZEEK_VERSION_NUMBER >= 30300
+using TCPSessionAdapter = ::zeek::analyzer::tcp::TCP_Analyzer;
+#else
+using TCPSessionAdapter = ::analyzer::tcp::TCP_Analyzer;
+#endif
+} // namespace zeek::packet_analysis::TCP
+#endif
+
 //// Wrapper functions for functionality that differs by version.
 
 namespace spicy::zeek::compat {
