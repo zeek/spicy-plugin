@@ -151,16 +151,7 @@ void TCP_Analyzer::DeliverStream(int len, const u_char* data, bool is_orig) {
 void TCP_Analyzer::Undelivered(uint64_t seq, int len, bool is_orig) {
     ::zeek::analyzer::tcp::TCP_ApplicationAnalyzer::Undelivered(seq, len, is_orig);
 
-    // This mimics the (modified) Zeek HTTP analyzer. Otherwise stop parsing
-    // the connection
-    if ( is_orig && ! originator().isSkipping() ) {
-        STATE_DEBUG_MSG(is_orig, "undelivered data, skipping further originator payload");
-        originator().skipRemaining();
-    }
-    else if ( ! responder().isSkipping() ) {
-        STATE_DEBUG_MSG(is_orig, "undelivered data, skipping further responder payload");
-        responder().skipRemaining();
-    }
+    Process(is_orig, len, nullptr);
 }
 
 void TCP_Analyzer::EndOfData(bool is_orig) {
