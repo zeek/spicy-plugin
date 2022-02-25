@@ -133,11 +133,6 @@ void TCP_Analyzer::Done() {
 void TCP_Analyzer::DeliverStream(int len, const u_char* data, bool is_orig) {
     ::zeek::analyzer::tcp::TCP_ApplicationAnalyzer::DeliverStream(len, data, is_orig);
 
-    if ( TCP() && TCP()->IsPartial() ) {
-        STATE_DEBUG_MSG(is_orig, "skipping further data on partial TCP connection");
-        return;
-    }
-
     Process(is_orig, len, data);
 
     if ( originator().isFinished() && responder().isFinished() &&
