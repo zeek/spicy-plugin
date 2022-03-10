@@ -1,3 +1,19 @@
+1.3.8 | 2022-03-10 15:54:49 +0100
+
+  * Add test for analyzer recovery from gaps. (Benjamin Bannier, Corelight)
+
+  * Extract gaps in `record-spicy-batch.zeek`. (Benjamin Bannier, Corelight)
+
+  * Pass on even undelivered data. (Benjamin Bannier, Corelight)
+
+    On the Spicy side this will lead to gap chunks to be created will cannot
+    be read, but could be used to resynchronize the input.
+
+  * Pass on even data from partial connections. (Benjamin Bannier, Corelight)
+
+    This could trigger parse errors down the line, or if the parser can
+    recover, potentially allow it to continue parsing even the partial data.
+
 1.3.7 | 2022-02-02 11:18:53 +0100
 
   * GH-91: Ignore additional calls protocol_begin() with the same
