@@ -1,0 +1,19 @@
+# @TEST-EXEC: spicyz -o test.hlto %INPUT test.evt
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace _Zeek::Spicy test.hlto Spicy::enable_print=T >>output
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ipv6.trace _Zeek::Spicy test.hlto Spicy::enable_print=T >>output
+# @TEST-EXEC: btest-diff output
+
+module Test;
+
+import zeek;
+
+public type Foo = unit {
+    on %init { print zeek::conn_id(); }
+    x : /./;
+};
+
+# @TEST-START-FILE test.evt
+protocol analyzer spicy::Test over TCP:
+    port 21/tcp-22/tcp,
+    parse originator with Test::Foo;
+# @TEST-END-FILE

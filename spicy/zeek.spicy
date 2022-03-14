@@ -18,6 +18,9 @@ public function is_orig() : bool &cxxname="spicy::zeek::rt::is_orig";
 ## Returns the current connection's UID.
 public function uid() : string &cxxname="spicy::zeek::rt::uid";
 
+## Returns the current connection's 4-tuple ID.
+public function conn_id() : tuple<orig_h: addr, orig_p: port, resp_h: addr, resp_p: port> &cxxname="spicy::zeek::rt::conn_id";
+
 ## Instructs Zeek to flip the directionality of the current connection.
 public function flip_roles() : void &cxxname="spicy::zeek::rt::flip_roles";
 
