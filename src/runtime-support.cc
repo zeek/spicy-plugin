@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include <hilti/rt/types/port.h>
 #include <hilti/rt/util.h>
 
 #include <zeek-spicy/autogen/config.h>
@@ -180,6 +181,7 @@ hilti::rt::Bool rt::is_orig() {
     else
         throw ValueUnavailable("is_orig() not available in current context");
 }
+
 std::string rt::uid() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
@@ -188,6 +190,45 @@ std::string rt::uid() {
         return c->analyzer->Conn()->GetUID().Base62("C");
     else
         throw ValueUnavailable("uid() not available in current context");
+}
+
+std::tuple<hilti::rt::Address, hilti::rt::Port, hilti::rt::Address, hilti::rt::Port> rt::conn_id() {
+    static auto convert_address = [](const ::zeek::IPAddr zaddr) -> hilti::rt::Address {
+        const uint32_t* bytes = nullptr;
+        if ( auto n = zaddr.GetBytes(&bytes); n == 1 )
+            // IPv4
+            return hilti::rt::Address(*reinterpret_cast<const struct in_addr*>(bytes));
+        else if ( n == 4 )
+            // IPv6
+            return hilti::rt::Address(*reinterpret_cast<const struct in6_addr*>(bytes));
+        else
+            throw ValueUnavailable("unexpected IP address side from Zeek"); // shouldn't really be able to happen
+    };
+
+    static auto convert_port = [](uint32_t port, TransportProto proto) -> hilti::rt::Port {
+        auto p = ntohs(static_cast<uint16_t>(port));
+
+        switch ( proto ) {
+            case TransportProto::TRANSPORT_ICMP: return {p, hilti::rt::Protocol::ICMP};
+            case TransportProto::TRANSPORT_TCP: return {p, hilti::rt::Protocol::TCP};
+            case TransportProto::TRANSPORT_UDP: return {p, hilti::rt::Protocol::UDP};
+            case TransportProto::TRANSPORT_UNKNOWN: return {p, hilti::rt::Protocol::Undef};
+        }
+
+        hilti::rt::cannot_be_reached();
+    };
+
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        const auto* conn = c->analyzer->Conn();
+        return std::make_tuple(convert_address(conn->OrigAddr()), convert_port(conn->OrigPort(), conn->ConnTransport()),
+                               convert_address(conn->RespAddr()),
+                               convert_port(conn->RespPort(), conn->ConnTransport()));
+    }
+    else
+        throw ValueUnavailable("conn_id() not available in current context");
 }
 
 void rt::flip_roles() {

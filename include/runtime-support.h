@@ -189,6 +189,11 @@ hilti::rt::Bool is_orig();
  */
 std::string uid();
 
+/**
+ * Returns the current connection's ID tuple.
+ */
+std::tuple<hilti::rt::Address, hilti::rt::Port, hilti::rt::Address, hilti::rt::Port> conn_id();
+
 /** Instructs to Zeek to flip the directionality of the current connecction. */
 void flip_roles();
 
