@@ -33,7 +33,7 @@ public function number_packets() : uint64 &cxxname="spicy::zeek::rt::number_pack
 ## name (similar to what Zeek's signature action `enable` takes); if not
 ## specified, Zeek will perform its usual dynamic protocol detection to figure
 ## out how to parse the data (the latter will work only for TCP protocols, though.)
-public function protocol_begin(analyzer: optional<string> = Null) &cxxname="spicy::zeek::rt::protocol_begin";
+public function protocol_begin(analyzer: optional<string> = Null) : void &cxxname="spicy::zeek::rt::protocol_begin";
 
 ## Forwards protocol data to all previously instantiated Zeek-side child protocol analyzers.
 ##
