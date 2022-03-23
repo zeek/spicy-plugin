@@ -157,6 +157,9 @@ endfunction ()
 
 ### Main
 
-configure()
+if (NOT HAVE_SPICY)
+    configure()
+endif ()
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Spicy DEFAULT_MSG HAVE_SPICY SPICY_CONFIG)
