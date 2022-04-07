@@ -63,7 +63,7 @@ find_package(Spicy REQUIRED)
 find_package(Zeek REQUIRED)
 
 spicy_require_version("1.3.0")
-zeek_require_version("3.0.0")
+zeek_require_version("4.0.0")
 
 ###
 ### Configure build
