@@ -10,15 +10,23 @@ event ssh::banner(c: connection, is_orig: bool, version: string, software: strin
 	print "SSH banner", c$id, is_orig, version, software;
 	}
 
+@if ( Version::number >= 40200 )
+event analyzer_confirmation(c: connection, atype: AllAnalyzers::Tag, aid: count)
+@else
 event protocol_confirmation(c: connection, atype: Analyzer::Tag, aid: count)
+@endif
 	{
-    if ( atype == Analyzer::ANALYZER_SPICY_SSH )
+	if ( atype == Analyzer::ANALYZER_SPICY_SSH )
 	    print "confirm", atype;
 	}
 
+@if ( Version::number >= 40200 )
+event analyzer_violation(c: connection, atype: AllAnalyzers::Tag, aid: count, reason: string)
+@else
 event protocol_violation(c: connection, atype: Analyzer::Tag, aid: count, reason: string)
+@endif
 	{
-    if ( atype == Analyzer::ANALYZER_SPICY_SSH )
+	if ( atype == Analyzer::ANALYZER_SPICY_SSH )
 	    print "violation", atype;
 	}
 

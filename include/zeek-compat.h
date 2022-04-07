@@ -113,6 +113,26 @@ public:
 
 namespace spicy::zeek::compat {
 
+#if ZEEK_VERSION_NUMBER >= 40200 // Zeek >= 4.2
+inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, ::zeek::Tag tag) {
+    analyzer->AnalyzerConfirmation(tag);
+}
+
+inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason,
+                                       const char* data = nullptr, int len = 0) {
+    analyzer->AnalyzerViolation(reason, data, len);
+}
+#else
+inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, ::zeek::analyzer::Tag tag) {
+    analyzer->ProtocolConfirmation(tag);
+}
+
+inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason,
+                                       const char* data = nullptr, int len = 0) {
+    analyzer->ProtocolViolation(reason, data, len);
+}
+#endif
+
 #if ZEEK_VERSION_NUMBER >= 40100 // Zeek >= 4.1
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->GetVal(); }
 #else

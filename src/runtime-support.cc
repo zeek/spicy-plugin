@@ -174,8 +174,11 @@ std::string rt::uid() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        // Retrieve the ConnVal() so that we ensure the UID has been set.
+        c->analyzer->ConnVal();
         return c->analyzer->Conn()->GetUID().Base62("C");
+    }
     else
         throw ValueUnavailable("uid() not available in current context");
 }
@@ -248,7 +251,7 @@ void rt::confirm_protocol() {
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
-        return x->analyzer->ProtocolConfirmation(tag);
+        return ::spicy::zeek::compat::Analyzer_AnalyzerConfirmation(x->analyzer, tag);
     }
     else
         throw ValueUnavailable("no current connection available");
@@ -259,7 +262,7 @@ void rt::reject_protocol(const std::string& reason) {
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        return x->analyzer->ProtocolViolation(reason.c_str());
+        return ::spicy::zeek::compat::Analyzer_AnalyzerViolation(x->analyzer, reason.c_str());
     else
         throw ValueUnavailable("no current connection available");
 }
