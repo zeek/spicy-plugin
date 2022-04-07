@@ -88,7 +88,7 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
         const auto analyzer_args = _state.cookie().analyzer->GetArgs();
 
         file->FileEvent(Spicy::max_file_depth_exceeded,
-                        {file_val, analyzer_args, compat::val_mgr_Count(_state.cookie().depth)});
+                        {file_val, analyzer_args, ::zeek::val_mgr->Count(_state.cookie().depth)});
         reporter::analyzerError(_state.cookie().analyzer, "maximal file depth exceeded", "Spicy file analysis plugin");
         return false;
     }

@@ -177,7 +177,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag, bool enable);
+    bool toggleProtocolAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag, bool enable);
 
     /**
      * Explicitly enable/disable a file analyzer. By default, all analyzers
@@ -189,7 +189,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag, bool enable);
+    bool toggleFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag, bool enable);
 
 #ifdef HAVE_PACKET_ANALYZERS
     /**
@@ -203,7 +203,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag, bool enable);
+    bool togglePacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag, bool enable);
 #endif
 
     /**

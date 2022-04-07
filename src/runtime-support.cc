@@ -47,7 +47,7 @@ void rt::register_enum_type(
 void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(name); }
 
 ::zeek::EventHandlerPtr rt::internal_handler(const std::string& name) {
-    auto handler = zeek::compat::event_register_Lookup(name);
+    auto handler = ::zeek::event_registry->Lookup(name);
 
     if ( ! handler )
         reporter::internalError(::hilti::rt::fmt("Spicy event %s was not installed", name));
@@ -60,38 +60,36 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     // Caller must have checked already that there's a handler availale.
     assert(handler);
 
-    auto zeek_args =
-        zeek::compat::TypeList_GetTypes(zeek::compat::FuncType_ArgTypes(compat::EventHandler_GetType(handler)));
-    if ( args.size() != zeek::compat::TypeList_GetTypesSize(zeek_args) )
+    const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
+    if ( args.size() != static_cast<uint64_t>(zeek_args.size()) )
         throw TypeMismatch(hilti::rt::fmt("expected %" PRIu64 " parameters, but got %zu",
-                                          zeek::compat::TypeList_GetTypesSize(zeek_args), args.size()),
+                                          static_cast<uint64_t>(zeek_args.size()), args.size()),
                            location);
 
-    ::zeek::Args vl = zeek::compat::ZeekArgs_New();
+    ::zeek::Args vl = ::zeek::Args();
     for ( const auto& v : args ) {
         if ( v )
-            zeek::compat::ZeekArgs_Append(vl, v);
+            vl.emplace_back(v);
         else
             // Shouldn't happen here, but we have to_vals() that
             // (legitimately) return null in certain contexts.
             throw InvalidValue("null value encountered after conversion", location);
     }
 
-    zeek::compat::event_mgr_Enqueue(handler, vl);
+    ::zeek::event_mgr.Enqueue(handler, vl);
 }
 
 ::zeek::TypePtr rt::event_arg_type(const ::zeek::EventHandlerPtr& handler,
                                    const hilti::rt::integer::safe<uint64_t>& idx, const std::string& location) {
     assert(handler);
 
-    auto zeek_args =
-        zeek::compat::TypeList_GetTypes(zeek::compat::FuncType_ArgTypes(compat::EventHandler_GetType(handler)));
-    if ( idx >= static_cast<uint64_t>(zeek::compat::TypeList_GetTypesSize(zeek_args)) )
+    const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
+    if ( idx >= static_cast<uint64_t>(zeek_args.size()) )
         throw TypeMismatch(hilti::rt::fmt("more parameters given than the %" PRIu64 " that the Zeek event expects",
-                                          zeek::compat::TypeList_GetTypesSize(zeek_args)),
+                                          static_cast<uint64_t>(zeek_args.size())),
                            location);
 
-    return zeek::compat::ZeekArgs_Get(zeek_args, idx);
+    return zeek_args[idx];
 }
 
 ::zeek::ValPtr rt::current_conn(const std::string& location) {
@@ -109,7 +107,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        return zeek::compat::val_mgr_Bool(x->is_orig);
+        return ::zeek::val_mgr->Bool(x->is_orig);
     else
         throw ValueUnavailable("$is_orig not available", location);
 }
@@ -148,7 +146,7 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::FileAnalyzer>(cookie) )
-        return zeek::compat::File_ToVal(x->analyzer->GetFile());
+        return x->analyzer->GetFile()->ToVal();
     else
         throw ValueUnavailable("$file not available", location);
 }
@@ -161,7 +159,7 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
     if ( auto c = std::get_if<cookie::PacketAnalyzer>(cookie) ) {
         if ( ! c->packet_val )
             // We cache the built value in case we need it multiple times.
-            c->packet_val = zeek::compat::Packet_ToRawPktHdrVal(c->packet);
+            c->packet_val = c->packet->ToRawPktHdrVal();
 
         return c->packet_val;
     }
@@ -479,14 +477,13 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
         // tricks: we can get to the fa_info value, but read-only; const_cast
         // comes to our rescue. And then we just write directly into the
         // record fields.
-        auto rval = const_cast<::zeek::RecordVal*>(zeek::compat::File_ToVal(file)->AsRecordVal());
-        auto current = zeek::compat::File_ToVal(f->analyzer->GetFile())->AsRecordVal();
-        rval->Assign(::zeek::id::fa_file->FieldOffset("parent_id"),
-                     zeek::compat::RecordVal_GetField(current, "id")); // set to parent
+        auto rval = file->ToVal()->AsRecordVal();
+        auto current = f->analyzer->GetFile()->ToVal()->AsRecordVal();
+        rval->Assign(::zeek::id::fa_file->FieldOffset("parent_id"), current->GetField("id")); // set to parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("conns"),
-                     zeek::compat::RecordVal_GetField(current, "conns")); // copy from parent
+                     current->GetField("conns")); // copy from parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
-                     zeek::compat::RecordVal_GetField(current, "is_orig")); // copy from parent
+                     current->GetField("is_orig")); // copy from parent
     }
 
     // Double check everybody agrees on the file ID.
@@ -551,5 +548,5 @@ void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
 }
 
 hilti::rt::Time rt::network_time() {
-    return hilti::rt::Time(zeek::compat::networkTime(), hilti::rt::Time::SecondTag());
+    return hilti::rt::Time(::zeek::run_state::network_time, hilti::rt::Time::SecondTag());
 }
