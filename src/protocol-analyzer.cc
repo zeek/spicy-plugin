@@ -175,23 +175,12 @@ void TCP_Analyzer::EndpointEOF(bool is_orig) {
     Finish(is_orig);
 }
 
-#if ZEEK_VERSION_NUMBER >= 30200
 void TCP_Analyzer::ConnectionClosed(::zeek::analyzer::tcp::TCP_Endpoint* endpoint,
-                                    ::zeek::analyzer::tcp::TCP_Endpoint* peer, bool gen_event)
-#else
-void TCP_Analyzer::ConnectionClosed(::zeek::analyzer::tcp::TCP_Endpoint* endpoint,
-                                    ::zeek::analyzer::tcp::TCP_Endpoint* peer, int gen_event)
-#endif
-{
+                                    ::zeek::analyzer::tcp::TCP_Endpoint* peer, bool gen_event) {
     ::zeek::analyzer::tcp::TCP_ApplicationAnalyzer::ConnectionClosed(endpoint, peer, gen_event);
 }
 
-#if ZEEK_VERSION_NUMBER >= 30200
-void TCP_Analyzer::ConnectionFinished(bool half_finished)
-#else
-void TCP_Analyzer::ConnectionFinished(int half_finished)
-#endif
-{
+void TCP_Analyzer::ConnectionFinished(bool half_finished) {
     ::zeek::analyzer::tcp::TCP_ApplicationAnalyzer::ConnectionFinished(half_finished);
 }
 

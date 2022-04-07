@@ -80,27 +80,12 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
 
     auto* file = _state.cookie().analyzer->GetFile();
 
-    const auto& max_file_depth =
-#if ZEEK_VERSION_NUMBER < 30200
-        ::BifConst::Spicy::max_file_depth;
-#else
-        ::zeek::BifConst::Spicy::max_file_depth;
-#endif
+    const auto& max_file_depth = ::zeek::BifConst::Spicy::max_file_depth;
 
     if ( _state.cookie().depth >= max_file_depth ) {
-        const auto& file_val =
-#if ZEEK_VERSION_NUMBER < 30200
-            file->GetVal()->Ref();
-#else
-            file->ToVal();
-#endif
+        const auto& file_val = file->ToVal();
 
-        const auto analyzer_args =
-#if ZEEK_VERSION_NUMBER < 30200
-            _state.cookie().analyzer->Args()->Ref();
-#else
-            _state.cookie().analyzer->GetArgs();
-#endif
+        const auto analyzer_args = _state.cookie().analyzer->GetArgs();
 
         file->FileEvent(Spicy::max_file_depth_exceeded,
                         {file_val, analyzer_args, compat::val_mgr_Count(_state.cookie().depth)});

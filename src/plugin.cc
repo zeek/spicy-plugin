@@ -40,12 +40,10 @@ plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 using namespace spicy::zeek;
 
 plugin::Zeek_Spicy::Plugin::Plugin() {
-#ifdef ZEEK_VERSION_NUMBER // Not available in Zeek 3.0 yet.
     if ( spicy::zeek::configuration::ZeekVersionNumber != ZEEK_VERSION_NUMBER )
         reporter::fatalError(
             hilti::rt::fmt("Zeek version mismatch: running with Zeek %d, but plugin compiled for Zeek %s",
                            ZEEK_VERSION_NUMBER, spicy::zeek::configuration::ZeekVersionNumber));
-#endif
 
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     hilti::rt::filesystem::path plugin_path;
