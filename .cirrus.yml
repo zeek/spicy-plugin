@@ -32,7 +32,7 @@ zkg_ubuntu_task:
     - zkg install --force --skiptests .
 
   check_script:
-    - zeek -N _Zeek::Spicy
+    - zeek -N Zeek::Spicy
     - zeek local
 
   always:
@@ -70,7 +70,7 @@ standalone_ubuntu_task:
     - (cd build && run-clang-tidy -j $(nproc) $(jq -r '.[].file | select(contains(".bif") | not)' <compile_commands.json ))
 
   test_build_script:
-    - ZEEK_PLUGIN_PATH=$(pwd)/build zeek -N _Zeek::Spicy
+    - ZEEK_PLUGIN_PATH=$(pwd)/build zeek -N Zeek::Spicy
     - make -C tests test
 
   install_script:
@@ -78,7 +78,7 @@ standalone_ubuntu_task:
     - rm -rf build
 
   test_install_script:
-    - zeek -N _Zeek::Spicy
+    - zeek -N Zeek::Spicy
     - PATH=/opt/spicy-plugin/bin:$PATH make -C tests test-install
 
 static_zeek_master_ubuntu_task:
@@ -113,10 +113,10 @@ static_zeek_master_ubuntu_task:
 
   # Note that the build tests need the Zeek headers installed.
   test_build_script:
-    - (. zeek/build/zeek-path-dev.sh && ./zeek/build/src/zeek -N _Zeek::Spicy)
+    - (. zeek/build/zeek-path-dev.sh && ./zeek/build/src/zeek -N Zeek::Spicy)
     - PATH=$(pwd)/zeek/build/src:$(pwd)/zeek/build/src/builtin-plugins/$(basename $(pwd))/bin:$PATH make -C tests test
 
   test_install_script:
     - rm -rf zeek/build
-    - PATH=/opt/zeek-master/bin:$PATH zeek -N _Zeek::Spicy
+    - PATH=/opt/zeek-master/bin:$PATH zeek -N Zeek::Spicy
     - PATH=/opt/zeek-master/bin:$PATH make -C tests test-install

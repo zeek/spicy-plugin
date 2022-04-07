@@ -1,7 +1,7 @@
 # @TEST-EXEC: spicyz -o ssh.hlto ssh.spicy ./ssh.evt
-# @TEST-EXEC: ${ZEEK} -b _Zeek::Spicy ssh.hlto %INPUT >>output
+# @TEST-EXEC: ${ZEEK} -b Zeek::Spicy ssh.hlto %INPUT >>output
 # @TEST-EXEC: echo >>output
-# @TEST-EXEC: ${ZEEK} -b _Zeek::Spicy %INPUT >>output
+# @TEST-EXEC: ${ZEEK} -b Zeek::Spicy %INPUT >>output
 # @TEST-EXEC: btest-diff output
 #
 # @TEST-DOC: Check that we can access ANALYZER_* tags during Zeek-side script parse time.

@@ -1,6 +1,6 @@
 # @TEST-EXEC: spicyz -o test.hlto %INPUT test.evt
-# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace _Zeek::Spicy test.hlto Spicy::enable_print=T >>output
-# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ipv6.trace _Zeek::Spicy test.hlto Spicy::enable_print=T >>output
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace Zeek::Spicy test.hlto Spicy::enable_print=T >>output
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ipv6.trace Zeek::Spicy test.hlto Spicy::enable_print=T >>output
 # @TEST-EXEC: btest-diff output
 
 module Test;

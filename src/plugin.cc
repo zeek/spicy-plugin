@@ -445,7 +445,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enabl
 
 ::zeek::plugin::Configuration plugin::Zeek_Spicy::Plugin::Configure() {
     ::zeek::plugin::Configuration config;
-    config.name = "_Zeek::Spicy"; // Prefix with underscore to make sure it gets loaded first
+    config.name = "Zeek::Spicy";
     config.description = "Support for Spicy parsers (*.spicy, *.evt, *.hlto)";
     config.version.major = spicy::zeek::configuration::PluginVersionMajor;
     config.version.minor = spicy::zeek::configuration::PluginVersionMinor;

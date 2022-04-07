@@ -37,11 +37,11 @@ through the Zeek package manager:
 
 This will pull down the package, compile and test the plugin, and then
 install and activate it. To check that the plugin becomes available,
-run `zeek -N _Zeek::Spicy` afterwards, it should show output like
+run `zeek -N Zeek::Spicy` afterwards, it should show output like
 this:
 
-    # zeek -NN _Zeek::Spicy
-    _Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+    # zeek -NN Zeek::Spicy
+    Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
 
 If you want to develop your own Spicy analyzers for Zeek, you will
 need a tool that comes with the plugin: ``spicyz``. Please see the
@@ -68,8 +68,8 @@ that you can write to the Zeek plugin directory):
 
 Zeek should now show it:
 
-    # zeek -N _Zeek::Spicy
-    _Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+    # zeek -N Zeek::Spicy
+    Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
 
 You will also find `spicyz` in `${prefix}/bin` now.
 
