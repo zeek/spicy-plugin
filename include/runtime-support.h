@@ -269,6 +269,11 @@ std::string file_begin(const std::optional<std::string>& mime_type);
 std::string fuid();
 
 /**
+ * Close the current active connection.
+ */
+void close_connection();
+
+/**
  * Signals the expected size of a file to Zeek's file analysis.
  *
  * @param size expected final size of the file

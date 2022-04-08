@@ -66,6 +66,9 @@ public function file_begin(mime_type: optional<string> = Null) : string &cxxname
 ## Returns the current file's FUID.
 public function fuid() : string &cxxname="spicy::zeek::rt::fuid";
 
+## Close the current active connection.
+public function close_connection() : void &cxxname="spicy::zeek::rt::close_connection";
+
 ## Signals the expected size of a file to Zeek's file analysis.
 ##
 ## size: expected size of file

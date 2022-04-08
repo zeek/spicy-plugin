@@ -1,0 +1,30 @@
+# @TEST-EXEC: spicyz -o test.hlto %INPUT test.evt
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/long-dns-connection.pcap _Zeek::Spicy test.hlto
+
+module Test;
+
+import zeek;
+
+public type Foo = unit {
+    on %done { 
+        self.context().counter = self.context().counter + 1;
+        # print self.context().counter;
+
+        # close the connection if it is too long 
+        if (self.context().counter > 10){
+            zeek::close_connection();
+            # print "closed connection";
+        }
+    }
+    x : /./;
+
+    %context = Counter;
+};
+
+type Counter = tuple<counter:int64>;
+
+# @TEST-START-FILE test.evt
+protocol analyzer spicy::Test over UDP:
+    port 53/udp,
+    parse originator with Test::Foo;
+# @TEST-END-FILE

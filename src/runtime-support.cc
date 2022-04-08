@@ -12,6 +12,7 @@
 #include <zeek-spicy/zeek-reporter.h>
 
 #include "zeek/analyzer/Analyzer.h"
+#include "zeek/session/Manager.h"
 
 using namespace spicy::zeek;
 using namespace plugin::Zeek_Spicy;
@@ -442,6 +443,22 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
             ::zeek::file_mgr->DataIn(data_, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid,
                                      mime_type);
     }
+}
+
+void rt::close_connection(){
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        if (::zeek::session_mgr){
+            ::zeek::session_mgr->Remove(c->analyzer->Conn());
+            return ;
+        }
+        else
+            throw spicy::zeek::rt::ValueUnavailable("Session Manager not available");
+    }
+    else
+        throw spicy::zeek::rt::ValueUnavailable("close_connection() not available in the curent context");
 }
 
 std::string rt::fuid() {
