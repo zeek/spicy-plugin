@@ -123,7 +123,6 @@ public:
      */
     const spicy::rt::Parser* parserForFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag);
 
-#ifdef HAVE_PACKET_ANALYZERS
     /**
      * Runtime method to retrieve the Spicy parser for a given Zeek packet analyzer tag.
      *
@@ -132,7 +131,6 @@ public:
      * valid for the life-time of the process.
      */
     const spicy::rt::Parser* parserForPacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag);
-#endif
 
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
@@ -156,7 +154,6 @@ public:
      */
     spicy::zeek::compat::FileAnalysisTag tagForFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag);
 
-#ifdef HAVE_PACKET_ANALYZERS
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
      * script-land when talking about a packet analyzer. This is normally the
@@ -167,7 +164,6 @@ public:
      * @return desired tag for passing to script-land.
      */
     spicy::zeek::compat::AnalyzerTag tagForPacketAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag);
-#endif
 
     /**
      * Explicitly enable/disable a protocol analyzer. By default, all analyzers
@@ -191,7 +187,6 @@ public:
      */
     bool toggleFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag, bool enable);
 
-#ifdef HAVE_PACKET_ANALYZERS
     /**
      * Explicitly enable/disable a packet analyzer. By default, all analyzers
      * loaded will also be activated. By calling this method, an analyzer can
@@ -204,7 +199,6 @@ public:
      * @param enable true to enable, false to disable
      */
     bool togglePacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag, bool enable);
-#endif
 
     /**
      * Explicitly enable/disable an analyzer. By default, all analyzers
@@ -294,7 +288,6 @@ private:
         spicy::zeek::compat::FileAnalysisTag replaces;
     };
 
-#ifdef HAVE_PACKET_ANALYZERS
     /** Captures a registered file analyzer. */
     struct PacketAnalyzerInfo {
         // Filled in when registering the analyzer.
@@ -307,13 +300,10 @@ private:
         // Filled in during InitPostScript().
         const spicy::rt::Parser* parser;
     };
-#endif
 
     std::vector<ProtocolAnalyzerInfo> _protocol_analyzers_by_type;
     std::vector<FileAnalyzerInfo> _file_analyzers_by_type;
-#ifdef HAVE_PACKET_ANALYZERS
     std::vector<PacketAnalyzerInfo> _packet_analyzers_by_type;
-#endif
     std::unordered_map<std::string, hilti::rt::Library> _libraries;
     std::set<std::string> _locations;
     std::unordered_map<std::string, ::zeek::detail::IDPtr> _events;

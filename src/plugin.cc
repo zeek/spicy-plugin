@@ -20,9 +20,7 @@
 
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/file-analyzer.h>
-#ifdef HAVE_PACKET_ANALYZERS
 #include <zeek-spicy/packet-analyzer.h>
-#endif
 #include <zeek-spicy/plugin.h>
 #include <zeek-spicy/protocol-analyzer.h>
 #include <zeek-spicy/zeek-compat.h>
@@ -195,7 +193,6 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     _file_analyzers_by_type[info.type] = info;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name, const std::string& parser,
                                                         const std::string& linker_scope) {
     ZEEK_DEBUG(hilti::rt::fmt("Have Spicy packet analyzer %s", name));
@@ -226,7 +223,6 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     _packet_analyzers_by_type.resize(info.type + 1);
     _packet_analyzers_by_type[info.type] = info;
 }
-#endif
 
 void plugin::Zeek_Spicy::Plugin::registerEnumType(
     const std::string& ns, const std::string& id,
@@ -294,12 +290,10 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForFileAnalyzer(
     return _file_analyzers_by_type[tag.Type()].parser;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(
     const ::spicy::zeek::compat::PacketAnalysisTag& tag) {
     return _packet_analyzers_by_type[tag.Type()].parser;
 }
-#endif
 
 ::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForProtocolAnalyzer(
     const ::spicy::zeek::compat::AnalyzerTag& tag) {
@@ -317,13 +311,11 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(
         return tag;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 ::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForPacketAnalyzer(
     const ::spicy::zeek::compat::AnalyzerTag& tag) {
     // Don't have a replacement mechanism currently.
     return tag;
 }
-#endif
 
 bool plugin::Zeek_Spicy::Plugin::toggleProtocolAnalyzer(const ::spicy::zeek::compat::AnalyzerTag& tag, bool enable) {
     auto type = tag.Type();
@@ -409,7 +401,6 @@ bool plugin::Zeek_Spicy::Plugin::toggleFileAnalyzer(const ::spicy::zeek::compat:
 #endif
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 bool plugin::Zeek_Spicy::Plugin::togglePacketAnalyzer(const ::spicy::zeek::compat::PacketAnalysisTag& tag,
                                                       bool enable) {
     auto type = tag.Type();
@@ -426,7 +417,6 @@ bool plugin::Zeek_Spicy::Plugin::togglePacketAnalyzer(const ::spicy::zeek::compa
                               analyzer.name_analyzer));
     return false;
 }
-#endif
 
 bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enable) {
     if ( tag->GetType() == ::zeek::analyzer_mgr->GetTagType() ) {
@@ -443,14 +433,12 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enabl
             return false;
     }
 
-#ifdef HAVE_PACKET_ANALYZERS
     if ( tag->GetType() == ::zeek::packet_mgr->GetTagType() ) {
         if ( auto analyzer = ::zeek::packet_mgr->Lookup(tag) )
             return togglePacketAnalyzer(analyzer->Tag(), enable);
         else
             return false;
     }
-#endif
 
     return false;
 }
@@ -642,7 +630,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         }
     }
 
-#ifdef HAVE_PACKET_ANALYZERS
     for ( auto& p : _packet_analyzers_by_type ) {
         if ( p.type == 0 )
             // vector element not set
@@ -651,7 +638,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         ZEEK_DEBUG(hilti::rt::fmt("Registering packet analyzer %s with Zeek", p.name_analyzer.c_str()));
         p.parser = find_parser(p.name_analyzer, p.name_parser, p.linker_scope);
     }
-#endif
 
     ZEEK_DEBUG("Done with post-script initialization");
 }

@@ -30,11 +30,7 @@ void rt::register_file_analyzer(const std::string& name, const hilti::rt::Vector
 }
 
 void rt::register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& linker_scope) {
-#ifdef HAVE_PACKET_ANALYZERS
     OurPlugin->registerPacketAnalyzer(name, parser, linker_scope);
-#else
-    throw Unsupported("packet analyzer functionality requires Zeek >= 4.0");
-#endif
 }
 
 void rt::register_enum_type(
@@ -131,12 +127,10 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
         auto name = ::zeek::file_mgr->GetComponentName(f->analyzer->Tag());
         ZEEK_DEBUG(hilti::rt::fmt("[%s/%" PRIu32 "] %s", name, f->analyzer->GetID(), msg));
     }
-#ifdef HAVE_PACKET_ANALYZERS
     else if ( const auto f = std::get_if<cookie::PacketAnalyzer>(&cookie) ) {
         auto name = ::zeek::packet_mgr->GetComponentName(f->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("[%s] %s", name, msg));
     }
-#endif
     else
         throw ValueUnavailable("neither $conn nor $file nor packet analyzer available for debug logging");
 }
@@ -152,7 +146,6 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
 }
 
 ::zeek::ValPtr rt::current_packet(const std::string& location) {
-#ifdef HAVE_PACKET_ANALYZERS
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -165,9 +158,6 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
     }
     else
         throw ValueUnavailable("$packet not available", location);
-#else
-    throw Unsupported("packet analyzer functionality requires Zeek >= 4.0");
-#endif
 }
 
 hilti::rt::Bool rt::is_orig() {
@@ -534,7 +524,6 @@ void rt::file_end(const std::optional<std::string>& fid) {
 }
 
 void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
-#ifdef HAVE_PACKET_ANALYZERS
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -542,9 +531,6 @@ void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
         c->next_analyzer = identifier;
     else
         throw ValueUnavailable("no current packet analyzer available");
-#else
-    throw Unsupported("packet analyzer functionality requires Zeek >= 4.0");
-#endif
 }
 
 hilti::rt::Time rt::network_time() {

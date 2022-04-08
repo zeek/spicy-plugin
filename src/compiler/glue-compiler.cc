@@ -424,13 +424,9 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
             }
 
             else if ( looking_at(*chunk, 0, "packet") ) {
-#ifdef HAVE_PACKET_ANALYZERS
                 auto a = parsePacketAnalyzer(*chunk);
                 _packet_analyzers.push_back(a);
                 ZEEK_DEBUG(hilti::util::fmt("  Got packet analyzer definition for %s", a.name));
-#else
-                throw ParseError("packet analyzers require Zeek >= 4.0");
-#endif
             }
 
             else if ( looking_at(*chunk, 0, "on") ) {
@@ -634,7 +630,6 @@ glue::FileAnalyzer GlueCompiler::parseFileAnalyzer(const std::string& chunk) {
     return a;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 glue::PacketAnalyzer GlueCompiler::parsePacketAnalyzer(const std::string& chunk) {
     glue::PacketAnalyzer a;
     a.location = _locations.back();
@@ -668,7 +663,6 @@ glue::PacketAnalyzer GlueCompiler::parsePacketAnalyzer(const std::string& chunk)
 
     return a;
 }
-#endif
 
 glue::Event GlueCompiler::parseEvent(const std::string& chunk) {
     glue::Event ev;
@@ -808,7 +802,6 @@ bool GlueCompiler::compile() {
                               builder::call("hilti::linker_scope", {})});
     }
 
-#ifdef HAVE_PACKET_ANALYZERS
     for ( auto& a : _packet_analyzers ) {
         ZEEK_DEBUG(hilti::util::fmt("Adding packet analyzer '%s'", a.name));
 
@@ -826,7 +819,6 @@ bool GlueCompiler::compile() {
                              {builder::string(a.name), builder::string(a.unit_name),
                               builder::call("hilti::linker_scope", {})});
     }
-#endif
 
 #if 0
     // Check that our events align with what's defined on the Zeek side.

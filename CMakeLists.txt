@@ -94,12 +94,6 @@ else ()
     set(ZEEK_DEBUG_BUILD "no")
 endif ()
 
-if (${ZEEK_VERSION_NUMBER} GREATER_EQUAL 30300) # Zeek >= 3.3 (aka 4.0)
-    set(HAVE_PACKET_ANALYZERS yes)
-else ()
-    set(HAVE_PACKET_ANALYZERS no)
-endif ()
-
 if (NOT CMAKE_BUILD_TYPE)
     # We follow Zeek's build mode by default.
     if (ZEEK_DEBUG_BUILD)

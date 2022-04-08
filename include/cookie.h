@@ -102,7 +102,6 @@ struct FileAnalyzer {
     FileStateStack fstate; /**< file analysis state for nested files */
 };
 
-#ifdef HAVE_PACKET_ANALYZERS
 /** State on the current file analyzer. */
 struct PacketAnalyzer {
     ::zeek::packet_analysis::Analyzer* analyzer = nullptr; /**< current analyzer */
@@ -110,15 +109,10 @@ struct PacketAnalyzer {
     ::zeek::ValPtr packet_val = nullptr;                   /**< cached "raw_pkt_hdr" val for packet */
     std::optional<uint32_t> next_analyzer;
 };
-#endif
 
 } // namespace cookie
 
 /** Type of state stored in HILTI's execution context during Spicy processing. */
-#ifdef HAVE_PACKET_ANALYZERS
 using Cookie = std::variant<cookie::ProtocolAnalyzer, cookie::FileAnalyzer, cookie::PacketAnalyzer>;
-#else
-using Cookie = std::variant<cookie::ProtocolAnalyzer, cookie::FileAnalyzer>;
-#endif
 
 } // namespace spicy::zeek::rt

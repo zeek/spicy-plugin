@@ -7,7 +7,6 @@ namespace spicy::zeek::configuration {
 #cmakedefine SPICY_HAVE_TOOLCHAIN
 #cmakedefine ZEEK_SPICY_PLUGIN_USE_JIT
 #cmakedefine ZEEK_SPICY_PLUGIN_INTERNAL_BUILD
-#cmakedefine HAVE_PACKET_ANALYZERS
 
 // We make sure this is always defined, either as 0 or 1, so that we
 // can catch when this header wasn't included.
