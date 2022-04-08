@@ -3,7 +3,7 @@
 # @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace -s ./ssh.sig Zeek::Spicy ssh.hlto %INPUT ./extern.zeek | sort >>output
 # @TEST-EXEC: echo === violation >>output
 # @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/http-post.trace -s ./ssh.sig Zeek::Spicy ssh.hlto  ./extern.zeek %INPUT | sort >>output
-# @TEST-EXEC: TEST_DIFF_CANONIFIER= btest-diff output
+# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/diff-remove-abspath btest-diff output
 
 event ssh::banner(c: connection, is_orig: bool, version: string, software: string)
 	{
@@ -27,7 +27,7 @@ event protocol_violation(c: connection, atype: Analyzer::Tag, aid: count, reason
 @endif
 	{
 	if ( atype == Analyzer::ANALYZER_SPICY_SSH )
-	    print "violation", atype;
+	    print "violation", atype, reason;
 	}
 
 # @TEST-START-FILE extern.zeek

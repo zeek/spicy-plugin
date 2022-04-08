@@ -4,6 +4,7 @@
 #include <zeek-spicy/plugin.h>
 #include <zeek-spicy/protocol-analyzer.h>
 #include <zeek-spicy/runtime-support.h>
+#include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
 
 using namespace spicy::zeek;
@@ -63,7 +64,9 @@ void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
         hilti::rt::context::CookieSetter _(&endp->cookie());
         endp->process(len, reinterpret_cast<const char*>(data));
     } catch ( const spicy::rt::ParseError& e ) {
-        reporter::weird(endp->cookie().analyzer->Conn(), e.what());
+        STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);
         originator().skipRemaining();
         responder().skipRemaining();
         endp->cookie().analyzer->SetSkip(true);
@@ -83,7 +86,9 @@ void ProtocolAnalyzer::Finish(bool is_orig) {
         hilti::rt::context::CookieSetter _(&endp->cookie());
         endp->finish();
     } catch ( const spicy::rt::ParseError& e ) {
-        reporter::weird(endp->cookie().analyzer->Conn(), e.what());
+        STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);
         endp->skipRemaining();
     } catch ( const hilti::rt::Exception& e ) {
         reporter::analyzerError(endp->cookie().analyzer, e.description(),

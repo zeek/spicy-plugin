@@ -251,18 +251,21 @@ void rt::confirm_protocol() {
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
+        ZEEK_DEBUG(hilti::rt::fmt("confirming protocol %s", tag.AsString()));
         return ::spicy::zeek::compat::Analyzer_AnalyzerConfirmation(x->analyzer, tag);
     }
-    else
-        throw ValueUnavailable("no current connection available");
+    throw ValueUnavailable("no current connection available");
 }
 
 void rt::reject_protocol(const std::string& reason) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        return ::spicy::zeek::compat::Analyzer_AnalyzerViolation(x->analyzer, reason.c_str());
+    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
+        ZEEK_DEBUG(hilti::rt::fmt("rejecting protocol %s", tag.AsString()));
+        return ::spicy::zeek::compat::Analyzer_AnalyzerViolation(x->analyzer, "protocol rejected", nullptr, 0, tag);
+    }
     else
         throw ValueUnavailable("no current connection available");
 }
