@@ -269,6 +269,12 @@ std::string file_begin(const std::optional<std::string>& mime_type);
 std::string fuid();
 
 /**
+ * Terminates the currently active Zeek-side session, flushing all state. Any
+ * subsequent activity will start a new session from scratch.
+ */
+void terminate_session();
+
+/**
  * Signals the expected size of a file to Zeek's file analysis.
  *
  * @param size expected final size of the file

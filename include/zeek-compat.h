@@ -63,7 +63,10 @@
 #include <zeek/analyzer/protocol/pia/PIA.h>
 #include <zeek/analyzer/protocol/tcp/TCP.h>
 #if ZEEK_VERSION_NUMBER < 40100 // Zeek < 4.1
+#include <zeek/Sessions.h>
 #include <zeek/analyzer/protocol/udp/UDP.h>
+#else // Zeek >= 4.1
+#include <zeek/session/Manager.h>
 #endif
 #include <zeek/file_analysis/Analyzer.h>
 #include <zeek/file_analysis/File.h>
@@ -135,8 +138,16 @@ inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, con
 
 #if ZEEK_VERSION_NUMBER >= 40100 // Zeek >= 4.1
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->GetVal(); }
+inline void SessionMgr_Remove(::zeek::Connection* c) {
+    assert(::zeek::session_mgr);
+    ::zeek::session_mgr->Remove(c);
+}
 #else
 inline auto Connection_ConnVal(::zeek::Connection* c) { return c->ConnVal(); }
+inline void SessionMgr_Remove(::zeek::Connection* c) {
+    assert(::zeek::sessions);
+    ::zeek::sessions->Remove(c);
+}
 #endif
 
 } // namespace spicy::zeek::compat
