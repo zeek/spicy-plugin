@@ -271,7 +271,7 @@ std::string fuid();
 /**
  * Close the current active connection.
  */
-void close_connection();
+void terminate_session();
 
 /**
  * Signals the expected size of a file to Zeek's file analysis.
