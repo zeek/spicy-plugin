@@ -18,6 +18,7 @@ public type Test = unit {
     j: bytes &size=1 &convert=interval(4.0);
 
     var s: set<uint64> = set<uint64>(1,2,3);
+    var t: tuple<a: int64, b: string> = (47, "foo"); # Tuple conversion will ignore element names.
     var v: vector<bytes> = vector<bytes>(b"A", b"B", b"C");
     var l: vector<bytes> = vector<bytes>(b"A", b"B", b"C");
     var m: map<int64, string> = map(1: "A", 2: "B", 3: "C");
@@ -47,6 +48,7 @@ on Conv::Test -> event conv::test($conn,
                                   self.i,
                                   self.j,
                                   self.s,
+                                  self.t,
                                   self.v,
                                   self.l,
                                   self.m
@@ -54,6 +56,10 @@ on Conv::Test -> event conv::test($conn,
 
 @TEST-END-FILE
 
+type MyRecord: record {
+    i: int;
+    s: string;
+};
 
 event conv::test(x: connection,
                  is_orig: bool,
@@ -68,6 +74,7 @@ event conv::test(x: connection,
                  i: time,
                  j: interval,
                  s: set[count],
+                 t: MyRecord,
                  v: vector of string,
                  l: vector of string,
                  m: table[int] of string
@@ -86,6 +93,7 @@ event conv::test(x: connection,
     print i;
     print fmt("%f", j), type_name(j); # print as float as interval format differs between versions
     print s;
+    print t;
     print v;
     print l;
     print m;
