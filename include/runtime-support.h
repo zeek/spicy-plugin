@@ -320,6 +320,8 @@ hilti::rt::Time network_time();
 // Forward-declare to_val() functions.
 template<typename T, typename std::enable_if_t<hilti::rt::is_tuple<T>::value>* = nullptr>
 ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
+template<typename T, typename std::enable_if_t<std::is_base_of<::hilti::rt::trait::isStruct, T>::value>* = nullptr>
+::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
 template<typename T, typename std::enable_if_t<std::is_enum<T>::value>* = nullptr>
 ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
 template<typename K, typename V>
@@ -625,6 +627,64 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
         idx++;
     });
 
+
+    return zeek::compat::ToValPtr(std::move(rval));
+}
+
+/**
+ * Converts Spicy-side struct to a Zeek record value. The result is returned
+ * with a ref count +1.
+ */
+template<typename T, typename std::enable_if_t<std::is_base_of<::hilti::rt::trait::isStruct, T>::value>*>
+inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location) {
+    if ( target->Tag() != ::zeek::TYPE_RECORD )
+        throw TypeMismatch("struct", target, location);
+
+    auto rtype = target->AsRecordType();
+
+    auto rval = std::make_unique<::zeek::RecordVal>(zeek::compat::ToValCtorType(rtype));
+    int idx = 0;
+
+    auto num_fields = rtype->NumFields();
+
+    t.__visit([&](const auto& name, const auto& val) {
+        if ( idx >= num_fields )
+            throw TypeMismatch(hilti::rt::fmt("no matching record field for field '%s'", name), location);
+
+        auto field = zeek::compat::RecordType_GetFieldType(rtype, idx);
+        std::string field_name = rtype->FieldName(idx);
+
+        if ( field_name != name )
+            throw TypeMismatch(hilti::rt::fmt("mismatch in field name: expected '%s', found '%s'", name, field_name),
+                               location);
+
+        ::zeek::ValPtr v = nullptr;
+
+        if constexpr ( std::is_same<decltype(val), const hilti::rt::Null&>::value ) {
+            // "Null" turns into an unset optional record field.
+        }
+        else
+            // This may return a nullptr in cases where the field is to be left unset.
+            v = to_val(val, field, location);
+
+        if ( v )
+            rval->Assign(idx, v);
+        else {
+            // Field must be &optional or &default.
+            if ( auto attrs = rtype->FieldDecl(idx)->attrs;
+                 ! attrs || ! (zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_DEFAULT) ||
+                               zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_OPTIONAL)) )
+                throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", field_name), location);
+        }
+
+        idx++;
+    });
+
+    // We already check above that all Spicy-side fields are mapped so we
+    // can only hit this if there are uninitialized Zeek-side fields left.
+    if ( idx != num_fields )
+        throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx + 1)),
+                           location);
 
     return zeek::compat::ToValPtr(std::move(rval));
 }
