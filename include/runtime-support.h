@@ -615,9 +615,9 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
             rval->Assign(idx, v);
         else {
             // Field must be &optional or &default.
-            auto attrs = rtype->FieldDecl(idx)->attrs;
-            if ( ! (zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_DEFAULT) ||
-                    zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_OPTIONAL)) )
+            if ( auto attrs = rtype->FieldDecl(idx)->attrs;
+                 ! attrs || ! (zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_DEFAULT) ||
+                               zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_OPTIONAL)) )
                 throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx)),
                                    location);
         }
