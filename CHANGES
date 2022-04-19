@@ -1,3 +1,27 @@
+1.3.9-9 | 2022-04-14 14:56:35 +0200
+
+  * Do not emit events in bare mode. (Benjamin Bannier, Corelight)
+
+    We previously would emit events even in bare mode. With this patch
+    we now take advantage of Zeek's new `bare_mode` function if
+    available to detect whether we are not in bare mode and only emit
+    events in that case. If that function is unavailable we keep the
+    old behavior.
+
+  * GH-95: Add support for passing Spicy `structs` to Zeek as records.
+    (Benjamin Bannier, Corelight)
+
+  * Fix handling of absent attributes. (Benjamin Bannier, Corelight)
+
+  * Add test for tuple conversion Zeek record. (Benjamin Bannier,
+    Corelight)
+
+  * Do not reconfigure already configured CMake project. (Benjamin
+    Bannier, Corelight)
+
+  * Give an explicit return type to `protocol_begin`. (Benjamin
+    Bannier, Corelight)
+
 1.3.9 | 2022-03-15 15:05:26 +0100
 
   * GH-97: Add `zeek::conn_id()` runtime function to access Zeek's
