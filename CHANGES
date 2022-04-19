@@ -1,3 +1,21 @@
+1.3.9-19 | 2022-04-19 15:46:32 +0200
+
+  * Update plugin for Zeek >= 4.2. (Robin Sommer, Corelight)
+
+  * GH-44: Remove support for Zeek 3.x. The required minimum Zeek
+    version is now 4.0. (Robin Sommer, Corelight)
+
+ *  GH-44: Rename plugin from _Zeek::Spicy to Zeek::Spicy. This was
+    just a work-around in place for Zeek 3.x. (Robin Sommer,
+    Corelight)
+
+  * Fix bug triggering an internal error when no
+    `{protocol,analyzer}_confirmation` event handler was defined.
+    (Robin Sommer, Corelight)
+
+  * Add Zeek 4.2 to CI, remove Zeek 3.0 from CI. (Robin Sommer,
+    Corelight)
+
 1.3.9-9 | 2022-04-14 14:56:35 +0200
 
   * Do not emit events in bare mode. (Benjamin Bannier, Corelight)

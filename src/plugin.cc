@@ -20,9 +20,7 @@
 
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/file-analyzer.h>
-#ifdef HAVE_PACKET_ANALYZERS
 #include <zeek-spicy/packet-analyzer.h>
-#endif
 #include <zeek-spicy/plugin.h>
 #include <zeek-spicy/protocol-analyzer.h>
 #include <zeek-spicy/zeek-compat.h>
@@ -40,12 +38,10 @@ plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 using namespace spicy::zeek;
 
 plugin::Zeek_Spicy::Plugin::Plugin() {
-#ifdef ZEEK_VERSION_NUMBER // Not available in Zeek 3.0 yet.
     if ( spicy::zeek::configuration::ZeekVersionNumber != ZEEK_VERSION_NUMBER )
         reporter::fatalError(
             hilti::rt::fmt("Zeek version mismatch: running with Zeek %d, but plugin compiled for Zeek %s",
                            ZEEK_VERSION_NUMBER, spicy::zeek::configuration::ZeekVersionNumber));
-#endif
 
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     hilti::rt::filesystem::path plugin_path;
@@ -197,7 +193,6 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     _file_analyzers_by_type[info.type] = info;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name, const std::string& parser,
                                                         const std::string& linker_scope) {
     ZEEK_DEBUG(hilti::rt::fmt("Have Spicy packet analyzer %s", name));
@@ -228,7 +223,6 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     _packet_analyzers_by_type.resize(info.type + 1);
     _packet_analyzers_by_type[info.type] = info;
 }
-#endif
 
 void plugin::Zeek_Spicy::Plugin::registerEnumType(
     const std::string& ns, const std::string& id,
@@ -241,7 +235,7 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
     auto fqid = hilti::rt::fmt("%s::%s", ns, id);
     ZEEK_DEBUG(hilti::rt::fmt("Adding Zeek enum type %s", fqid));
 
-    auto etype = ::spicy::zeek::compat::EnumType_New(fqid);
+    auto etype = ::zeek::make_intrusive<::zeek::EnumType>(fqid);
 
     for ( auto [lid, lval] : labels ) {
         auto name = ::hilti::rt::fmt("%s_%s", id, lid);
@@ -260,7 +254,7 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
 
 void plugin::Zeek_Spicy::Plugin::registerEvent(const std::string& name) {
     // Create a Zeek handler for the event.
-    ::spicy::zeek::compat::event_register_Register(name);
+    ::zeek::event_registry->Register(name);
 
     // Install the ID into the corresponding namespace and export it.
     auto n = ::hilti::rt::split(name, "::");
@@ -296,12 +290,10 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForFileAnalyzer(
     return _file_analyzers_by_type[tag.Type()].parser;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(
     const ::spicy::zeek::compat::PacketAnalysisTag& tag) {
     return _packet_analyzers_by_type[tag.Type()].parser;
 }
-#endif
 
 ::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForProtocolAnalyzer(
     const ::spicy::zeek::compat::AnalyzerTag& tag) {
@@ -319,15 +311,13 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(
         return tag;
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
 ::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForPacketAnalyzer(
     const ::spicy::zeek::compat::AnalyzerTag& tag) {
     // Don't have a replacement mechanism currently.
     return tag;
 }
-#endif
 
-bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::AnalyzerTag& tag, bool enable) {
+bool plugin::Zeek_Spicy::Plugin::toggleProtocolAnalyzer(const ::spicy::zeek::compat::AnalyzerTag& tag, bool enable) {
     auto type = tag.Type();
 
     if ( type >= _protocol_analyzers_by_type.size() )
@@ -361,7 +351,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::Ana
     return true;
 }
 
-bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::FileAnalysisTag& tag, bool enable) {
+bool plugin::Zeek_Spicy::Plugin::toggleFileAnalyzer(const ::spicy::zeek::compat::FileAnalysisTag& tag, bool enable) {
     auto type = tag.Type();
 
     if ( type >= _file_analyzers_by_type.size() )
@@ -411,8 +401,8 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::Fil
 #endif
 }
 
-#ifdef HAVE_PACKET_ANALYZERS
-bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::PacketAnalysisTag& tag, bool enable) {
+bool plugin::Zeek_Spicy::Plugin::togglePacketAnalyzer(const ::spicy::zeek::compat::PacketAnalysisTag& tag,
+                                                      bool enable) {
     auto type = tag.Type();
 
     if ( type >= _packet_analyzers_by_type.size() )
@@ -427,38 +417,35 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(const ::spicy::zeek::compat::Pac
                               analyzer.name_analyzer));
     return false;
 }
-#endif
 
 bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enable) {
-    if ( ::spicy::zeek::compat::EnumVal_GetType(tag) == ::spicy::zeek::compat::AnalyzerMgr_GetTagType() ) {
+    if ( tag->GetType() == ::zeek::analyzer_mgr->GetTagType() ) {
         if ( auto analyzer = ::zeek::analyzer_mgr->Lookup(tag) )
-            return toggleAnalyzer(::spicy::zeek::compat::ComponentTag(*analyzer), enable);
+            return toggleProtocolAnalyzer(analyzer->Tag(), enable);
         else
             return false;
     }
 
-    if ( ::spicy::zeek::compat::EnumVal_GetType(tag) == ::spicy::zeek::compat::FileMgr_GetTagType() ) {
+    if ( tag->GetType() == ::zeek::file_mgr->GetTagType() ) {
         if ( auto analyzer = ::zeek::file_mgr->Lookup(tag) )
-            return toggleAnalyzer(::spicy::zeek::compat::ComponentTag(*analyzer), enable);
+            return toggleFileAnalyzer(analyzer->Tag(), enable);
         else
             return false;
     }
 
-#ifdef HAVE_PACKET_ANALYZERS
     if ( tag->GetType() == ::zeek::packet_mgr->GetTagType() ) {
-        if ( auto analyzer = ::zeek::file_mgr->Lookup(tag) )
-            return toggleAnalyzer(::spicy::zeek::compat::ComponentTag(*analyzer), enable);
+        if ( auto analyzer = ::zeek::packet_mgr->Lookup(tag) )
+            return togglePacketAnalyzer(analyzer->Tag(), enable);
         else
             return false;
     }
-#endif
 
     return false;
 }
 
 ::zeek::plugin::Configuration plugin::Zeek_Spicy::Plugin::Configure() {
     ::zeek::plugin::Configuration config;
-    config.name = "_Zeek::Spicy"; // Prefix with underscore to make sure it gets loaded first
+    config.name = "Zeek::Spicy";
     config.description = "Support for Spicy parsers (*.spicy, *.evt, *.hlto)";
     config.version.major = spicy::zeek::configuration::PluginVersionMajor;
     config.version.minor = spicy::zeek::configuration::PluginVersionMinor;
@@ -522,11 +509,12 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     // type. Give it a dummy event type in that case, so that we don't walk
     // around with a nullptr.
     for ( const auto& [name, id] : _events ) {
-        if ( ! compat::ID_GetType(id) ) //NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-            // clang-tidy reports a leak here even with >= 3.2. Not sure why because
-            // the memory should be managed. Either way, doesn't matter so we
-            // ignore.
-            id->SetType(compat::EventTypeDummy_New());
+        if ( ! id->GetType() ) {
+            auto args = ::zeek::make_intrusive<::zeek::RecordType>(new ::zeek::type_decl_list());
+            auto et = ::zeek::make_intrusive<::zeek::FuncType>(std::move(args), ::zeek::base_type(::zeek::TYPE_VOID),
+                                                               ::zeek::FUNC_FLAVOR_EVENT);
+            id->SetType(std::move(et));
+        }
     }
 
     // Init runtime, which will trigger all initialization code to execute.
@@ -626,13 +614,11 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 
             // MIME types are registered in scriptland, so we'll raise an
             // event that will do it for us through a predefined handler.
-            zeek::Args vals = ::spicy::zeek::compat::ZeekArgs_New();
-            ::spicy::zeek::compat::ZeekArgs_Append(vals, ::spicy::zeek::compat::FileAnalysisComponentTag_AsVal(tag));
-            ::spicy::zeek::compat::ZeekArgs_Append(vals, ::spicy::zeek::compat::StringVal_New(
-                                                             mt)); //NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-            ::zeek::EventHandlerPtr handler =
-                ::spicy::zeek::compat::event_register_Register("spicy_analyzer_for_mime_type");
-            ::spicy::zeek::compat::event_mgr_Enqueue(handler, vals);
+            zeek::Args vals = ::zeek::Args();
+            vals.emplace_back(tag.AsVal());
+            vals.emplace_back(::zeek::make_intrusive<::zeek::StringVal>(mt));
+            ::zeek::EventHandlerPtr handler = ::zeek::event_registry->Register("spicy_analyzer_for_mime_type");
+            ::zeek::event_mgr.Enqueue(handler, vals);
         };
 
         for ( const auto& mt : p.mime_types )
@@ -644,7 +630,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         }
     }
 
-#ifdef HAVE_PACKET_ANALYZERS
     for ( auto& p : _packet_analyzers_by_type ) {
         if ( p.type == 0 )
             // vector element not set
@@ -653,7 +638,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         ZEEK_DEBUG(hilti::rt::fmt("Registering packet analyzer %s with Zeek", p.name_analyzer.c_str()));
         p.parser = find_parser(p.name_analyzer, p.name_parser, p.linker_scope);
     }
-#endif
 
     ZEEK_DEBUG("Done with post-script initialization");
 }

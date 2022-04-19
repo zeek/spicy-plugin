@@ -1,5 +1,3 @@
-# @TEST-REQUIRES: zeek-version 30300
-#
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/dns53-proto-255.pcap raw-layer.spicy raw-layer.evt %INPUT >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 

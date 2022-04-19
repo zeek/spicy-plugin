@@ -6,7 +6,11 @@ event ssh::banner(c: connection, is_orig: bool, version: string, software: strin
 	print "SSH banner", c$id, is_orig, version, software;
 	}
 
+@if ( Version::number >= 40200 )
+event analyzer_confirmation(c: connection, atype: AllAnalyzers::Tag, aid: count)
+@else
 event protocol_confirmation(c: connection, atype: Analyzer::Tag, aid: count)
+@endif
     {
     print atype, aid;
     }

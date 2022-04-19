@@ -383,7 +383,7 @@ inline ::zeek::ValPtr to_val(const std::string& s, ::zeek::TypePtr target, const
     if ( target->Tag() != ::zeek::TYPE_STRING )
         throw TypeMismatch("string", target, location);
 
-    return zeek::compat::StringVal_New(s);
+    return ::zeek::make_intrusive<::zeek::StringVal>(s);
 }
 
 /**
@@ -394,7 +394,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Bytes& b, ::zeek::TypePtr target, 
     if ( target->Tag() != ::zeek::TYPE_STRING )
         throw TypeMismatch("string", target, location);
 
-    return zeek::compat::StringVal_New(b.str());
+    return ::zeek::make_intrusive<::zeek::StringVal>(b.str());
 }
 
 /**
@@ -406,20 +406,20 @@ inline ::zeek::ValPtr to_val(hilti::rt::integer::safe<T> i, ::zeek::TypePtr targ
     ::zeek::ValPtr v = nullptr;
     if constexpr ( std::is_unsigned<T>::value ) {
         if ( target->Tag() == ::zeek::TYPE_COUNT )
-            return zeek::compat::val_mgr_Count(i);
+            return ::zeek::val_mgr->Count(i);
 
         if ( target->Tag() == ::zeek::TYPE_INT )
-            return zeek::compat::val_mgr_Int(i);
+            return ::zeek::val_mgr->Int(i);
 
         throw TypeMismatch("uint64", target, location);
     }
     else {
         if ( target->Tag() == ::zeek::TYPE_INT )
-            return zeek::compat::val_mgr_Int(i);
+            return ::zeek::val_mgr->Int(i);
 
         if ( target->Tag() == ::zeek::TYPE_COUNT ) {
             if ( i >= 0 )
-                return zeek::compat::val_mgr_Count(i);
+                return ::zeek::val_mgr->Count(i);
             else
                 throw TypeMismatch("negative int64", target, location);
         }
@@ -436,7 +436,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Bool& b, ::zeek::TypePtr target, c
     if ( target->Tag() != ::zeek::TYPE_BOOL )
         throw TypeMismatch("bool", target, location);
 
-    return zeek::compat::val_mgr_Bool(b);
+    return ::zeek::val_mgr->Bool(b);
 }
 
 /**
@@ -447,7 +447,7 @@ inline ::zeek::ValPtr to_val(double r, ::zeek::TypePtr target, const std::string
     if ( target->Tag() != ::zeek::TYPE_DOUBLE )
         throw TypeMismatch("double", target, location);
 
-    return zeek::compat::DoubleVal_New(r);
+    return ::zeek::make_intrusive<::zeek::DoubleVal>(r);
 }
 
 /**
@@ -460,10 +460,10 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Address& d, ::zeek::TypePtr target
 
     auto in_addr = d.asInAddr();
     if ( auto v4 = std::get_if<struct in_addr>(&in_addr) )
-        return zeek::compat::AddrVal_New(::zeek::IPAddr(*v4));
+        return ::zeek::make_intrusive<::zeek::AddrVal>(::zeek::IPAddr(*v4));
     else {
         auto v6 = std::get<struct in6_addr>(in_addr);
-        return zeek::compat::AddrVal_New(::zeek::IPAddr(v6));
+        return ::zeek::make_intrusive<::zeek::AddrVal>(::zeek::IPAddr(v6));
     }
 }
 
@@ -476,11 +476,11 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Port& p, ::zeek::TypePtr target, c
         throw TypeMismatch("port", target, location);
 
     switch ( p.protocol() ) {
-        case hilti::rt::Protocol::TCP: return zeek::compat::val_mgr_Port(p.port(), ::TransportProto::TRANSPORT_TCP);
+        case hilti::rt::Protocol::TCP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_TCP);
 
-        case hilti::rt::Protocol::UDP: return zeek::compat::val_mgr_Port(p.port(), ::TransportProto::TRANSPORT_UDP);
+        case hilti::rt::Protocol::UDP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_UDP);
 
-        case hilti::rt::Protocol::ICMP: return zeek::compat::val_mgr_Port(p.port(), ::TransportProto::TRANSPORT_ICMP);
+        case hilti::rt::Protocol::ICMP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_ICMP);
 
         default: throw InvalidValue("port value with undefined protocol", location);
     }
@@ -494,7 +494,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Interval& i, ::zeek::TypePtr targe
     if ( target->Tag() != ::zeek::TYPE_INTERVAL )
         throw TypeMismatch("interval", target, location);
 
-    return zeek::compat::IntervalVal_New(i.seconds());
+    return ::zeek::make_intrusive<::zeek::IntervalVal>(i.seconds());
 }
 
 /**
@@ -505,7 +505,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Time& t, ::zeek::TypePtr target, c
     if ( target->Tag() != ::zeek::TYPE_TIME )
         throw TypeMismatch("time", target, location);
 
-    return zeek::compat::TimeVal_New(t.seconds());
+    return ::zeek::make_intrusive<::zeek::TimeVal>(t.seconds());
 }
 
 /**
@@ -517,12 +517,12 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Vector<T>& v, ::zeek::TypePtr targ
     if ( target->Tag() != ::zeek::TYPE_VECTOR && target->Tag() != ::zeek::TYPE_LIST )
         throw TypeMismatch("expected vector or list", target, location);
 
-    auto vt = target->AsVectorType();
-    auto zv = std::make_unique<::zeek::VectorVal>(zeek::compat::ToValCtorType(vt));
+    auto vt = ::zeek::cast_intrusive<::zeek::VectorType>(target);
+    auto zv = ::zeek::make_intrusive<::zeek::VectorVal>(vt);
     for ( auto i : v )
-        zv->Assign(zv->Size(), to_val(i, zeek::compat::VectorType_Yield(vt), location));
+        zv->Assign(zv->Size(), to_val(i, vt->Yield(), location));
 
-    return zeek::compat::ToValPtr(std::move(zv));
+    return zv;
 }
 
 /**
@@ -537,23 +537,22 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Map<K, V>& m, ::zeek::TypePtr targ
     if ( target->Tag() != ::zeek::TYPE_TABLE )
         throw TypeMismatch("map", target, location);
 
-    auto tt = target->AsTableType();
+    auto tt = ::zeek::cast_intrusive<::zeek::TableType>(target);
     if ( tt->IsSet() )
         throw TypeMismatch("map", target, location);
 
-    if ( zeek::compat::TableType_GetIndexTypesLength(tt) != 1 )
+    if ( tt->GetIndexTypes().size() != 1 )
         throw TypeMismatch("map with non-tuple elements", target, location);
 
-    auto zv = std::make_unique<::zeek::TableVal>(zeek::compat::ToValCtorType(tt));
+    auto zv = ::zeek::make_intrusive<::zeek::TableVal>(tt);
 
     for ( auto i : m ) {
-        auto k = to_val(i.first, zeek::compat::TableType_GetIndexTypes(tt)[0], location);
-        auto v = to_val(i.second, zeek::compat::TableType_Yield(tt), location);
+        auto k = to_val(i.first, tt->GetIndexTypes()[0], location);
+        auto v = to_val(i.second, tt->Yield(), location);
         zv->Assign(k, v);
-        zeek::compat::Unref(k);
     }
 
-    return zeek::compat::ToValPtr(std::move(zv));
+    return zv;
 } // namespace spicy::zeek::rt
 
 /**
@@ -565,26 +564,25 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Set<T>& s, ::zeek::TypePtr target,
     if ( target->Tag() != ::zeek::TYPE_TABLE )
         throw TypeMismatch("set", target, location);
 
-    auto tt = target->AsTableType();
+    auto tt = ::zeek::cast_intrusive<::zeek::TableType>(target);
     if ( ! tt->IsSet() )
         throw TypeMismatch("set", target, location);
 
-    auto zv = std::make_unique<::zeek::TableVal>(zeek::compat::ToValCtorType(tt));
+    auto zv = ::zeek::make_intrusive<::zeek::TableVal>(tt);
 
     for ( auto i : s ) {
         if constexpr ( hilti::rt::is_tuple<T>::value )
             throw TypeMismatch("internal error: sets with tuples not yet supported in to_val()");
         else {
-            if ( zeek::compat::TableType_GetIndexTypesLength(tt) != 1 )
+            if ( tt->GetIndexTypes().size() != 1 )
                 throw TypeMismatch("set with non-tuple elements", target, location);
 
-            auto idx = to_val(i, zeek::compat::TableType_GetIndexTypes(tt)[0], location);
+            auto idx = to_val(i, tt->GetIndexTypes()[0], location);
             zv->Assign(idx, nullptr);
-            zeek::compat::Unref(idx);
         }
     }
 
-    return zeek::compat::ToValPtr(std::move(zv));
+    return zv;
 }
 
 /**
@@ -596,12 +594,12 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
     if ( target->Tag() != ::zeek::TYPE_RECORD )
         throw TypeMismatch("tuple", target, location);
 
-    auto rtype = target->AsRecordType();
+    auto rtype = ::zeek::cast_intrusive<::zeek::RecordType>(target);
 
     if ( std::tuple_size<T>::value != rtype->NumFields() )
         throw TypeMismatch("tuple", target, location);
 
-    auto rval = std::make_unique<::zeek::RecordVal>(zeek::compat::ToValCtorType(rtype));
+    auto rval = ::zeek::make_intrusive<::zeek::RecordVal>(rtype);
     int idx = 0;
     hilti::rt::tuple_for_each(t, [&](const auto& x) {
         ::zeek::ValPtr v = nullptr;
@@ -611,15 +609,14 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
         }
         else
             // This may return a nullptr in cases where the field is to be left unset.
-            v = to_val(x, zeek::compat::RecordType_GetFieldType(rtype, idx), location);
+            v = to_val(x, rtype->GetFieldType(idx), location);
 
         if ( v )
             rval->Assign(idx, v);
         else {
             // Field must be &optional or &default.
-            if ( auto attrs = rtype->FieldDecl(idx)->attrs;
-                 ! attrs || ! (zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_DEFAULT) ||
-                               zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_OPTIONAL)) )
+            if ( auto attrs = rtype->FieldDecl(idx)->attrs; ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) ||
+                                                                          attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
                 throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx)),
                                    location);
         }
@@ -627,8 +624,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
         idx++;
     });
 
-
-    return zeek::compat::ToValPtr(std::move(rval));
+    return rval;
 }
 
 /**
@@ -640,9 +636,9 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
     if ( target->Tag() != ::zeek::TYPE_RECORD )
         throw TypeMismatch("struct", target, location);
 
-    auto rtype = target->AsRecordType();
+    auto rtype = ::zeek::cast_intrusive<::zeek::RecordType>(target);
 
-    auto rval = std::make_unique<::zeek::RecordVal>(zeek::compat::ToValCtorType(rtype));
+    auto rval = ::zeek::make_intrusive<::zeek::RecordVal>(rtype);
     int idx = 0;
 
     auto num_fields = rtype->NumFields();
@@ -651,7 +647,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
         if ( idx >= num_fields )
             throw TypeMismatch(hilti::rt::fmt("no matching record field for field '%s'", name), location);
 
-        auto field = zeek::compat::RecordType_GetFieldType(rtype, idx);
+        auto field = rtype->GetFieldType(idx);
         std::string field_name = rtype->FieldName(idx);
 
         if ( field_name != name )
@@ -671,9 +667,8 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
             rval->Assign(idx, v);
         else {
             // Field must be &optional or &default.
-            if ( auto attrs = rtype->FieldDecl(idx)->attrs;
-                 ! attrs || ! (zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_DEFAULT) ||
-                               zeek::compat::Attribute_Find(attrs, ::zeek::detail::ATTR_OPTIONAL)) )
+            if ( auto attrs = rtype->FieldDecl(idx)->attrs; ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) ||
+                                                                          attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
                 throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", field_name), location);
         }
 
@@ -686,7 +681,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
         throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx + 1)),
                            location);
 
-    return zeek::compat::ToValPtr(std::move(rval));
+    return rval;
 }
 
 /**
@@ -710,7 +705,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
 
     bro_int_t bt = (it >= 0 ? it : std::numeric_limits<::bro_int_t>::max());
 
-    return zeek::compat::EnumTypeGetEnumVal(target->AsEnumType(), bt);
+    return target->AsEnumType()->GetEnumVal(bt);
 }
 
 } // namespace spicy::zeek::rt

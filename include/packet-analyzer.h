@@ -2,10 +2,6 @@
 
 #pragma once
 
-#include <zeek-spicy/autogen/config.h>
-
-#ifdef HAVE_PACKET_ANALYZERS
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -18,6 +14,7 @@
 
 #include <hilti/base/util.h>
 
+#include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/cookie.h>
 #include <zeek-spicy/zeek-compat.h>
 
@@ -74,5 +71,3 @@ private:
 };
 
 } // namespace spicy::zeek::rt
-
-#endif

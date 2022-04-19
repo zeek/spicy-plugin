@@ -8,14 +8,14 @@ module Spicy;
 
 function Spicy::__toggle_analyzer%(tag: any, enable: bool%) : bool
         %{
-        if ( ::spicy::zeek::compat::Val_GetTypeTag(tag) != ::zeek::TYPE_ENUM ) {
+        if ( tag->GetType()->Tag() != ::zeek::TYPE_ENUM ) {
             zeek::reporter->Warning("Spicy::disable_analyzer() must receive an analyzer tag");
-            return ::spicy::zeek::compat::val_mgr_Bool(false);
+            return ::zeek::val_mgr->Bool(false);
             }
 
         bool result = ::plugin::Zeek_Spicy::OurPlugin->toggleAnalyzer(tag->AsEnumVal(), enable);
         if ( ! result )
             zeek::reporter->Warning("could not toggle Spicy analyzer");
 
-        return ::spicy::zeek::compat::val_mgr_Bool(result);
+        return ::zeek::val_mgr->Bool(result);
         %}
