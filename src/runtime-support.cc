@@ -1,5 +1,7 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
+#include <zeek/analyzer/Analyzer.h>
+
 #include <memory>
 
 #include <hilti/rt/types/port.h>
@@ -10,8 +12,6 @@
 #include <zeek-spicy/runtime-support.h>
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
-
-#include "zeek/analyzer/Analyzer.h"
 
 using namespace spicy::zeek;
 using namespace plugin::Zeek_Spicy;
@@ -433,6 +433,16 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
             ::zeek::file_mgr->DataIn(data_, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid,
                                      mime_type);
     }
+}
+
+void rt::terminate_session() {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+        ::spicy::zeek::compat::SessionMgr_Remove(c->analyzer->Conn());
+    else
+        throw spicy::zeek::rt::ValueUnavailable("terminate_session() not available in the curent context");
 }
 
 std::string rt::fuid() {
