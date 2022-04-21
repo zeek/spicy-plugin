@@ -16,6 +16,8 @@ namespace spicy::zeek::configuration {
 #define ZEEK_SPICY_VERSION_NUMBER ${ZEEK_VERSION_NUMBER}
 #define ZEEK_SPICY_BUILD_DIRECTORY "${CMAKE_BINARY_DIR}"
 
+#define SPICY_VERSION_NUMBER ${SPICY_VERSION_NUMBER}
+
 inline const auto InstallLibDir = "${CMAKE_INSTALL_LIBDIR}";
 inline const auto InstallPrefix = "${CMAKE_INSTALL_PREFIX}";
 

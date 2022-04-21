@@ -21,6 +21,12 @@
 // Must come after Bro includes to avoid namespace conflicts.
 #include <spicy/rt/libspicy.h>
 
+#if SPICY_VERSION_NUMBER >= 10500
+#include <hilti/compiler/init.h>
+
+#include <spicy/compiler/init.h>
+#endif
+
 using namespace spicy::zeek;
 using Driver = spicy::zeek::Driver;
 
@@ -122,6 +128,11 @@ Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int z
     config.preprocessor_constants["ZEEK_VERSION"] = zeek_version;
 
     _glue = std::make_unique<GlueCompiler>(this, zeek_version);
+
+#if SPICY_VERSION_NUMBER >= 10500
+    hilti::init();
+    spicy::init();
+#endif
 }
 
 Driver::~Driver() {}
