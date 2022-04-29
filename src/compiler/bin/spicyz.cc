@@ -75,12 +75,13 @@ static auto pluginPath() {
 
     hilti::rt::filesystem::path plugin_path;
 
-    if ( hilti::rt::filesystem::exists(exec.parent_path().parent_path() / "__bro_plugin__") )
+    if ( hilti::rt::filesystem::exists(spicy::zeek::configuration::BuildLibDir) )
         // Running out of build directory.
-        plugin_path = exec.parent_path().parent_path();
+        plugin_path = spicy::zeek::configuration::BuildLibDir;
     else
         // Installation otherwise.
-        plugin_path = exec.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
+        plugin_path = hilti::rt::filesystem::path(spicy::zeek::configuration::InstallPrefix) /
+                      spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
 
     try {
         return hilti::rt::filesystem::canonical(plugin_path);

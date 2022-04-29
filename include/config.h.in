@@ -18,6 +18,7 @@ namespace spicy::zeek::configuration {
 
 #define SPICY_VERSION_NUMBER ${SPICY_VERSION_NUMBER}
 
+inline const auto BuildLibDir = "${ZEEK_SPICY_PLUGIN_BUILD_LIBDIR}";
 inline const auto InstallLibDir = "${CMAKE_INSTALL_LIBDIR}";
 inline const auto InstallPrefix = "${CMAKE_INSTALL_PREFIX}";
 
