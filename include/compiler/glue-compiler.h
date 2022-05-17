@@ -9,7 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include <hilti/rt/filesystem.h>
 #include <hilti/rt/types/port.h>
+#include <hilti/rt/util.h>
 
 #include <spicy/rt/mime.h>
 
@@ -202,3 +204,14 @@ private:
     std::vector<hilti::Location> _locations;                 /**< location stack during parsing EVT files */
 };
 } // namespace spicy::zeek
+
+namespace std {
+template<>
+struct hash<spicy::zeek::glue::Event> {
+    std::size_t operator()(const spicy::zeek::glue::Event& e) {
+        // We only hash enough information here to unique identify the event.
+        return hilti::rt::hashCombine(std::hash<std::string>()(e.file), std::hash<std::string>()(e.name),
+                                      std::hash<std::string>()(e.path), std::hash<std::string>()(e.location));
+    }
+};
+} // namespace std
