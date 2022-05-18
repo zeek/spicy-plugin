@@ -109,7 +109,7 @@ static_zeek_master_ubuntu_task:
     - git clone --recursive https://github.com/zeek/zeek
 
   build_script:
-    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python && cd build && ninja -j4)
+    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python --disable-spicy && cd build && ninja -j4)
 
   install_script:
     - (cd zeek/build && ninja install)

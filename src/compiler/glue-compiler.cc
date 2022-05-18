@@ -984,7 +984,8 @@ static hilti::Result<hilti::Expression> _parseArgument(const std::string& expres
 }
 
 bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
-    auto mangled_event_name = hilti::util::fmt("%s_%p", hilti::util::replace(ev->name.str(), "::", "_"), ev);
+    auto mangled_event_name =
+        hilti::util::fmt("%s_%p", hilti::util::replace(ev->name.str(), "::", "_"), std::hash<glue::Event>()(*ev));
     auto meta = Meta(ev->location);
 
     // Find the Spicy module that this event belongs to.
