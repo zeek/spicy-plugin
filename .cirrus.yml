@@ -4,10 +4,6 @@ environment:
     # Enforce sequential JIT'ing of files for controlled memory usage.
     HILTI_JIT_SEQUENTIAL: 1
 
-    # Images for macOS
-    IMAGE_MACOS_BIG_SUR:  big-sur-base
-    IMAGE_MACOS_CATALINA: catalina-base
-
 zkg_ubuntu_task:
   timeout_in: 120m
   container:
