@@ -116,8 +116,8 @@ public:
 
 namespace spicy::zeek::compat {
 
-#if ZEEK_VERSION_NUMBER >= 40200 // Zeek >= 4.2
-inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, ::zeek::Tag tag) {
+#if ZEEK_VERSION_NUMBER >= 50100 // Zeek >= 5.1
+inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, AnalyzerTag tag) {
     analyzer->AnalyzerConfirmation(tag);
 }
 
@@ -126,13 +126,19 @@ inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, con
     analyzer->AnalyzerViolation(reason, data, len);
 }
 #else
-inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, ::zeek::analyzer::Tag tag) {
+inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, AnalyzerTag tag) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     analyzer->ProtocolConfirmation(tag);
+#pragma GCC diagnostic pop
 }
 
 inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason,
                                        const char* data = nullptr, int len = 0) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     analyzer->ProtocolViolation(reason, data, len);
+#pragma GCC diagnostic pop
 }
 #endif
 
