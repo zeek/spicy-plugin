@@ -19,7 +19,7 @@ zkg_ubuntu_task:
         - ZEEK_VERSION: 4.0.3-0
       - docker_arguments:
         - ZEEK_LTS:
-        - ZEEK_VERSION: 4.2.0-0
+        - ZEEK_VERSION: 4.2.1-0
     cpu: 2
     memory: 8G
 
