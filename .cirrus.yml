@@ -1,12 +1,13 @@
 environment:
     CCACHE_BASEDIR: $CIRRUS_WORKING_DIR
+    CCACHE_DIR: /tmp/ccache
+    CCACHE_COMPRESS: 1
 
     # Enforce sequential JIT'ing of files for controlled memory usage.
     HILTI_JIT_SEQUENTIAL: 1
 
-    # Images for macOS
-    IMAGE_MACOS_BIG_SUR:  big-sur-base
-    IMAGE_MACOS_CATALINA: catalina-base
+    # Cache JIT results.
+    HILTI_CXX_COMPILER_LAUNCHER: ccache
 
 zkg_ubuntu_task:
   timeout_in: 120m
@@ -21,6 +22,10 @@ zkg_ubuntu_task:
         - ZEEK_VERSION: 4.2.0-0
     cpu: 2
     memory: 8G
+
+  ccache_cache:
+    folder: /tmp/ccache
+    fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
     - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy-dev.deb
@@ -39,7 +44,7 @@ zkg_ubuntu_task:
     - zeek local
 
   always:
-      stderr_script: ./ci/show-zkg-stderr
+    stderr_script: ./ci/show-zkg-stderr
 
 standalone_ubuntu_task:
   timeout_in: 120m
@@ -51,10 +56,6 @@ standalone_ubuntu_task:
         - ZEEK_VERSION: 4.0.3-0
     cpu: 2
     memory: 8G
-
-  env:
-    CCACHE_DIR: /tmp/ccache
-    CCACHE_COMPRESS: 1
 
   always:
     ccache_cache:
@@ -90,10 +91,6 @@ static_zeek_master_ubuntu_task:
     dockerfile: ci/Dockerfile
     cpu: 2
     memory: 8G
-
-  env:
-    CCACHE_DIR: /tmp/ccache
-    CCACHE_COMPRESS: 1
 
   always:
     ccache_cache:
