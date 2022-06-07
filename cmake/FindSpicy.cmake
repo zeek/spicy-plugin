@@ -117,7 +117,9 @@ function (spicy_link_libraries lib)
                             ${SPICY_LIBRARY_DIRS_RUNTIME})
 
     if (SPICY_HAVE_TOOLCHAIN)
-        target_link_libraries(${lib} "${ARGN}" hilti spicy)
+        # In addition to libhilti and libspicy we also add their dependencies here
+        # so we can link against both shared libraries as well as static archives.
+        target_link_libraries(${lib} "${ARGN}" hilti spicy dl)
     endif ()
 endfunction ()
 
