@@ -321,6 +321,14 @@ hilti::Result<hilti::Nothing> Driver::loadFile(hilti::rt::filesystem::path file,
             return rc.error();
     }
 
+    if ( ext == ".cc" || ext == ".cxx" ) {
+        ZEEK_DEBUG(hilti::util::fmt("Loading C++ code %s", rpath));
+        if ( auto rc = addInput(rpath) )
+            return hilti::Nothing();
+        else
+            return rc.error();
+    }
+
     return hilti::result::Error(hilti::util::fmt("unknown file type passed to Spicy loader: %s", rpath));
 }
 
