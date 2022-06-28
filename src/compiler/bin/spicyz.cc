@@ -185,7 +185,10 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
 
             case 'S': std::cout << spicy::zeek::configuration::PluginScriptsDirectory << std::endl; return Nothing();
 
-            case 'T': driver_options->keep_tmps = true; break;
+            case 'T':
+                driver_options->keep_tmps = true;
+                compiler_options->keep_tmps = true;
+                break;
 
             case 'v': std::cout << spicy::zeek::configuration::PluginVersion << std::endl; return Nothing();
 
