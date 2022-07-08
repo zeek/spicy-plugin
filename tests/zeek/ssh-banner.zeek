@@ -1,6 +1,7 @@
 # @TEST-EXEC: spicyz -o ssh.hlto ssh.spicy ./ssh.evt
 # @TEST-EXEC: echo === confirmation >>output
-# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace -s ./ssh.sig Zeek::Spicy ssh.hlto %INPUT ./extern.zeek | sort >>output
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace -s ./ssh.sig Zeek::Spicy base/frameworks/notice/weird ssh.hlto %INPUT ./extern.zeek | sort >>output
+# @TEST-EXEC: btest-diff weird.log
 # @TEST-EXEC: echo === violation >>output
 # @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/http-post.trace -s ./ssh.sig Zeek::Spicy ssh.hlto  ./extern.zeek %INPUT | sort >>output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/diff-remove-abspath btest-diff output
@@ -49,7 +50,7 @@ public type Banner = unit {
     magic   : /SSH-/;
     version : /[^-]*/;
     dash    : /-/;
-    software: /[^\r\n]*/;
+    software: /[^\r\n]*/ { zeek::weird("my_weird", $$.decode()); }
 
     on %done { zeek::confirm_protocol(); assert zeek::uid() == "CHhAvVGS1DHFjwGM9"; }
     on %error { zeek::reject_protocol("kaputt"); }

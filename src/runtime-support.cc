@@ -270,6 +270,21 @@ void rt::reject_protocol(const std::string& reason) {
         throw ValueUnavailable("no current connection available");
 }
 
+void rt::weird(const std::string& id, const std::string& addl) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( const auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+        x->analyzer->Weird(id.c_str(), addl.data());
+    else if ( const auto x = std::get_if<cookie::FileAnalyzer>(cookie) )
+        ::zeek::reporter->Weird(x->analyzer->GetFile(), id.c_str(), addl.data());
+    else if ( const auto x = std::get_if<cookie::PacketAnalyzer>(cookie) ) {
+        ::spicy::zeek::compat::PacketAnalyzer_Weird(x->analyzer, id.c_str(), x->packet, addl.data());
+    }
+    else
+        throw ValueUnavailable("none of $conn, $file, or $packet available for weird reporting");
+}
+
 void rt::protocol_begin(const std::optional<std::string>& analyzer) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);

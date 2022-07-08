@@ -18,22 +18,6 @@ void reporter::warning(const std::string& msg) { ::zeek::reporter->Warning("%s",
 
 void reporter::internalError(const std::string& msg) { ::zeek::reporter->InternalError("%s", msg.c_str()); }
 
-void reporter::weird(::zeek::Connection* conn, const std::string& msg) {
-    if ( conn )
-        ::zeek::reporter->Weird(conn, msg.c_str());
-    else
-        ::zeek::reporter->Weird(msg.c_str());
-}
-
-void reporter::weird(::zeek::file_analysis::File* f, const std::string& msg) {
-    if ( f )
-        ::zeek::reporter->Weird(f, msg.c_str());
-    else
-        ::zeek::reporter->Weird(msg.c_str());
-}
-
-void reporter::weird(const std::string& msg) { ::zeek::reporter->Weird(msg.c_str()); }
-
 static std::unique_ptr<::zeek::detail::Location> _makeLocation(const std::string& location) {
     static std::set<std::string> filenames; // see comment below in parse_location
 

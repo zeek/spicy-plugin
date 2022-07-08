@@ -1,7 +1,7 @@
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/raw-layer.pcap raw-layer.spicy raw-layer.evt %INPUT >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff conn.log
-# @TEST-EXEC-FAIL: test -e weird.log
+# @TEST-EXEC: btest-diff weird.log
 
 module PacketAnalyzer::SPICY_RAWLAYER;
 
@@ -16,7 +16,7 @@ event zeek_init()
 
 event raw::data(p: raw_pkt_hdr, data: string)
 	{
-    print fmt("MACs: src=%s dst=%s", p$l2$src, p$l2$dst);
+	print fmt("MACs: src=%s dst=%s", p$l2$src, p$l2$dst);
 	print "raw data", data;
 	}
 
@@ -31,6 +31,7 @@ public type Packet = unit {
 
     on %done {
         zeek::forward_packet(self.protocol);
+        zeek::weird("test_weird");
     }
 };
 # @TEST-END-FILE
