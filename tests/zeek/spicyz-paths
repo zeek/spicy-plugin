@@ -1,4 +1,4 @@
-# @TEST-EXEC: (cd $(spicyz --print-plugin-path) && find cmake include spicy tests) | sort >files
+# @TEST-EXEC: (cd $(spicyz --print-plugin-path) && find cmake include spicy) | sort >files
 # @TEST-EXEC: TEST_DIFF_CANONIFIER= btest-diff files
 #
 # @TEST-DOC: Ensure all the expected files are available inside the plugin path that spicyz prints.

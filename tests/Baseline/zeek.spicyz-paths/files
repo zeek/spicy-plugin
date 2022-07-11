@@ -21,13 +21,3 @@ spicy
 spicy/zeek.spicy
 spicy/zeek_file.spicy
 spicy/zeek_rt.hlt
-tests
-tests/Scripts
-tests/Scripts/canonify-zeek-log
-tests/Scripts/canonify-zeek-log-sorted
-tests/Scripts/diff-remove-abspath
-tests/Scripts/diff-remove-timestamps
-tests/Scripts/diff-sort
-tests/Scripts/spicy-version
-tests/Scripts/zeek-version
-tests/random.seed

@@ -41,17 +41,6 @@ set(AUX_HEADERS
 
 set(AUX_SPICY spicy/zeek.spicy spicy/zeek_file.spicy spicy/zeek_rt.hlt)
 
-set(AUX_TESTS tests/random.seed)
-
-set(AUX_TESTS_SCRIPTS
-    tests/Scripts/canonify-zeek-log
-    tests/Scripts/canonify-zeek-log-sorted
-    tests/Scripts/diff-remove-abspath
-    tests/Scripts/diff-remove-timestamps
-    tests/Scripts/diff-sort
-    tests/Scripts/spicy-version
-    tests/Scripts/zeek-version)
-
 ###
 ### Set up dependencies.
 ###
@@ -163,7 +152,7 @@ endif ()
 
 zeek_plugin_dist_files(include/zeek-spicy/autogen/config.h)
 
-foreach (i ${AUX_CMAKE} ${AUX_HEADERS} ${AUX_SPICY} ${AUX_TESTS} ${AUX_TESTS_SCRIPTS})
+foreach (i ${AUX_CMAKE} ${AUX_HEADERS} ${AUX_SPICY})
     zeek_plugin_dist_files(${i})
 endforeach ()
 
@@ -228,8 +217,6 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_HEADERS} ${PROJECT_BINARY_DIR}/include/zeek-spicy/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_CMAKE} ${PROJECT_BINARY_DIR}/cmake/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_SPICY} ${PROJECT_BINARY_DIR}/spicy/
-        COMMAND ${CMAKE_COMMAND} -E copy ${AUX_TESTS} ${PROJECT_BINARY_DIR}/tests/
-        COMMAND ${CMAKE_COMMAND} -E copy ${AUX_TESTS_SCRIPTS} ${PROJECT_BINARY_DIR}/tests/Scripts/
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
     # Note for static builds: We can't easily make Zeek's include headers
@@ -249,7 +236,7 @@ set(plugin_base "${CMAKE_INSTALL_FULL_LIBDIR}/zeek-spicy")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/spicy" DESTINATION "${plugin_base}")
 install(DIRECTORY "${PROJECT_BINARY_DIR}/include" DESTINATION "${plugin_base}")
 
-foreach (aux ${AUX_CMAKE} ${AUX_SPICY} ${AUX_TESTS} ${AUX_TESTS_SCRIPTS})
+foreach (aux ${AUX_CMAKE} ${AUX_SPICY})
     get_filename_component(dir "${aux}" DIRECTORY)
     install(PROGRAMS "${aux}" DESTINATION "${plugin_base}/${dir}/")
 endforeach ()
