@@ -116,29 +116,53 @@ public:
 
 namespace spicy::zeek::compat {
 
-#if ZEEK_VERSION_NUMBER >= 50100 // Zeek >= 5.1
-inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, AnalyzerTag tag) {
+// Version-specific implementation for AnalyzerConfirmation().
+#if ZEEK_VERSION_NUMBER >= 40200 // Zeek >= 4.2
+inline void Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, const AnalyzerTag& tag) {
     analyzer->AnalyzerConfirmation(tag);
 }
 
-inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason,
-                                       const char* data = nullptr, int len = 0) {
-    analyzer->AnalyzerViolation(reason, data, len);
-}
-#else
-inline auto Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, AnalyzerTag tag) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    analyzer->ProtocolConfirmation(tag);
-#pragma GCC diagnostic pop
+inline void Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason, const char* data,
+                                       int len, const ::zeek::Tag& tag) {
+    analyzer->AnalyzerViolation(reason, data, len, tag);
 }
 
-inline auto Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason,
-                                       const char* data = nullptr, int len = 0) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+inline void Analyzer_AnalyzerViolation(const ::zeek::Packet& packet, ::zeek::packet_analysis::Analyzer* analyzer,
+                                       const char* reason, const char* data, int len, const ::zeek::Tag& tag) {
+    analyzer->AnalyzerViolation(reason, packet.session, data, len, tag);
+}
+
+
+#else // Zeek < 4.2
+inline void Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, const AnalyzerTag& tag) {
+    analyzer->ProtocolConfirmation(tag);
+}
+
+inline void Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason, const char* data,
+                                       int len, const ::zeek::Tag& tag) {
     analyzer->ProtocolViolation(reason, data, len);
-#pragma GCC diagnostic pop
+}
+
+inline void Analyzer_AnalyzerViolation(const ::zeek::Packet& packet, ::zeek::packet_analysis::Analyzer* analyzer,
+                                       const char* reason, const char* data, int len, const ::zeek::Tag& tag) {
+    // We do not a have good way to report this in old Zeek versions.
+}
+#endif
+
+inline void Analyzer_AnalyzerViolation(::zeek::file_analysis::Analyzer* analyzer, const char* reason, const char* data,
+                                       int len, const ::zeek::Tag& tag) {
+    // We do not a have good way to report this in any Zeek version.
+}
+
+#if ZEEK_VERSION_NUMBER >= 40200
+inline void PacketAnalyzer_Weird(::zeek::packet_analysis::Analyzer* analyzer, const char* name, ::zeek::Packet* packet,
+                                 const char* addl) {
+    analyzer->Weird(name, packet, addl);
+}
+#else
+inline void PacketAnalyzer_Weird(::zeek::packet_analysis::Analyzer* analyzer, const char* name, ::zeek::Packet* packet,
+                                 const char* addl) {
+    ::zeek::sessions->Weird(name, packet, addl, analyzer->GetAnalyzerName());
 }
 #endif
 

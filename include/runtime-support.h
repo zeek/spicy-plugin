@@ -95,6 +95,9 @@ void register_protocol_analyzer(const std::string& name, hilti::rt::Protocol pro
 void register_file_analyzer(const std::string& name, const hilti::rt::Vector<std::string>& mime_types,
                             const std::string& parser, const std::string& replaces, const std::string& linker_scope);
 
+/** Reports a Zeek-side "weird". */
+void weird(const std::string& id, const std::string& addl);
+
 /**
  * Registers a Spicy packet analyzer with its EVT meta information with the
  * plugin's runtime.

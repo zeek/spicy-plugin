@@ -35,15 +35,6 @@ extern void warning(const std::string& msg);
 /** Reports an internal error through the Zeek reporter, aborting execution. */
 extern void internalError(const std::string& msg);
 
-/** Reports a connection-associated "weird" through the Zeek reporter. */
-extern void weird(::zeek::Connection* conn, const std::string& msg);
-
-/** Reports a file-associated "weird" through the Zeek reporter. */
-extern void weird(::zeek::file_analysis::File* f, const std::string& msg);
-
-/** Reports a generic "weird" through the Zeek reporter. */
-extern void weird(const std::string& msg);
-
 /** Report an error and disable a protocol analyzer's input processing */
 void analyzerError(::zeek::analyzer::Analyzer* a, const std::string& msg, const std::string& location);
 

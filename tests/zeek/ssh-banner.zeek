@@ -1,9 +1,10 @@
 # @TEST-EXEC: spicyz -o ssh.hlto ssh.spicy ./ssh.evt
 # @TEST-EXEC: echo === confirmation >>output
-# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace -s ./ssh.sig Zeek::Spicy ssh.hlto %INPUT ./extern.zeek | sort >>output
+# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace -s ./ssh.sig Zeek::Spicy base/frameworks/notice/weird ssh.hlto %INPUT ./extern.zeek | sort >>output
+# @TEST-EXEC: btest-diff weird.log
 # @TEST-EXEC: echo === violation >>output
 # @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/http-post.trace -s ./ssh.sig Zeek::Spicy ssh.hlto  ./extern.zeek %INPUT | sort >>output
-# @TEST-EXEC: TEST_DIFF_CANONIFIER= btest-diff output
+# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/diff-remove-abspath btest-diff output
 
 event ssh::banner(c: connection, is_orig: bool, version: string, software: string)
 	{
@@ -27,7 +28,7 @@ event protocol_violation(c: connection, atype: Analyzer::Tag, aid: count, reason
 @endif
 	{
 	if ( atype == Analyzer::ANALYZER_SPICY_SSH )
-	    print "violation", atype;
+	    print "violation", atype, reason;
 	}
 
 # @TEST-START-FILE extern.zeek
@@ -49,7 +50,7 @@ public type Banner = unit {
     magic   : /SSH-/;
     version : /[^-]*/;
     dash    : /-/;
-    software: /[^\r\n]*/;
+    software: /[^\r\n]*/ { zeek::weird("my_weird", $$.decode()); }
 
     on %done { zeek::confirm_protocol(); assert zeek::uid() == "CHhAvVGS1DHFjwGM9"; }
     on %error { zeek::reject_protocol("kaputt"); }

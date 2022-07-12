@@ -1,3 +1,20 @@
+1.3.16-3 | 2022-07-12 11:46:19 +0200
+
+  * Add `zeek::weird()` library function to report a Zeek-side
+    "weird". (Robin Sommer, Corelight)
+
+  * GH-101: Change how parse errors are reported. (Robin Sommer,
+    Corelight)
+
+    Instead of writing them to `weird.log`, they now go through the
+    DPD confirmation/violation pipeline for protocol and packet
+    analyzers. For file analyzers, we ignore them because Zeek
+    currently doesn't have an appropinte reporting mechanism. We also
+    track all parse errors inside the debug output so that there's a
+    way to confirm what's happening. We now also implicitly raise a
+    protocol violation for any parse errors that we couldn't recover
+    from.
+
 1.3.16 | 2022-06-28 12:06:41 +0200
 
   * Pass through value of `-T` spicyz option also to compiler. (Benjamin Bannier, Corelight)

@@ -1,5 +1,6 @@
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.spicy ./text.evt %INPUT >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
+# @TEST-EXEC: btest-diff weird.log
 
 event text::data(f: fa_file, data: string)
 	{
@@ -17,6 +18,7 @@ public type Data = unit {
     on %done {
         # File ID isn't stable across platforms, so just check expected length.
         assert |zeek::fuid()| == 18;
+        zeek::weird("test_weird");
     }
 };
 # @TEST-END-FILE
