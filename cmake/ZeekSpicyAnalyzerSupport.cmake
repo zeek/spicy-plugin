@@ -15,11 +15,12 @@ include(GNUInstallDirs)
 #         [SOURCES <source files for spicyz>...]
 #         [PACKAGE_NAME <package_name>]
 #         [SCRIPTS <additional script files to install>...]
+#         [CXX_LINK <libraries to link>...]
 #     )
 function (spicy_add_analyzer)
     set(options)
     set(oneValueArgs NAME PACKAGE_NAME)
-    set(multiValueArgs SOURCES SCRIPTS)
+    set(multiValueArgs SOURCES SCRIPTS CXX_LINK)
 
     cmake_parse_arguments(PARSE_ARGV 0 SPICY_ANALYZER "${options}" "${oneValueArgs}"
                           "${multiValueArgs}")
@@ -44,12 +45,18 @@ function (spicy_add_analyzer)
     string(TOLOWER "${SPICY_ANALYZER_NAME}" NAME_LOWER)
     set(OUTPUT "${SPICY_MODULE_OUTPUT_DIR_BUILD}/${NAME_LOWER}.hlto")
 
+    # list(TRANSFORM SPICY_ANALYZER_CXX_LINK PREPEND "--cxx-link ")
+    foreach (cxx_link ${SPICY_ANALYZER_CXX_LINK})
+        list(APPEND CXX_LINK "--cxx-link")
+        list(APPEND CXX_LINK ${cxx_link})
+    endforeach ()
+
     add_custom_command(
         OUTPUT ${OUTPUT}
         DEPENDS ${SPICY_ANALYZER_SOURCES} spicyz
         COMMENT "Compiling ${SPICY_ANALYZER_NAME} analyzer"
         COMMAND mkdir -p ${SPICY_MODULE_OUTPUT_DIR_BUILD}
-        COMMAND spicyz -o ${OUTPUT} ${SPICYZ_FLAGS} ${SPICY_ANALYZER_SOURCES}
+        COMMAND spicyz -o ${OUTPUT} ${SPICYZ_FLAGS} ${SPICY_ANALYZER_SOURCES} ${CXX_LINK}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     add_custom_target(${SPICY_ANALYZER_NAME} ALL DEPENDS ${OUTPUT}
