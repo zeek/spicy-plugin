@@ -13,9 +13,12 @@ const ::hilti::logging::DebugStream ZeekPlugin("zeek");
 
 void ::spicy::zeek::debug::do_log(const std::string& msg) { HILTI_DEBUG(ZeekPlugin, std::string(msg)); }
 
+constexpr int OPT_CXX_LINK = 1000;
+
 static struct option long_driver_options[] = {{"abort-on-exceptions", required_argument, nullptr, 'A'},
                                               {"show-backtraces", required_argument, nullptr, 'B'},
                                               {"compiler-debug", required_argument, nullptr, 'D'},
+                                              {"cxx-link", required_argument, nullptr, OPT_CXX_LINK},
                                               {"debug", no_argument, nullptr, 'd'},
                                               {"debug-addl", required_argument, nullptr, 'X'},
                                               {"disable-optimizations", no_argument, nullptr, 'g'},
@@ -63,6 +66,7 @@ static void usage() {
                  "       --skip-validation          Don't validate ASTs (for debugging only).\n"
                  "  -X | --debug-addl <addl>        Implies -d and adds selected additional instrumentation."
                  "(comma-separated; see 'help' for list).\n"
+                 "       --cxx-link <lib>           Link specified static archive or shared library during JIT or to "
                  "\n"
                  "Inputs can be *.spicy, *.evt, *.hlt, .cc/.cxx\n"
                  "\n";
@@ -195,6 +199,14 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'V': std::cout << spicy::zeek::configuration::PluginVersionNumber << std::endl; return Nothing();
 
             case 'z': std::cout << spicy::zeek::configuration::ZeekConfig << std::endl; return Nothing();
+
+            case OPT_CXX_LINK:
+#if SPICY_VERSION_NUMBER >= 10600
+                compiler_options->cxx_link.emplace_back(optarg);
+#else
+                return hilti::result::Error("option '--cxx-link' is only supported for Spicy 1.6 or newer");
+#endif
+                break;
 
             case 'h': usage(); return Nothing();
 
