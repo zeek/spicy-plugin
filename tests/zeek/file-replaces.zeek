@@ -2,9 +2,9 @@
 #
 # @TEST-EXEC: spicyz -o pe.hlto pe.spicy zeek_pe.spicy pe.evt
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/ftp-pe.pcap pe.hlto %INPUT ENABLE=T
-# @TEST-EXEC: cat files.log | grep PE >>output
+# @TEST-EXEC: cat files.log | zeek-cut source analyzers filename mime_type >>output
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/ftp-pe.pcap pe.hlto %INPUT ENABLE=F
-# @TEST-EXEC: cat files.log | grep PE >>output
+# @TEST-EXEC: cat files.log | zeek-cut source analyzers filename mime_type >>output
 # @TEST-EXEC: btest-diff output
 #
 # @TEST-DOC: Test replacing an existing file analyzer, and also toggling the Spicy one on and off

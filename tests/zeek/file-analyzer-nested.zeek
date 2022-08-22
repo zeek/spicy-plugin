@@ -4,7 +4,8 @@
 # @TEST-EXEC: spicyz -o text.hlto text.spicy ./text.evt
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::enable_print=T | sort -k 3 >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
-# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff files.log
+# @TEST-EXEC: cat files.log | zeek-cut source analyzers filename mime_type >files
+# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff files
 #
 # Check that exceeding max-file-depth leads to aborting and an event.
 # @TEST-EXEC: ${ZEEK} -t /tmp/zeek.trace -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
