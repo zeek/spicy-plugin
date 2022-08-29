@@ -712,7 +712,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
         // can't allow this ...
         throw InvalidValue("enum values with value max_int not supported by Zeek integration", location);
 
-    bro_int_t bt = (it >= 0 ? it : std::numeric_limits<::bro_int_t>::max());
+    zeek_int_t bt = (it >= 0 ? it : std::numeric_limits<::zeek_int_t>::max());
 
     return target->AsEnumType()->GetEnumVal(bt);
 }
