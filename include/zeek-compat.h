@@ -78,6 +78,10 @@
 
 //// Import types and globals into the new namespaces.
 
+#if ZEEK_VERSION_NUMBER < 50100 // Zeek < 5.1
+using zeek_int_t = bro_int_t;
+#endif
+
 #if ZEEK_VERSION_NUMBER < 40100 // Zeek < 4.1
 namespace zeek::packet_analysis::TCP {
 using TCPSessionAdapter = ::zeek::analyzer::tcp::TCP_Analyzer;

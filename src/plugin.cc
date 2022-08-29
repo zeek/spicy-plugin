@@ -242,7 +242,7 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
 
         if ( lval == -1 )
             // Zeek's enum can't be negative, so swap int max_int for our Undef.
-            lval = std::numeric_limits<::bro_int_t>::max();
+            lval = std::numeric_limits<::zeek_int_t>::max();
 
         etype->AddName(ns, name.c_str(), lval, true);
     }

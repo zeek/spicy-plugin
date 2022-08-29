@@ -1,3 +1,9 @@
+1.3.17-4 | 2022-08-29 10:04:12 +0200
+
+  * GH-128: Switch bro_int_t to zeek_int_t (Arne Welzel, Corelight)
+
+  * Adjust tests for files.log changes in zeek-5.1. (Benjamin Bannier, Corelight)
+
 1.3.17 | 2022-07-13 09:43:39 +0200
 
   * Add `CXX_LINK` option to `spicy_add_analyzer` CMake macro. (Benjamin Bannier, Corelight)
