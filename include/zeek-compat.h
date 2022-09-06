@@ -133,7 +133,8 @@ inline void Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, con
 
 inline void Analyzer_AnalyzerViolation(const ::zeek::Packet& packet, ::zeek::packet_analysis::Analyzer* analyzer,
                                        const char* reason, const char* data, int len, const ::zeek::Tag& tag) {
-    analyzer->AnalyzerViolation(reason, packet.session, data, len, tag);
+    if ( auto* session = packet.session )
+        analyzer->AnalyzerViolation(reason, session, data, len, tag);
 }
 
 
