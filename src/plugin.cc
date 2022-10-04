@@ -117,7 +117,8 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
             ::zeek::analyzer_mgr->DisableAnalyzer(tag);
         }
         else
-            ZEEK_DEBUG(hilti::rt::fmt("%s i supposed to replace %s, but that does not exist", name, replaces, name));
+            ZEEK_DEBUG(
+                hilti::rt::fmt("%s is supposed to replace %s, but that %s does not exist", name, replaces, name));
     }
 
     ::zeek::analyzer::Component::factory_callback factory = nullptr;
