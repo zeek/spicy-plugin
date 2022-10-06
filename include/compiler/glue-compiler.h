@@ -71,6 +71,7 @@ struct PacketAnalyzer {
     hilti::Location location; /**< Location where the analyzer was defined. */
     hilti::ID name;           /**< Name of the analyzer. */
     hilti::ID unit_name;      /**< The fully-qualified name of the unit type to parse with. */
+    std::string replaces;     /**< Name of another analyzer this one replaces. */
 
     // Computed information.
     std::optional<UnitInfo> unit; /**< The type of the unit to parse the originator side. */
@@ -132,7 +133,7 @@ struct Event {
 class GlueCompiler : public glue::GlueCompilerInterface {
 public:
     /** Constructor. */
-    GlueCompiler(){};
+    GlueCompiler() {}
 
     /** Destructor. */
     virtual ~GlueCompiler();
@@ -199,8 +200,8 @@ private:
     /** Returns a HILTI string expression with the location of the event. */
     hilti::Expression location(const glue::ExpressionAccessor& e);
 
-    Driver* _driver = nullptr; /**< driver provided to Init() */
-    int _zeek_version = -1;    /**< Zeek version provided to Init() */
+    Driver* _driver = nullptr;        /**< driver provided to Init() */
+    std::optional<int> _zeek_version; /**< Zeek version provided to Init() */
 
     std::map<hilti::ID, std::shared_ptr<glue::SpicyModule>> _spicy_modules;
 

@@ -102,7 +102,8 @@ void weird(const std::string& id, const std::string& addl);
  * Registers a Spicy packet analyzer with its EVT meta information with the
  * plugin's runtime.
  */
-void register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& linker_scope);
+void register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& replaces,
+                              const std::string& linker_scope);
 
 /** Registers a Spicy enum type to make it available inside Zeek. */
 void register_enum_type(const std::string& ns, const std::string& id,

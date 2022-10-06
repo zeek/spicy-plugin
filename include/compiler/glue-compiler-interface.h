@@ -21,17 +21,17 @@ protected:
     // Callback executing when a file analyzer has been parsed from an EVT
     // file. Note that no computed information will have been filled in
     // yet.
-    virtual void newFileAnalyzer(const glue::FileAnalyzer& analyzer){};
+    virtual void newFileAnalyzer(const glue::FileAnalyzer& analyzer) {}
 
     // Callback executing when a packet analyzer has been parsed from an EVT
     // file. Note that no computed information will have been filled in
     // yet.
-    virtual void newPacketAnalyzer(const glue::PacketAnalyzer& analyzer){};
+    virtual void newPacketAnalyzer(const glue::PacketAnalyzer& analyzer) {}
 
     // Callback executing when a protocol analyzer has been parsed from an EVT
     // file. Note that no computed information will have been filled in
     // yet.
-    virtual void newProtocolAnalyzer(const glue::ProtocolAnalyzer& analyzer){};
+    virtual void newProtocolAnalyzer(const glue::ProtocolAnalyzer& analyzer) {}
 };
 
 } // namespace glue

@@ -51,7 +51,7 @@ protected:
 
     void newPacketAnalyzer(const glue::PacketAnalyzer& analyzer) override {
         // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerPacketAnalyzer(analyzer.name, analyzer.unit_name, "");
+        _plugin->registerPacketAnalyzer(analyzer.name, analyzer.unit_name, analyzer.replaces, "");
     }
 
     void newProtocolAnalyzer(const glue::ProtocolAnalyzer& analyzer) override {
@@ -64,6 +64,7 @@ private:
     template<typename T>
     hilti::rt::Vector<T> to_rt_vector(std::vector<T> in) {
         hilti::rt::Vector<T> out;
+        out.reserve(in.size());
         for ( auto&& x : in )
             out.push_back(std::move(x));
 
@@ -244,11 +245,12 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
 }
 
 void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name, const std::string& parser,
-                                                        const std::string& linker_scope) {
+                                                        const std::string& replaces, const std::string& linker_scope) {
     ZEEK_DEBUG(hilti::rt::fmt("Have Spicy packet analyzer %s", name));
 
     PacketAnalyzerInfo info;
     info.name_analyzer = name;
+    info.name_replaces = replaces;
     info.name_parser = parser;
     info.name_zeek = hilti::util::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", info.name_zeek);
@@ -381,10 +383,12 @@ const spicy::rt::Parser* plugin::Zeek_Spicy::Plugin::parserForPacketAnalyzer(
         return tag;
 }
 
-::spicy::zeek::compat::AnalyzerTag plugin::Zeek_Spicy::Plugin::tagForPacketAnalyzer(
-    const ::spicy::zeek::compat::AnalyzerTag& tag) {
-    // Don't have a replacement mechanism currently.
-    return tag;
+::spicy::zeek::compat::PacketAnalysisTag plugin::Zeek_Spicy::Plugin::tagForPacketAnalyzer(
+    const ::spicy::zeek::compat::PacketAnalysisTag& tag) {
+    if ( auto r = _packet_analyzers_by_type[tag.Type()].replaces )
+        return r;
+    else
+        return tag;
 }
 
 bool plugin::Zeek_Spicy::Plugin::toggleProtocolAnalyzer(const ::spicy::zeek::compat::AnalyzerTag& tag, bool enable) {
@@ -478,14 +482,48 @@ bool plugin::Zeek_Spicy::Plugin::togglePacketAnalyzer(const ::spicy::zeek::compa
     if ( type >= _packet_analyzers_by_type.size() )
         return false;
 
-    const auto& analyzer = _protocol_analyzers_by_type[type];
+    const auto& analyzer = _packet_analyzers_by_type[type];
 
     if ( ! analyzer.type )
         // not set -> not ours
         return false;
-    ZEEK_DEBUG(hilti::rt::fmt("supposed to toggle packet analyzer %s, but that is not supported by Zeek",
+
+#if ZEEK_VERSION_NUMBER >= 50200
+    ::zeek::packet_analysis::Component* component = ::zeek::packet_mgr->Lookup(tag);
+    ::zeek::packet_analysis::Component* component_replaces =
+        analyzer.replaces ? ::zeek::packet_mgr->Lookup(analyzer.replaces) : nullptr;
+
+    if ( ! component ) {
+        // Shouldn't really happen.
+        reporter::internalError("failed to lookup packet analyzer component");
+        return false;
+    }
+
+    if ( enable ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Enabling Spicy packet analyzer %s", analyzer.name_analyzer));
+        component->SetEnabled(true);
+
+        if ( component_replaces ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Disabling standard packet analyzer %s", analyzer.name_analyzer));
+            component_replaces->SetEnabled(false);
+        }
+    }
+    else {
+        ZEEK_DEBUG(hilti::rt::fmt("Disabling Spicy packet analyzer %s", analyzer.name_analyzer));
+        component->SetEnabled(false);
+
+        if ( component_replaces ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Enabling standard packet analyzer %s", analyzer.name_analyzer));
+            component_replaces->SetEnabled(true);
+        }
+    }
+
+    return true;
+#else
+    ZEEK_DEBUG(hilti::rt::fmt("supposed to toggle packet analyzer %s, but that is not supported by Zeek version",
                               analyzer.name_analyzer));
     return false;
+#endif
 }
 
 bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enable) {
@@ -844,6 +882,32 @@ void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
         }
 
         ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing file analyzer %s", info.name_analyzer, replaces));
+        info.replaces = component->Tag();
+        component->SetEnabled(false);
+    }
+#endif
+
+#if ZEEK_VERSION_NUMBER >= 50200
+    // Zeek does not have a way to disable packet analyzers until 4.1. There's
+    // separate logic to nicely reject 'replaces' usages found in .evt packets
+    // if using inadequate Zeek version; this #ifdef is just to make Spicy
+    // compilation work regardless.
+
+    for ( auto& info : _packet_analyzers_by_type ) {
+        if ( info.name_replaces.empty() )
+            continue;
+
+        auto replaces = info.name_replaces.c_str();
+
+        auto component = ::zeek::packet_mgr->Lookup(replaces);
+        if ( ! component ) {
+            ZEEK_DEBUG(hilti::rt::fmt("%s is supposed to replace packet analyzer %s, but that does not exist",
+                                      info.name_analyzer, replaces));
+
+            continue;
+        }
+
+        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing packet analyzer %s", info.name_analyzer, replaces));
         info.replaces = component->Tag();
         component->SetEnabled(false);
     }

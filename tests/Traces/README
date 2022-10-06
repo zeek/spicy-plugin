@@ -8,6 +8,7 @@ Sources for external PCAPs:
     - Zeek
         * http-post.trace (post.trace)
         * ftp-pe.pcap (pe/pe.trace, pruned a single file transfer)
+        * dns53.pcap
 
     - Wireshark (https://wiki.wireshark.org/SampleCaptures)
         * long-dns-connection.pcap

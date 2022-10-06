@@ -347,7 +347,7 @@ hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* 
 }
 
 void GlueCompiler::preprocessEvtFile(hilti::rt::filesystem::path& path, std::istream& in, std::ostream& out) {
-    hilti::util::SourceCodePreprocessor pp({{"ZEEK_VERSION", _zeek_version}});
+    hilti::util::SourceCodePreprocessor pp({{"ZEEK_VERSION", *_zeek_version}});
     int lineno = 0;
 
     std::string line;
@@ -383,6 +383,8 @@ void GlueCompiler::preprocessEvtFile(hilti::rt::filesystem::path& path, std::ist
 }
 
 bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
+    assert(_zeek_version);
+
     std::ifstream in(path);
 
     if ( ! in ) {
@@ -461,7 +463,7 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
             }
 
             else
-                throw ParseError("expected 'import', '{file,protocol} analyzer', or 'on'");
+                throw ParseError("expected 'import', '{file,packet,protocol} analyzer', or 'on'");
 
             _locations.pop_back();
         }
@@ -617,7 +619,7 @@ glue::FileAnalyzer GlueCompiler::parseFileAnalyzer(const std::string& chunk) {
         }
 
         else if ( looking_at(chunk, i, "replaces") ) {
-            if ( _zeek_version < 40100 )
+            if ( *_zeek_version < 40100 )
                 throw ParseError("file analyzer replacement requires Zeek 4.1+");
 
             eat_token(chunk, &i, "replaces");
@@ -653,6 +655,14 @@ glue::PacketAnalyzer GlueCompiler::parsePacketAnalyzer(const std::string& chunk)
             eat_token(chunk, &i, "parse");
             eat_token(chunk, &i, "with");
             a.unit_name = extract_id(chunk, &i);
+        }
+
+        else if ( looking_at(chunk, i, "replaces") ) {
+            if ( *_zeek_version < 50200 )
+                throw ParseError("packet analyzer replacement requires Zeek 5.2+");
+
+            eat_token(chunk, &i, "replaces");
+            a.replaces = extract_id(chunk, &i);
         }
 
         else
@@ -821,7 +831,7 @@ bool GlueCompiler::compile() {
         }
 
         preinit_body.addCall("zeek_rt::register_packet_analyzer",
-                             {builder::string(a.name), builder::string(a.unit_name),
+                             {builder::string(a.name), builder::string(a.unit_name), builder::string(a.replaces),
                               builder::call("hilti::linker_scope", {})});
     }
 
