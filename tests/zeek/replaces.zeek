@@ -1,5 +1,11 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace  ssh.spicy ./ssh.evt %INPUT | sort >output
+# @TEST-EXEC: mkdir -p modules
+# @TEST-EXEC: spicyz -o modules/ssh.hlto ssh.spicy ./ssh.evt
+# @TEST-EXEC: ZEEK_SPICY_MODULE_PATH=$(pwd)/modules ${ZEEK} -r ${TRACES}/ssh-single-conn.trace %INPUT | sort >output
 # @TEST-EXEC: btest-diff output
+#
+# We use the module search path for loading here as a regression test for #137.
+# Note that this that problem only showed up when the Spicy plugin was built
+# into Zeek.
 
 event ssh::banner(c: connection, is_orig: bool, version: string, software: string)
 	{

@@ -110,17 +110,6 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.ports = ports;
     info.linker_scope = linker_scope;
 
-    if ( replaces.size() ) {
-        if ( auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(replaces.c_str()) ) {
-            ZEEK_DEBUG(hilti::rt::fmt("  Replaces existing protocol analyzer %s", replaces));
-            info.replaces = tag;
-            ::zeek::analyzer_mgr->DisableAnalyzer(tag);
-        }
-        else
-            ZEEK_DEBUG(
-                hilti::rt::fmt("%s is supposed to replace %s, but that %s does not exist", name, replaces, name));
-    }
-
     ::zeek::analyzer::Component::factory_callback factory = nullptr;
 
     switch ( proto ) {
@@ -506,6 +495,8 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     _driver->InitPostScript();
 #endif
 
+    disableReplacedAnalyzers();
+
     // If there's no handler for one of our events, it won't have received a
     // type. Give it a dummy event type in that case, so that we don't walk
     // around with a nullptr.
@@ -724,4 +715,47 @@ void plugin::Zeek_Spicy::Plugin::autoDiscoverModules() {
         searchModules(spicy::zeek::configuration::PluginModuleDirectory);
         searchModules(zeek::util::zeek_plugin_path());
     }
+}
+
+void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
+    for ( auto& info : _protocol_analyzers_by_type ) {
+        if ( info.name_replaces.empty() )
+            continue;
+
+        auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(info.name_replaces.c_str());
+        if ( ! tag ) {
+            ZEEK_DEBUG(hilti::rt::fmt("%s is supposed to replace protocol analyzer %s, but that does not exist",
+                                      info.name_analyzer, info.name_replaces));
+
+            continue;
+        }
+
+        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing protocol analyzer %s", info.name_analyzer, info.name_replaces));
+        info.replaces = tag;
+        ::zeek::analyzer_mgr->DisableAnalyzer(tag);
+    }
+
+#if ZEEK_VERSION_NUMBER >= 40100
+    // Zeek does not have a way to disable file analyzers until 4.1.
+    // There's separate logic to nicely reject 'replaces' usages found
+    // in .evt files if using inadequate Zeek version; this #ifdef is just
+    // to make Spicy compilation work regardless.
+
+    for ( auto& info : _file_analyzers_by_type ) {
+        if ( info.name_replaces.empty() )
+            continue;
+
+        auto component = ::zeek::file_mgr->Lookup(info.name_replaces.c_str());
+        if ( ! component ) {
+            ZEEK_DEBUG(hilti::rt::fmt("%s is supposed to replace file analyzer %s, but that does not exist",
+                                      info.name_analyzer, info.name_replaces));
+
+            continue;
+        }
+
+        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing file analyzer %s", info.name_analyzer, info.name_replaces));
+        info.replaces = component->Tag();
+        component->SetEnabled(false);
+    }
+#endif
 }

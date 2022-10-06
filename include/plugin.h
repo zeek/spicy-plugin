@@ -253,6 +253,9 @@ private:
     // Return a Zeek location object for the given file name that will stay valid.
     ::zeek::detail::Location makeLocation(const std::string& fname);
 
+    // Disable any Zeek-side analyzers that are replaced by one of ours.
+    void disableReplacedAnalyzers();
+
     /** Captures a registered protocol analyzer. */
     struct ProtocolAnalyzerInfo {
         // Filled in when registering the analyzer.
