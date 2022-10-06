@@ -722,15 +722,20 @@ void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
         if ( info.name_replaces.empty() )
             continue;
 
-        auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(info.name_replaces.c_str());
+        auto replaces = info.name_replaces.c_str();
+
+        if ( ::zeek::file_mgr->Lookup(replaces) || ::zeek::packet_mgr->Lookup(replaces) )
+            reporter::fatalError(hilti::rt::fmt("cannot replace '%s' analyzer with a protocol analyzer", replaces));
+
+        auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(replaces);
         if ( ! tag ) {
             ZEEK_DEBUG(hilti::rt::fmt("%s is supposed to replace protocol analyzer %s, but that does not exist",
-                                      info.name_analyzer, info.name_replaces));
+                                      info.name_analyzer, replaces));
 
             continue;
         }
 
-        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing protocol analyzer %s", info.name_analyzer, info.name_replaces));
+        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing protocol analyzer %s", info.name_analyzer, replaces));
         info.replaces = tag;
         ::zeek::analyzer_mgr->DisableAnalyzer(tag);
     }
@@ -745,15 +750,20 @@ void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
         if ( info.name_replaces.empty() )
             continue;
 
-        auto component = ::zeek::file_mgr->Lookup(info.name_replaces.c_str());
+        auto replaces = info.name_replaces.c_str();
+
+        if ( ::zeek::analyzer_mgr->Lookup(replaces) || ::zeek::packet_mgr->Lookup(replaces) )
+            reporter::fatalError(hilti::rt::fmt("cannot replace '%s' analyzer with a file analyzer", replaces));
+
+        auto component = ::zeek::file_mgr->Lookup(replaces);
         if ( ! component ) {
             ZEEK_DEBUG(hilti::rt::fmt("%s is supposed to replace file analyzer %s, but that does not exist",
-                                      info.name_analyzer, info.name_replaces));
+                                      info.name_analyzer, replaces));
 
             continue;
         }
 
-        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing file analyzer %s", info.name_analyzer, info.name_replaces));
+        ZEEK_DEBUG(hilti::rt::fmt("%s replaces existing file analyzer %s", info.name_analyzer, replaces));
         info.replaces = component->Tag();
         component->SetEnabled(false);
     }
