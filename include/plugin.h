@@ -277,6 +277,7 @@ private:
         std::string linker_scope;
 
         // Filled in after registering the analyzer.
+        std::string name_zeek;
         std::string name_zeekygen;
         spicy::zeek::compat::AnalyzerTag::type_t type;
         const spicy::rt::Parser* parser_orig;
@@ -302,6 +303,7 @@ private:
         std::string linker_scope;
 
         // Filled in after registering the analyzer.
+        std::string name_zeek;
         std::string name_zeekygen;
         spicy::zeek::compat::FileAnalysisTag::type_t type;
         const spicy::rt::Parser* parser;
@@ -324,6 +326,7 @@ private:
         std::string linker_scope;
 
         // Filled in after registering the analyzer.
+        std::string name_zeek;
         std::string name_zeekygen;
         spicy::zeek::compat::PacketAnalysisTag::type_t type;
         const spicy::rt::Parser* parser;

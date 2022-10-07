@@ -494,7 +494,7 @@ glue::ProtocolAnalyzer GlueCompiler::parseProtocolAnalyzer(const std::string& ch
 
     eat_token(chunk, &i, "protocol");
     eat_token(chunk, &i, "analyzer");
-    a.name = hilti::util::replace(extract_id(chunk, &i), "::", "_");
+    a.name = extract_id(chunk, &i).str();
 
     eat_token(chunk, &i, "over");
 
@@ -599,7 +599,7 @@ glue::FileAnalyzer GlueCompiler::parseFileAnalyzer(const std::string& chunk) {
 
     eat_token(chunk, &i, "file");
     eat_token(chunk, &i, "analyzer");
-    a.name = hilti::util::replace(extract_id(chunk, &i).str(), "::", "_");
+    a.name = extract_id(chunk, &i).str();
 
     eat_token(chunk, &i, ":");
 
@@ -644,9 +644,6 @@ glue::PacketAnalyzer GlueCompiler::parsePacketAnalyzer(const std::string& chunk)
 
     eat_token(chunk, &i, "packet");
     eat_token(chunk, &i, "analyzer");
-
-    // We don't normalize the name here so that the user can address
-    // it with the expected spelling.
     a.name = extract_id(chunk, &i).str();
 
     eat_token(chunk, &i, ":");

@@ -142,6 +142,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.name_parser_orig = parser_orig;
     info.name_parser_resp = parser_resp;
     info.name_replaces = replaces;
+    info.name_zeek = hilti::util::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.protocol = proto;
     info.ports = ports;
@@ -149,7 +150,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
 
     // We may have that analyzer already iff it was previously pre-registered
     // without a linker scope. We'll then only set the scope now.
-    if ( auto c = findComponent(name) ) {
+    if ( auto c = findComponent(info.name_zeek) ) {
         ZEEK_DEBUG(hilti::rt::fmt("Updating already registered protocol analyzer %s", name));
 
         const auto& tag = _analyzer_name_to_tag_type.at(c->Name());
@@ -172,7 +173,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
         default: reporter::error("unsupported protocol in analyzer"); return;
     }
 
-    auto c = new ::zeek::analyzer::Component(info.name_analyzer, factory, 0);
+    auto c = new ::zeek::analyzer::Component(info.name_zeek, factory, 0);
     AddComponent(c);
 
     // Hack to prevent Zeekygen from reporting the ID as not having a
@@ -201,14 +202,15 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     info.name_analyzer = name;
     info.name_parser = parser;
     info.name_replaces = replaces;
+    info.name_zeek = hilti::util::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.mime_types = mime_types;
     info.linker_scope = linker_scope;
 
     // We may have that analyzer already iff it was previously pre-registered
     // without a linker scope. We'll then only set the scope now.
-    if ( auto c = findComponent(name) ) {
-        ZEEK_DEBUG(hilti::rt::fmt("Updating already registered file analyzer %s", name));
+    if ( auto c = findComponent(info.name_zeek) ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Updating already registered packet analyzer %s", name));
 
         const auto& tag = _analyzer_name_to_tag_type.at(c->Name());
         auto& existing = _file_analyzers_by_type.at(tag);
@@ -221,8 +223,8 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
         return;
     }
 
-    auto c = new ::zeek::file_analysis::Component(info.name_analyzer,
-                                                  ::spicy::zeek::rt::FileAnalyzer::InstantiateAnalyzer, 0);
+    auto c =
+        new ::zeek::file_analysis::Component(info.name_zeek, ::spicy::zeek::rt::FileAnalyzer::InstantiateAnalyzer, 0);
     AddComponent(c);
 
     // Hack to prevent Zeekygen from reporting the ID as not having a
@@ -248,12 +250,13 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     PacketAnalyzerInfo info;
     info.name_analyzer = name;
     info.name_parser = parser;
-    info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
+    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", info.name_zeek);
     info.linker_scope = linker_scope;
 
     // We may have that analyzer already iff it was previously pre-registered
     // without a linker scope. We'll then set the scope now.
-    if ( auto c = findComponent(name) ) {
+    if ( auto c = findComponent(info.name_zeek) ) {
         ZEEK_DEBUG(hilti::rt::fmt("Updating already registered packet analyzer %s", name));
 
         const auto& tag = _analyzer_name_to_tag_type.at(c->Name());
@@ -269,10 +272,10 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     }
 
     auto instantiate = [info]() -> ::zeek::packet_analysis::AnalyzerPtr {
-        return ::spicy::zeek::rt::PacketAnalyzer::Instantiate(info.name_analyzer);
+        return ::spicy::zeek::rt::PacketAnalyzer::Instantiate(info.name_zeek);
     };
 
-    auto c = new ::zeek::packet_analysis::Component(info.name_analyzer, instantiate, 0);
+    auto c = new ::zeek::packet_analysis::Component(info.name_zeek, instantiate, 0);
     AddComponent(c);
 
     // Hack to prevent Zeekygen from reporting the ID as not having a
@@ -644,7 +647,7 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         p.parser_resp = find_parser(p.name_analyzer, p.name_parser_resp, p.linker_scope);
 
         // Register analyzer for its well-known ports.
-        auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(p.name_analyzer.c_str());
+        auto tag = ::zeek::analyzer_mgr->GetAnalyzerTag(p.name_zeek.c_str());
         if ( ! tag )
             reporter::internalError(hilti::rt::fmt("cannot get analyzer tag for '%s'", p.name_analyzer));
 
@@ -674,7 +677,7 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         p.parser = find_parser(p.name_analyzer, p.name_parser, p.linker_scope);
 
         // Register analyzer for its MIME types.
-        auto tag = ::zeek::file_mgr->GetComponentTag(p.name_analyzer.c_str());
+        auto tag = ::zeek::file_mgr->GetComponentTag(p.name_zeek.c_str());
         if ( ! tag )
             reporter::internalError(hilti::rt::fmt("cannot get analyzer tag for '%s'", p.name_analyzer));
 
