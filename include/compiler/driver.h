@@ -10,6 +10,7 @@
 #include <hilti/rt/filesystem.h>
 
 #include <spicy/compiler/driver.h>
+#include <zeek-spicy/compiler/glue-compiler-interface.h>
 
 namespace spicy::zeek {
 
@@ -45,7 +46,8 @@ public:
      * @param plugin_path Path to base directory of Zeek plugin
      * @param zeek_version Version number of Zeek we're working with
      */
-    Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int zeek_version);
+    Driver(std::unique_ptr<GlueCompiler> glue, const char* argv0, hilti::rt::filesystem::path plugin_path,
+           int zeek_version);
 
     /** Destructor. */
     ~Driver();

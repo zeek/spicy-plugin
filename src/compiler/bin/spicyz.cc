@@ -7,6 +7,7 @@
 
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/compiler/driver.h>
+#include <zeek-spicy/compiler/glue-compiler.h>
 #include <zeek-spicy/debug.h>
 
 const ::hilti::logging::DebugStream ZeekPlugin("zeek");
@@ -229,7 +230,8 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
 }
 
 int main(int argc, char** argv) {
-    spicy::zeek::Driver driver("", pluginPath(), spicy::zeek::configuration::ZeekVersionNumber);
+    spicy::zeek::Driver driver(std::make_unique<spicy::zeek::GlueCompiler>(), "", pluginPath(),
+                               spicy::zeek::configuration::ZeekVersionNumber);
 
     hilti::driver::Options driver_options;
     driver_options.execute_code = true;

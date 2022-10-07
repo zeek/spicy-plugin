@@ -19,6 +19,7 @@
 #include <hilti/autogen/config.h>
 
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/glue-compiler.h>
 #include <zeek-spicy/file-analyzer.h>
 #include <zeek-spicy/packet-analyzer.h>
 #include <zeek-spicy/plugin.h>
@@ -70,7 +71,8 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
     name = info.dli_fname;
 #endif
 
-    _driver = std::make_unique<Driver>(name.c_str(), plugin_path, spicy::zeek::configuration::ZeekVersionNumber);
+    _driver = std::make_unique<Driver>(std::make_unique<GlueCompiler>(), name.c_str(), plugin_path,
+                                       spicy::zeek::configuration::ZeekVersionNumber);
 #endif
 }
 

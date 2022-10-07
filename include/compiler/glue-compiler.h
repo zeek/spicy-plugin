@@ -24,6 +24,7 @@
 
 #include <spicy/ast/declarations/unit-hook.h>
 #include <spicy/ast/types/unit.h>
+#include <zeek-spicy/compiler/glue-compiler-interface.h>
 
 #include "driver.h"
 
@@ -128,13 +129,13 @@ struct Event {
 } // namespace glue
 
 /** Generates the glue code between Zeek and Spicy based on *.evt files. */
-class GlueCompiler {
+class GlueCompiler : public glue::GlueCompilerInterface {
 public:
     /** Constructor. */
-    GlueCompiler(Driver* driver, int zeek_version);
+    GlueCompiler() {};
 
     /** Destructor. */
-    ~GlueCompiler();
+    virtual ~GlueCompiler();
 
     /** Parses an `*.evt` file, without generating any code yet. */
     bool loadEvtFile(hilti::rt::filesystem::path& path);
@@ -153,6 +154,12 @@ public:
      * Spicy files.
      */
     bool compile();
+
+protected:
+    friend class Driver;
+
+    /** Called by driver to initialized a provided glue compiler. */
+    void Init(Driver* driver, int zeek_version);
 
 private:
     /**
@@ -192,8 +199,9 @@ private:
     /** Returns a HILTI string expression with the location of the event. */
     hilti::Expression location(const glue::ExpressionAccessor& e);
 
-    Driver* _driver;
-    int _zeek_version;
+    Driver* _driver = nullptr; /**< driver provided to Init() */
+    int _zeek_version = -1;    /**< Zeek version provided to Init() */
+
     std::map<hilti::ID, std::shared_ptr<glue::SpicyModule>> _spicy_modules;
 
     std::vector<std::pair<ID, std::optional<ID>>> _imports;  /**< imports from EVT file, with ID and optional scope */
