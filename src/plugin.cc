@@ -38,6 +38,41 @@ plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 
 using namespace spicy::zeek;
 
+class OurGlueCompiler : public spicy::zeek::GlueCompiler {
+public:
+    OurGlueCompiler(plugin::Zeek_Spicy::Plugin* plugin) : _plugin(plugin) {}
+
+protected:
+    void newFileAnalyzer(const glue::FileAnalyzer& analyzer) override {
+        // We don't know the linker scope yet, that'll be updated later.
+        _plugin->registerFileAnalyzer(analyzer.name, to_rt_vector(analyzer.mime_types), analyzer.unit_name,
+                                      analyzer.replaces, "");
+    }
+
+    void newPacketAnalyzer(const glue::PacketAnalyzer& analyzer) override {
+        // We don't know the linker scope yet, that'll be updated later.
+        _plugin->registerPacketAnalyzer(analyzer.name, analyzer.unit_name, "");
+    }
+
+    void newProtocolAnalyzer(const glue::ProtocolAnalyzer& analyzer) override {
+        // We don't know the linker scope yet, that'll be updated later.
+        _plugin->registerProtocolAnalyzer(analyzer.name, analyzer.protocol, to_rt_vector(analyzer.ports),
+                                          analyzer.unit_name_orig, analyzer.unit_name_resp, analyzer.replaces, "");
+    }
+
+private:
+    template<typename T>
+    hilti::rt::Vector<T> to_rt_vector(std::vector<T> in) {
+        hilti::rt::Vector<T> out;
+        for ( auto&& x : in )
+            out.push_back(std::move(x));
+
+        return out;
+    }
+
+    plugin::Zeek_Spicy::Plugin* _plugin;
+};
+
 plugin::Zeek_Spicy::Plugin::Plugin() {
     if ( spicy::zeek::configuration::ZeekVersionNumber != ZEEK_VERSION_NUMBER )
         reporter::fatalError(
@@ -71,7 +106,7 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
     name = info.dli_fname;
 #endif
 
-    _driver = std::make_unique<Driver>(std::make_unique<GlueCompiler>(), name.c_str(), plugin_path,
+    _driver = std::make_unique<Driver>(std::make_unique<OurGlueCompiler>(this), name.c_str(), plugin_path,
                                        spicy::zeek::configuration::ZeekVersionNumber);
 #endif
 }
@@ -112,6 +147,23 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.ports = ports;
     info.linker_scope = linker_scope;
 
+    // We may have that analyzer already iff it was previously pre-registered
+    // without a linker scope. We'll then only set the scope now.
+    if ( auto c = findComponent(name) ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Updating already registered protocol analyzer %s", name));
+
+        const auto& tag = _analyzer_name_to_tag_type.at(c->Name());
+        auto& existing = _protocol_analyzers_by_type.at(tag);
+        assert(existing.name_analyzer == name);
+        existing.linker_scope = info.linker_scope;
+
+        // If the infos don't match now, we have two separate definitions.
+        if ( info != existing )
+            reporter::fatalError(hilti::rt::fmt("redefinition of protocol analyzer %s", info.name_analyzer));
+
+        return;
+    }
+
     ::zeek::analyzer::Component::factory_callback factory = nullptr;
 
     switch ( proto ) {
@@ -132,6 +184,8 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     // this point already, so ours won't get initialized anymore.
     c->Initialize();
 
+    trackComponent(c, c->Tag().Type()); // must come after Initialize(); needed for Zeek < 4.2
+
     info.type = c->Tag().Type();
     _protocol_analyzers_by_type.resize(info.type + 1);
     _protocol_analyzers_by_type[info.type] = info;
@@ -151,21 +205,21 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     info.mime_types = mime_types;
     info.linker_scope = linker_scope;
 
-#if ZEEK_VERSION_NUMBER >= 40100
-    // Zeek does not have a way to disable file analyzers until 4.1.
-    // There's separate logic to nicely reject 'replaces' usages found
-    // in .evt files if using inadequate Zeek version, but this is just
-    // to make Spicy compilation work regardless.
-    if ( replaces.size() ) {
-        if ( auto component = ::zeek::file_mgr->Lookup(replaces) ) {
-            ZEEK_DEBUG(hilti::rt::fmt("  Replaces existing file analyzer %s", replaces));
-            info.replaces = component->Tag();
-            component->SetEnabled(false);
-        }
-        else
-            ZEEK_DEBUG(hilti::rt::fmt("%s i supposed to replace %s, but that does not exist", name, replaces, name));
+    // We may have that analyzer already iff it was previously pre-registered
+    // without a linker scope. We'll then only set the scope now.
+    if ( auto c = findComponent(name) ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Updating already registered file analyzer %s", name));
+
+        const auto& tag = _analyzer_name_to_tag_type.at(c->Name());
+        auto& existing = _file_analyzers_by_type.at(tag);
+        existing.linker_scope = info.linker_scope;
+
+        // If the infos don't match now, we have two separate definitions.
+        if ( info != existing )
+            reporter::fatalError(hilti::rt::fmt("redefinition of file analyzer %s", info.name_analyzer));
+
+        return;
     }
-#endif
 
     auto c = new ::zeek::file_analysis::Component(info.name_analyzer,
                                                   ::spicy::zeek::rt::FileAnalyzer::InstantiateAnalyzer, 0);
@@ -179,6 +233,8 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     // TODO: Should Zeek do this? It has run component intiialization at
     // this point already, so ours won't get initialized anymore.
     c->Initialize();
+
+    trackComponent(c, c->Tag().Type()); // must come after Initialize(); needed for Zeek < 4.2
 
     info.type = c->Tag().Type();
     _file_analyzers_by_type.resize(info.type + 1);
@@ -195,6 +251,23 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.linker_scope = linker_scope;
 
+    // We may have that analyzer already iff it was previously pre-registered
+    // without a linker scope. We'll then set the scope now.
+    if ( auto c = findComponent(name) ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Updating already registered packet analyzer %s", name));
+
+        const auto& tag = _analyzer_name_to_tag_type.at(c->Name());
+        auto& existing = _packet_analyzers_by_type.at(tag);
+        assert(existing.name_analyzer == name);
+        existing.linker_scope = info.linker_scope;
+
+        // If the infos don't match now, we have two separate definitions.
+        if ( info != existing )
+            reporter::fatalError(hilti::rt::fmt("redefinition of packet analyzer %s", info.name_analyzer));
+
+        return;
+    }
+
     auto instantiate = [info]() -> ::zeek::packet_analysis::AnalyzerPtr {
         return ::spicy::zeek::rt::PacketAnalyzer::Instantiate(info.name_analyzer);
     };
@@ -210,6 +283,8 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     // TODO: Should Zeek do this? It has run component intiialization at
     // this point already, so ours won't get initialized anymore.
     c->Initialize();
+
+    trackComponent(c, c->Tag().Type()); // must come after Initialize(); needed for Zeek < 4.2
 
     info.type = c->Tag().Type();
     _packet_analyzers_by_type.resize(info.type + 1);
@@ -770,4 +845,23 @@ void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
         component->SetEnabled(false);
     }
 #endif
+}
+
+
+void plugin::Zeek_Spicy::Plugin::trackComponent(::zeek::plugin::Component* c, int32_t tag_type) {
+    auto i = _analyzer_name_to_tag_type.insert({c->Name(), tag_type});
+    if ( ! i.second )
+        // We enforce on our end that an analyzer name can appear only once
+        // across all types of analyzers. Makes things easier and avoids
+        // confusion.
+        reporter::fatalError(hilti::rt::fmt("duplicate analyzer name '%s'", c->Name()));
+}
+
+const ::zeek::plugin::Component* plugin::Zeek_Spicy::Plugin::findComponent(const std::string& name) {
+    for ( const auto& c : Components() ) {
+        if ( c->Name() == name )
+            return c;
+    }
+
+    return nullptr;
 }

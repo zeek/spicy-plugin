@@ -79,8 +79,8 @@ struct VisitorPostCompilation : public hilti::visitor::PreOrder<void, VisitorPos
 };
 
 Driver::Driver(std::unique_ptr<GlueCompiler> glue, const char* argv0, hilti::rt::filesystem::path plugin_path,
-               int zeek_version) : spicy::Driver("<Spicy Plugin for Zeek>"), _glue(std::move(glue)) {
-
+               int zeek_version)
+    : spicy::Driver("<Spicy Plugin for Zeek>"), _glue(std::move(glue)) {
     _glue->Init(this, zeek_version);
 
     spicy::Configuration::extendHiltiConfiguration();

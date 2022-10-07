@@ -132,7 +132,7 @@ struct Event {
 class GlueCompiler : public glue::GlueCompilerInterface {
 public:
     /** Constructor. */
-    GlueCompiler() {};
+    GlueCompiler(){};
 
     /** Destructor. */
     virtual ~GlueCompiler();
