@@ -345,6 +345,8 @@ template<typename T>
 ::zeek::ValPtr to_val(const hilti::rt::DeferredExpression<T>& t, ::zeek::TypePtr target, const std::string& location);
 template<typename T>
 ::zeek::ValPtr to_val(hilti::rt::integer::safe<T> i, ::zeek::TypePtr target, const std::string& location);
+template<typename T>
+::zeek::ValPtr to_val(const hilti::rt::ValueReference<T>& t, ::zeek::TypePtr target, const std::string& location);
 
 inline ::zeek::ValPtr to_val(const hilti::rt::Bool& b, ::zeek::TypePtr target, const std::string& location);
 inline ::zeek::ValPtr to_val(const hilti::rt::Address& d, ::zeek::TypePtr target, const std::string& location);
@@ -435,6 +437,14 @@ inline ::zeek::ValPtr to_val(hilti::rt::integer::safe<T> i, ::zeek::TypePtr targ
 
         throw TypeMismatch("int64", target, location);
     }
+}
+
+template<typename T>
+::zeek::ValPtr to_val(const hilti::rt::ValueReference<T>& t, ::zeek::TypePtr target, const std::string& location) {
+    if ( auto* x = t.get() )
+        return to_val(*x, target, location);
+
+    return nullptr;
 }
 
 /**
