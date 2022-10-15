@@ -1,3 +1,9 @@
+1.3.20-10 | 2022-10-15 22:07:12 +0200
+
+  * Add support for replacing and toggling packet analyzers. Requires
+    Zeek >= 5.2 (current master at the time of this commit). (Robin
+    Sommer)
+
 1.3.20-8 | 2022-10-15 22:05:59 +0200
 
   * Fix spelling of Zeek-side tags for packet analyzers. (Robin Sommer)

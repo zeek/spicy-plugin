@@ -11,7 +11,7 @@ public type EventHandlerPtr = __library_type("::zeek::EventHandlerPtr");
 
 declare public void register_protocol_analyzer(string name, hilti::Protocol protocol, vector<port> ports, string parser_orig, string parser_resp, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_protocol_analyzer" &have_prototype;
 declare public void register_file_analyzer(string name, vector<string> mime_types, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_file_analyzer" &have_prototype;
-declare public void register_packet_analyzer(string name, string parser, string linker_scope) &cxxname="spicy::zeek::rt::register_packet_analyzer" &have_prototype;
+declare public void register_packet_analyzer(string name, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_packet_analyzer" &have_prototype;
 declare public void register_enum_type(string ns, string id, vector<tuple<string, int<64>>> labels) &cxxname="spicy::zeek::rt::register_enum_type" &have_prototype;
 
 declare public bool have_handler(EventHandlerPtr handler) &cxxname="spicy::zeek::rt::have_handler" &have_prototype;

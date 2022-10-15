@@ -29,8 +29,9 @@ void rt::register_file_analyzer(const std::string& name, const hilti::rt::Vector
     OurPlugin->registerFileAnalyzer(name, mime_types, parser, replaces, linker_scope);
 }
 
-void rt::register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& linker_scope) {
-    OurPlugin->registerPacketAnalyzer(name, parser, linker_scope);
+void rt::register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& replaces,
+                                  const std::string& linker_scope) {
+    OurPlugin->registerPacketAnalyzer(name, parser, replaces, linker_scope);
 }
 
 void rt::register_enum_type(

@@ -129,7 +129,7 @@ protected:
      *
      * @param e unit type's meta information
      */
-    virtual void hookNewUnitType(const UnitInfo& e){};
+    virtual void hookNewUnitType(const UnitInfo& e) {}
 
     /**
      * Hook executed for all public enum declarations encountered in a Spicy
@@ -137,7 +137,7 @@ protected:
      *
      * @param e enum type's meta information
      */
-    virtual void hookNewEnumType(const EnumInfo& e){};
+    virtual void hookNewEnumType(const EnumInfo& e) {}
 
     /** Overidden from HILTI driver. */
     void hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) override;

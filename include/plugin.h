@@ -81,9 +81,12 @@ public:
      * @param parser name of the Spicy parser for parsing the packet; must
      * match the name that Spicy registers the unit's
      * parser with.
+     * @param replaces optional name of existing Zeek analyzer that this one
+     * replaces; the Zeek analyzer will automatically be disabled
      * @param linker_scope scope of current HLTO file, which will restrict visibility of the registration
      */
-    void registerPacketAnalyzer(const std::string& name, const std::string& parser, const std::string& linker_scope);
+    void registerPacketAnalyzer(const std::string& name, const std::string& parser, const std::string& replaces,
+                                const std::string& linker_scope);
 
     /**
      * Runtime method to register a Spicy-generted enum time with Zeek.
@@ -163,7 +166,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    spicy::zeek::compat::AnalyzerTag tagForPacketAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag);
+    spicy::zeek::compat::PacketAnalysisTag tagForPacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag);
 
     /**
      * Explicitly enable/disable a protocol analyzer. By default, all analyzers
@@ -276,7 +279,7 @@ private:
         hilti::rt::Vector<hilti::rt::Port> ports;
         std::string linker_scope;
 
-        // Filled in after registering the analyzer.
+        // Computed and available once the analyzer has been registered.
         std::string name_zeek;
         std::string name_zeekygen;
         spicy::zeek::compat::AnalyzerTag::type_t type;
@@ -302,7 +305,7 @@ private:
         hilti::rt::Vector<std::string> mime_types;
         std::string linker_scope;
 
-        // Filled in after registering the analyzer.
+        // Computed and available once the analyzer has been registered.
         std::string name_zeek;
         std::string name_zeekygen;
         spicy::zeek::compat::FileAnalysisTag::type_t type;
@@ -323,9 +326,10 @@ private:
         // Provided when registering the analyzer.
         std::string name_analyzer;
         std::string name_parser;
+        std::string name_replaces;
         std::string linker_scope;
 
-        // Filled in after registering the analyzer.
+        // Computed and available once the analyzer has been registered.
         std::string name_zeek;
         std::string name_zeekygen;
         spicy::zeek::compat::PacketAnalysisTag::type_t type;
@@ -335,7 +339,7 @@ private:
         // Compares only the provided attributes, as that's what defines us.
         bool operator==(const PacketAnalyzerInfo& other) const {
             return name_analyzer == other.name_analyzer && name_parser == other.name_parser &&
-                   linker_scope == other.linker_scope;
+                   name_replaces == other.name_replaces && linker_scope == other.linker_scope;
         }
 
         bool operator!=(const PacketAnalyzerInfo& other) const { return ! (*this == other); }

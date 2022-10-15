@@ -100,19 +100,19 @@ using PacketAnalysisTag = ::zeek::packet_analysis::Tag;
 class AnalyzerTag : public ::zeek::Tag {
 public:
     using ::zeek::Tag::Tag;
-    AnalyzerTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)){};
+    AnalyzerTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)) {}
 };
 
 class FileAnalysisTag : public ::zeek::Tag {
 public:
     using ::zeek::Tag::Tag;
-    FileAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)){};
+    FileAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)) {}
 };
 
 class PacketAnalysisTag : public ::zeek::Tag {
 public:
     using ::zeek::Tag::Tag;
-    PacketAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)){};
+    PacketAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)) {}
 };
 #endif
 
