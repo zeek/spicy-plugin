@@ -7,9 +7,9 @@ module PacketAnalyzer::SPICY_RAWLAYER;
 
 event zeek_init()
 	{
-	PacketAnalyzer::register_packet_analyzer(PacketAnalyzer::ANALYZER_ETHERNET, 0x88b5, PacketAnalyzer::ANALYZER_SPICY__RAWLAYER);
+	PacketAnalyzer::register_packet_analyzer(PacketAnalyzer::ANALYZER_ETHERNET, 0x88b5, PacketAnalyzer::ANALYZER_SPICY_RAWLAYER);
 
-	if ( ! PacketAnalyzer::try_register_packet_analyzer_by_name("spicy::RawLayer", 0x4950, "IP") )
+	if ( ! PacketAnalyzer::try_register_packet_analyzer_by_name("spicy_RawLayer", 0x4950, "IP") )
 		print "cannot register IP analyzer";
 	}
 

@@ -5,7 +5,7 @@ module PacketAnalyzer::SPICY_RAWLAYER;
 
 event zeek_init()
 	{
-	if ( ! PacketAnalyzer::try_register_packet_analyzer_by_name("IP", 255, "spicy::RawLayer") ) # modified trace to have IP proto 255
+	if ( ! PacketAnalyzer::try_register_packet_analyzer_by_name("IP", 255, "spicy_RawLayer") ) # modified trace to have IP proto 255
 		print "cannot register raw analyzer on top of IP";
 	}
 

@@ -23,6 +23,6 @@ module TEST;
 event zeek_init()
 {
 	if ( ! PacketAnalyzer::try_register_packet_analyzer_by_name("Ethernet", 0x6666,
-	    "spicy::TEST") )
+	    "spicy_TEST") )
 		print "cannot register spicy analyzer";
 }
