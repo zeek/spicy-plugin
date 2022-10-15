@@ -78,8 +78,11 @@ struct VisitorPostCompilation : public hilti::visitor::PreOrder<void, VisitorPos
     std::vector<UnitInfo> units;
 };
 
-Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int zeek_version)
-    : spicy::Driver("<Spicy Plugin for Zeek>") {
+Driver::Driver(std::unique_ptr<GlueCompiler> glue, const char* argv0, hilti::rt::filesystem::path plugin_path,
+               int zeek_version)
+    : spicy::Driver("<Spicy Plugin for Zeek>"), _glue(std::move(glue)) {
+    _glue->Init(this, zeek_version);
+
     spicy::Configuration::extendHiltiConfiguration();
     auto options = hiltiOptions();
 
@@ -126,8 +129,6 @@ Driver::Driver(const char* argv0, hilti::rt::filesystem::path plugin_path, int z
     auto& config = spicy::configuration();
     config.preprocessor_constants["HAVE_ZEEK"] = 1;
     config.preprocessor_constants["ZEEK_VERSION"] = zeek_version;
-
-    _glue = std::make_unique<GlueCompiler>(this, zeek_version);
 
 #if SPICY_VERSION_NUMBER >= 10500
     hilti::init();

@@ -1,3 +1,24 @@
+1.3.20-6 | 2022-10-15 22:03:13 +0200
+
+  * Allow to use Zeek-side `ANALYZER_*` tags in JIT mode. (Robin Sommer)
+
+    We had an inconsistency between pre-compiled HLTO files and JITing an
+    analyzer by giving Zeek the `*.{evt,spicy}` files directly: in the
+    latter case, a Zeek script wasn't able to use the `ANALYZER_*` tags,
+    because they weren't defined at script load time yet. The reason is
+    that they got registered only once the HILTI-side module
+    initialization ran, which for JITed analyzers is later than for HLTOs.
+
+    Note that there's still an ordering requirement: the EVT file needs
+    to be loaded before the Zeek script using the tag. However, that's
+    the same for HLTOs, so that's consistent at least.
+
+  * Add hooks to glue compiler to receive notifications about new analyzers. (Robin Sommer)
+
+    This enables users of the glue compiler to provide callbacks to
+    execute when the glue compiler learns about a new analyzer. We'll use
+    this in a subsequent commit.
+
 1.3.20-3 | 2022-10-15 22:02:08 +0200
 
   * GH-137: Fix analyzer replacement. (Robin Sommer)

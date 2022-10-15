@@ -1,6 +1,12 @@
 # @TEST-EXEC: ${ZEEK} -Cr ${TRACES}/udp.trace udp-test.spicy ./udp-test.evt %INPUT >output
 # @TEST-EXEC: btest-diff output
 
+event zeek_init()
+	{
+	# Check we can access the tag.
+	print Analyzer::ANALYZER_SPICY_UDP_TEST;
+	}
+
 event udp_test::message(c: connection, is_orig: bool, data: string)
 	{
 	print "UDP packet", c$id, is_orig, data;

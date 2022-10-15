@@ -2,6 +2,12 @@
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 # @TEST-EXEC: btest-diff weird.log
 
+event zeek_init()
+	{
+	# Check we can access the tag.
+	print Files::ANALYZER_SPICY_TEXT;
+	}
+
 event text::data(f: fa_file, data: string)
 	{
 	print "text data", f$id, data;

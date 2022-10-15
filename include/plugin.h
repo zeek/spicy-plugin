@@ -256,52 +256,86 @@ private:
     // Disable any Zeek-side analyzers that are replaced by one of ours.
     void disableReplacedAnalyzers();
 
+    // Record the component-to-tag-type mapping for our analyzers. This is
+    // needed for Zeek < 4.2 only, newer versions provide the mapping
+    // directly.
+    void trackComponent(::zeek::plugin::Component* c, int32_t tag_type);
+
+    // Lookup a previously registered component by name. Returns null if not
+    // found.
+    const ::zeek::plugin::Component* findComponent(const std::string& name);
+
     /** Captures a registered protocol analyzer. */
     struct ProtocolAnalyzerInfo {
-        // Filled in when registering the analyzer.
+        // Provided when registering the analyzer.
         std::string name_analyzer;
         std::string name_parser_orig;
         std::string name_parser_resp;
         std::string name_replaces;
-        std::string name_zeekygen;
         hilti::rt::Protocol protocol = hilti::rt::Protocol::Undef;
         hilti::rt::Vector<hilti::rt::Port> ports;
-        spicy::zeek::compat::AnalyzerTag::type_t type;
         std::string linker_scope;
 
-        // Filled in during InitPostScript().
+        // Filled in after registering the analyzer.
+        std::string name_zeekygen;
+        spicy::zeek::compat::AnalyzerTag::type_t type;
         const spicy::rt::Parser* parser_orig;
         const spicy::rt::Parser* parser_resp;
         spicy::zeek::compat::AnalyzerTag replaces;
+
+        bool operator==(const ProtocolAnalyzerInfo& other) const {
+            return name_analyzer == other.name_analyzer && name_parser_orig == other.name_parser_orig &&
+                   name_parser_resp == other.name_parser_resp && name_replaces == other.name_replaces &&
+                   protocol == other.protocol && ports == other.ports && linker_scope == other.linker_scope;
+        }
+
+        bool operator!=(const ProtocolAnalyzerInfo& other) const { return ! (*this == other); }
     };
 
     /** Captures a registered file analyzer. */
     struct FileAnalyzerInfo {
-        // Filled in when registering the analyzer.
+        // Provided when registering the analyzer.
         std::string name_analyzer;
         std::string name_parser;
         std::string name_replaces;
-        std::string name_zeekygen;
         hilti::rt::Vector<std::string> mime_types;
-        spicy::zeek::compat::FileAnalysisTag::type_t type;
         std::string linker_scope;
 
-        // Filled in during InitPostScript().
+        // Filled in after registering the analyzer.
+        std::string name_zeekygen;
+        spicy::zeek::compat::FileAnalysisTag::type_t type;
         const spicy::rt::Parser* parser;
         spicy::zeek::compat::FileAnalysisTag replaces;
+
+        bool operator==(const FileAnalyzerInfo& other) const {
+            return name_analyzer == other.name_analyzer && name_parser == other.name_parser &&
+                   name_replaces == other.name_replaces && mime_types == other.mime_types &&
+                   linker_scope == other.linker_scope;
+        }
+
+        bool operator!=(const FileAnalyzerInfo& other) const { return ! (*this == other); }
     };
 
     /** Captures a registered file analyzer. */
     struct PacketAnalyzerInfo {
-        // Filled in when registering the analyzer.
+        // Provided when registering the analyzer.
         std::string name_analyzer;
         std::string name_parser;
-        std::string name_zeekygen;
-        spicy::zeek::compat::PacketAnalysisTag::type_t type;
         std::string linker_scope;
 
-        // Filled in during InitPostScript().
+        // Filled in after registering the analyzer.
+        std::string name_zeekygen;
+        spicy::zeek::compat::PacketAnalysisTag::type_t type;
         const spicy::rt::Parser* parser;
+        spicy::zeek::compat::PacketAnalysisTag replaces;
+
+        // Compares only the provided attributes, as that's what defines us.
+        bool operator==(const PacketAnalyzerInfo& other) const {
+            return name_analyzer == other.name_analyzer && name_parser == other.name_parser &&
+                   linker_scope == other.linker_scope;
+        }
+
+        bool operator!=(const PacketAnalyzerInfo& other) const { return ! (*this == other); }
     };
 
     std::vector<ProtocolAnalyzerInfo> _protocol_analyzers_by_type;
@@ -310,6 +344,11 @@ private:
     std::unordered_map<std::string, hilti::rt::Library> _libraries;
     std::set<std::string> _locations;
     std::unordered_map<std::string, ::zeek::detail::IDPtr> _events;
+
+    // Before Zeek 4.2, Zeek's `Component` wouldn't know its tag type, so we
+    // store an explicit mapping here for our components. This additional state
+    // can be dropped once we do no longer want to support < 4.2.
+    std::unordered_map<std::string, int32_t> _analyzer_name_to_tag_type;
 
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     std::unique_ptr<Driver> _driver;

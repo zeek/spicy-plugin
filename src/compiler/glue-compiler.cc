@@ -272,7 +272,10 @@ static std::vector<hilti::rt::Port> extract_ports(const std::string& chunk, size
     return result;
 }
 
-GlueCompiler::GlueCompiler(Driver* driver, int zeek_version) : _driver(driver), _zeek_version(zeek_version) {}
+void GlueCompiler::Init(Driver* driver, int zeek_version) {
+    _driver = driver;
+    _zeek_version = zeek_version;
+}
 
 GlueCompiler::~GlueCompiler() {}
 
@@ -413,20 +416,23 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
 
             if ( looking_at(*chunk, 0, "protocol") ) {
                 auto a = parseProtocolAnalyzer(*chunk);
-                _protocol_analyzers.push_back(a);
                 ZEEK_DEBUG(hilti::util::fmt("  Got protocol analyzer definition for %s", a.name));
+                _protocol_analyzers.push_back(a);
+                newProtocolAnalyzer(_protocol_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "file") ) {
                 auto a = parseFileAnalyzer(*chunk);
-                _file_analyzers.push_back(a);
                 ZEEK_DEBUG(hilti::util::fmt("  Got file analyzer definition for %s", a.name));
+                _file_analyzers.push_back(a);
+                newFileAnalyzer(_file_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "packet") ) {
                 auto a = parsePacketAnalyzer(*chunk);
-                _packet_analyzers.push_back(a);
                 ZEEK_DEBUG(hilti::util::fmt("  Got packet analyzer definition for %s", a.name));
+                _packet_analyzers.push_back(a);
+                newPacketAnalyzer(_packet_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "on") ) {
@@ -727,6 +733,8 @@ glue::Event GlueCompiler::parseEvent(const std::string& chunk) {
 }
 
 bool GlueCompiler::compile() {
+    assert(_driver);
+
     auto init_module = hilti::Module(hilti::ID("spicy_init"));
 
     auto import_ = hilti::builder::import(ID("zeek_rt"), ".hlt");
