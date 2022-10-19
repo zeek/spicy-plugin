@@ -3,16 +3,21 @@
 
 This repository provides a [Zeek](https://github.com/zeek/zeek)
 package that adds [Spicy](https://github.com/zeek/spicy) support to
-Zeek through a plugin. After installing this package, you can then
+Zeek through a plugin. Once installed, your Zeek will be able to
 load Spicy-based protocol and file analyzers, such as those coming
 with the [Spicy Analyzers](https://github.com/zeek/spicy-analyzers)
 package.
 
+Both this plugin and Spicy itself now ship with Zeek by default, so
+chances are that you already have Spicy support in place if you are
+using Zeek >= 5.0.
+
 ## Prerequisites
 
-In addition to Zeek, you will first need to install Spicy. Please
-follow [its instructions](https://docs.zeek.org/projects/spicy/en/latest/installation.html).
-Ensure that the Spicy toolchain is in your ``PATH``. For example, with
+If not using Zeek's built-in version of the plugin, you will first
+need to install Spicy. Please follow [its
+instructions](https://docs.zeek.org/projects/spicy/en/latest/installation.html).
+Ensure that the Spicy toolchain is in your `PATH`. For example, with
 Spicy installed to `/opt/spicy` and using `bash`:
 
     export PATH=/opt/spicy/bin:$PATH
@@ -28,10 +33,31 @@ the Zeek package manager.
 
 ## Installation
 
+### Use Zeek's built-in version
+
+Zeek includes both Spicy and this plugin by default since version 5.0.
+To confirm that you have it available, run `zeek -N Zeek::Spicy`, it
+should show output like this:
+
+    # zeek -NN Zeek::Spicy
+    Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+
+Assuming that's the case, you should also find the plugin's
+compilation tool `spicyz` at the same place as the Zeek executable:
+
+    # which spicyz
+    /usr/local/zeek/bin/spicyz
+
+If you do not want to use the Spicy plugin that's built into Zeek for
+some reason (e.g., because you'd like to try a new version of the
+plugin or Spicy), you can build Zeek with `--disable-spicy` and then
+follow the instructions below for installation through the package
+manager or from source.
+
 ### Install through package manager
 
-The easiest, and recommended, way to install the Spicy plugin is
-through the Zeek package manager:
+If not using Zeek's built-in Spicy support, the recommended way to
+install the Spicy plugin is through the Zeek package manager:
 
     # zkg install zeek/spicy-plugin
 
@@ -43,11 +69,12 @@ this:
     # zeek -NN Zeek::Spicy
     Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
 
-If you want to develop your own Spicy analyzers for Zeek, you will
-need a tool that comes with the plugin: ``spicyz``. Please see the
-[Spicy manual](https://docs.zeek.org/projects/spicy/en/latest/zeek.html#zeek_spicyz)
-on how to make `spicyz` show up in your `PATH` after the plugin got
-installed.
+The compilation tool `spicyz` comes with package as well and should
+show up in your `PATH` after installation. If that's not the case,
+please see the [Spicy
+manual](https://docs.zeek.org/projects/spicy/en/latest/zeek.html#zeek_spicyz)
+on how to locate it (you might be using an older version of *zkg*
+still).
 
 ### Install manually
 
