@@ -148,7 +148,6 @@ void Driver::usage(std::ostream& out) {
            "  -C             Dump all generated code to disk for debugging.\n"
            "  -D <streams>   Activate compile-time debugging output for given debug streams (comma-separated).\n"
            "  -L <path>      Add path to list of directories to search when importing modules.\n"
-           "  -O             Build optimized release version of generated code.\n"
            "  -R             Report a break-down of compiler's execution time.\n"
            "  -V             Don't validate ASTs (for debugging only).\n"
            "  -X <addl>      Implies -d and adds selected additional instrumentation (comma-separated).\n"
@@ -238,8 +237,6 @@ hilti::Result<hilti::Nothing> Driver::parseOptionsPostScript(const std::string& 
                 compiler_options->library_paths.emplace_back(optarg);
                 break;
             }
-
-            case 'O': compiler_options->optimize = true; break;
 
             case 'o': {
                 if ( idx >= argc )

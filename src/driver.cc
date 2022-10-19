@@ -92,7 +92,6 @@ void plugin::Zeek_Spicy::Driver::_initialize() {
 
     hilti_options.debug = ::zeek::id::find_const("Spicy::debug")->AsBool();
     hilti_options.skip_validation = ::zeek::id::find_const("Spicy::skip_validation")->AsBool();
-    hilti_options.optimize = ::zeek::id::find_const("Spicy::optimize")->AsBool();
 
     for ( const auto& dir : _import_paths )
         hilti_options.library_paths.push_back(dir);

@@ -27,7 +27,6 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"help", no_argument, nullptr, 'h'},
                                               {"keep-tmps", no_argument, nullptr, 'T'},
                                               {"library-path", required_argument, nullptr, 'L'},
-                                              {"optimize", no_argument, nullptr, 'O'},
                                               {"output", required_argument, nullptr, 'o'},
                                               {"output-c++", required_argument, nullptr, 'c'},
                                               {"print-module-path", no_argument, nullptr, 'M'},
@@ -58,7 +57,6 @@ static void usage() {
                  "(comma-separated; 'help' for list).\n"
                  "  -L | --library-path <path>      Add path to list of directories to search when importing modules.\n"
                  "  -M | --print-module-path        Print the Zeek plugin's default module search path.\n"
-                 "  -O | --optimize                 Build optimized release version of generated code.\n"
                  "  -p | --print-prefix-path        Print installation prefix path.\n"
                  "  -P | --print-plugin-path        Print the path to plugin's base directory.\n"
                  "  -R | --report-times             Report a break-down of compiler's execution time.\n"
@@ -101,7 +99,7 @@ static auto pluginPath() {
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:CdgX:D:L:Mo:OpPRSTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:CdgX:D:L:Mo:pPRSTvhz", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -183,8 +181,6 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'M': std::cout << spicy::zeek::configuration::PluginModuleDirectory << std::endl; return Nothing();
 
             case 'o': driver_options->output_path = std::string(optarg); break;
-
-            case 'O': compiler_options->optimize = true; break;
 
             case 'R': driver_options->report_times = true; break;
 
