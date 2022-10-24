@@ -280,6 +280,17 @@ endif ()
 ### Create config file.
 ###
 
+# Create a version string that's a valid C identifier. We use only the actual
+# version number, no development postfix, to make ccache a bit happier.
+string(REGEX REPLACE "([0-9]+\.[0-9]+\.[0-9]+).*" "\\1" ZEEK_SPICY_PLUGIN_VERSION_C_IDENT
+                     "${ZEEK_SPICY_PLUGIN_VERSION}")
+string(REPLACE "." "_" ZEEK_SPICY_PLUGIN_VERSION_C_IDENT "${ZEEK_SPICY_PLUGIN_VERSION_C_IDENT}")
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    # Distinguish between release and debug builds.
+    set(ZEEK_SPICY_PLUGIN_VERSION_C_IDENT "${ZEEK_SPICY_PLUGIN_VERSION_C_IDENT}_debug")
+endif ()
+
 configure_file(${PROJECT_SOURCE_DIR}/include/config.h.in ${AUTOGEN_H}/config.h)
 
 ###

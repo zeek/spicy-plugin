@@ -33,6 +33,8 @@ const hilti::logging::DebugStream ZeekPlugin("zeek");
 }
 #endif
 
+const char* ZEEK_SPICY_PLUGIN_VERSION_FUNCTION() { return spicy::zeek::configuration::PluginVersion; }
+
 plugin::Zeek_Spicy::Plugin SpicyPlugin;
 plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 
