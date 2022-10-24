@@ -750,7 +750,19 @@ bool GlueCompiler::compile() {
     import_ = hilti::builder::import(ID("hilti"), ".hlt");
     init_module.add(std::move(import_));
 
+    // Declare the plugin's version function.
+    auto cxxname = hilti::AttributeSet(
+        {hilti::Attribute("&cxxname", builder::string(ZEEK_SPICY_PLUGIN_VERSION_FUNCTION_AS_STRING)),
+         hilti::Attribute("&have_prototype", builder::bool_(true))});
+    auto version_function =
+        hilti::builder::function("zeek_spicy_plugin_version", type::String(), {}, type::function::Flavor::Standard,
+                                 declaration::Linkage::Public, function::CallingConvention::Standard, cxxname);
+    init_module.add(std::move(version_function));
+
     auto preinit_body = hilti::builder::Builder(_driver->context());
+
+    // Call the plugin's version function.
+    preinit_body.addCall("zeek_spicy_plugin_version", {});
 
     for ( auto&& [id, m] : _spicy_modules )
         m->spicy_module = hilti::Module(hilti::ID(hilti::util::fmt("spicy_hooks_%s", id)));
