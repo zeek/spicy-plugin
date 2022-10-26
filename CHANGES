@@ -1,3 +1,22 @@
+1.3.20-18 | 2022-10-26 14:47:20 +0200
+
+  * Enforce matching versions between analyzers, plugin, and Spicy.
+    (Robin Sommer, Corelight)
+
+    - Embed a C function into plugin that encodes its version in the
+      name and make analyzers link against it. This will make them
+      fail to load if the plugin's version doesn't match what they
+      were compiled against.
+
+    - Link against recently added, Spicy-side version function to
+      prevent prevent the plugin from loading when the Spicy version
+      has changed without a rebuild of the plugin.
+
+  * Remove `--optimize` flag, just as Spicy itself did. (Robin Sommer,
+    Corelight)
+
+  * Update README. (Robin Sommer, Corelight)
+
 1.3.20-10 | 2022-10-15 22:07:12 +0200
 
   * Add support for replacing and toggling packet analyzers. Requires
@@ -27,14 +46,21 @@
     need to have double-underscores removed, and calls to the latter will
     need to switch from `Spicy::Foo` to `Spicy_Foo`. This is a bit
     unfortunate, but I don't see a way to avoid it if we want to become
-    consistent; and doing that change now seems a better time than later.
+    consistent;
+and doing that change now seems a better time than later.
 
-1.3.20-6 | 2022-10-15 22:03:13 +0200
+        1.3.20 -
+        6 |
+    2022 - 10 - 15 22 : 03 : 13 +
+        0200
 
-  * Allow to use Zeek-side `ANALYZER_*` tags in JIT mode. (Robin Sommer)
+            * Allow to use Zeek -
+        side `ANALYZER_*` tags in JIT mode.(Robin Sommer)
 
-    We had an inconsistency between pre-compiled HLTO files and JITing an
-    analyzer by giving Zeek the `*.{evt,spicy}` files directly: in the
+            We had an inconsistency between pre
+        - compiled HLTO files and JITing an analyzer by giving Zeek the `*.{
+    evt, spicy
+}` files directly: in the
     latter case, a Zeek script wasn't able to use the `ANALYZER_*` tags,
     because they weren't defined at script load time yet. The reason is
     that they got registered only once the HILTI-side module
@@ -604,28 +630,28 @@
   * GH-1: Add BiFs to enable/disable Spicy analyzers. (Robin Sommer, Corelight)
 
         global enable_protocol_analyzer: function(tag: Analyzer::Tag) : bool;
-global disable_protocol_analyzer : function(tag : Analyzer::Tag) : bool;
-global enable_file_analyzer : function(tag : Files::Tag) : bool;
+    global disable_protocol_analyzer : function(tag : Analyzer::Tag) : bool;
+    global enable_file_analyzer : function(tag : Files::Tag) : bool;
 #requires Zeek> 4.0 global disable_file_analyzer : function(tag : Files::Tag) : bool;
 #requires Zeek> 4.0
 
-*GH -
-        5 : Ensure that Spicy events are always exported inside Zeek.(Robin Sommer, Corelight)
+    *GH -
+            5 : Ensure that Spicy events are always exported inside Zeek.(Robin Sommer, Corelight)
 
-            * Clean up plugin's script structure. (Robin Sommer, Corelight)
+                * Clean up plugin's script structure. (Robin Sommer, Corelight)
 
-                  * Fix CMake issues.(Robin Sommer, Corelight)
+                      * Fix CMake issues.(Robin Sommer, Corelight)
+
+                          0.99.0 -
+            7 |
+        2021 - 03 - 11 13 : 02 : 46 +
+            0000
+
+                * Fix a couple of CMake issues.(Robin Sommer, Corelight)
 
                       0.99.0 -
-        7 |
-    2021 - 03 - 11 13 : 02 : 46 +
-        0000
+            1 |
+        2021 - 03 - 09 12 : 15 : 54 +
+            0000
 
-            * Fix a couple of CMake issues.(Robin Sommer, Corelight)
-
-                  0.99.0 -
-        1 |
-    2021 - 03 - 09 12 : 15 : 54 +
-        0000
-
-            * Starting CHANGES.
+                * Starting CHANGES.
