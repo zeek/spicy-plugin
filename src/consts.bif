@@ -13,9 +13,6 @@ const debug_addl: string;
 # Save all generated code into files on disk.
 const dump_code: bool;
 
-# Enable optimization for code generation.
-const optimize: bool;
-
 # Report a break-down of compiler's execution time.
 const report_times: bool;
 
