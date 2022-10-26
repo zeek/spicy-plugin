@@ -345,6 +345,8 @@ private:
         bool operator!=(const PacketAnalyzerInfo& other) const { return ! (*this == other); }
     };
 
+    std::string _spicy_version;
+
     std::vector<ProtocolAnalyzerInfo> _protocol_analyzers_by_type;
     std::vector<FileAnalyzerInfo> _file_analyzers_by_type;
     std::vector<PacketAnalyzerInfo> _packet_analyzers_by_type;

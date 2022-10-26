@@ -33,6 +33,8 @@ const hilti::logging::DebugStream ZeekPlugin("zeek");
 }
 #endif
 
+const char* ZEEK_SPICY_PLUGIN_VERSION_FUNCTION() { return spicy::zeek::configuration::PluginVersion; }
+
 plugin::Zeek_Spicy::Plugin SpicyPlugin;
 plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 
@@ -75,6 +77,14 @@ private:
 };
 
 plugin::Zeek_Spicy::Plugin::Plugin() {
+#ifdef HILTI_VERSION_FUNCTION
+    // This ensures version compatibility at dlopen() time  by requiring the
+    // versioned symbol to be present. The symbol is available starting with
+    // Spicy 1.6.
+    _spicy_version = HILTI_VERSION_FUNCTION();
+#endif
+
+    // Not sure if with the with the check above, we still need this? Can't hurt I guess.
     if ( spicy::zeek::configuration::ZeekVersionNumber != ZEEK_VERSION_NUMBER )
         reporter::fatalError(
             hilti::rt::fmt("Zeek version mismatch: running with Zeek %d, but plugin compiled for Zeek %s",
