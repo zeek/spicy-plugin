@@ -1,3 +1,7 @@
+1.4.0 | 2022-10-26 14:53:45 +0200
+
+  * Release 1.4.0.
+
 1.3.20-18 | 2022-10-26 14:47:20 +0200
 
   * Enforce matching versions between analyzers, plugin, and Spicy.
@@ -25,56 +29,49 @@
 
 1.3.20-8 | 2022-10-15 22:05:59 +0200
 
-  * Fix spelling of Zeek-side tags for packet analyzers. (Robin Sommer)
+  * Fix spelling of Zeek-side tags for packet analyzers. (Robin
+    Sommer, Corelight)
 
     They used to turn out as `ANALYZER_SPICY__FOO`. Now they are
     `ANALYZER_SPICY_FOO`.
 
-    We also unify how the derivation of the Zeek-side name happens across
-    all three types of analyzers. On the Spicy side, analyzer names now
-    remain in their original spelling (i.e., `Spicy::Foo` instead of
-    `Spicy_Foo`). On the Zeek-side, the name for packet analyzers is now
-    `Spicy_Foo` instead of `Spicy::Foo` (that was the case for
-    protocol/file analyzers already).
+    We also unify how the derivation of the Zeek-side name happens
+    across all three types of analyzers. On the Spicy side, analyzer
+    names now remain in their original spelling (i.e., `Spicy::Foo`
+    instead of `Spicy_Foo`). On the Zeek-side, the name for packet
+    analyzers is now `Spicy_Foo` instead of `Spicy::Foo` (that was the
+    case for protocol/file analyzers already).
 
-    On the Zeek side, the removal of the double-underscore and the name
-    change for packet analyzer is user-visible and could break some
-    scripts. It'll most likely be encountered in logs and, more
-    importantly, in scripts configuring a packet analyzer through calls to
-    `register_packet_analyzer_by_name()` and
+    On the Zeek side, the removal of the double-underscore and the
+    name change for packet analyzer is user-visible and could break
+    some scripts. It'll most likely be encountered in logs and, more
+    importantly, in scripts configuring a packet analyzer through
+    calls to `register_packet_analyzer_by_name()` and
     `try_register_packet_analyzer_by_name()`. Calls to the former will
-    need to have double-underscores removed, and calls to the latter will
-    need to switch from `Spicy::Foo` to `Spicy_Foo`. This is a bit
-    unfortunate, but I don't see a way to avoid it if we want to become
-    consistent;
-and doing that change now seems a better time than later.
+    need to have double-underscores removed, and calls to the latter
+    will need to switch from `Spicy::Foo` to `Spicy_Foo`.
 
-        1.3.20 -
-        6 |
-    2022 - 10 - 15 22 : 03 : 13 +
-        0200
+  * Allow to use Zeek-side `ANALYZER_*` tags in JIT mode. (Robin
+    Sommer, Corelight)
 
-            * Allow to use Zeek -
-        side `ANALYZER_*` tags in JIT mode.(Robin Sommer)
+    We had an inconsistency between pre -compiled HLTO files and
+    JITing an analyzer by giving Zeek the `*.{evt, spicy}` files
+    directly: in the latter case, a Zeek script wasn't able to use the
+    `ANALYZER_*` tags, because they weren't defined at script load
+    time yet. The reason is that they got registered only once the
+    HILTI-side module initialization ran, which for JITed analyzers is
+    later than for HLTOs.
 
-            We had an inconsistency between pre
-        - compiled HLTO files and JITing an analyzer by giving Zeek the `*.{
-    evt, spicy
-}` files directly: in the
-    latter case, a Zeek script wasn't able to use the `ANALYZER_*` tags,
-    because they weren't defined at script load time yet. The reason is
-    that they got registered only once the HILTI-side module
-    initialization ran, which for JITed analyzers is later than for HLTOs.
+    Note that there's still an ordering requirement: the EVT file
+    needs to be loaded before the Zeek script using the tag. However,
+    that's the same for HLTOs, so that's consistent at least.
 
-    Note that there's still an ordering requirement: the EVT file needs
-    to be loaded before the Zeek script using the tag. However, that's
-    the same for HLTOs, so that's consistent at least.
-
-  * Add hooks to glue compiler to receive notifications about new analyzers. (Robin Sommer)
+  * Add hooks to glue compiler to receive notifications about new
+    analyzers. (Robin Sommer, Corelight)
 
     This enables users of the glue compiler to provide callbacks to
-    execute when the glue compiler learns about a new analyzer. We'll use
-    this in a subsequent commit.
+    execute when the glue compiler learns about a new analyzer. We'll
+    use this in a subsequent commit.
 
 1.3.20-3 | 2022-10-15 22:02:08 +0200
 
