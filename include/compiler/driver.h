@@ -15,24 +15,13 @@ namespace spicy::zeek {
 
 class GlueCompiler;
 
-/**
- * Captures meta information about a Spicy unit type, derived from its AST.
- */
-struct UnitInfo {
-    hilti::ID id;                            /**< fully-qualified name of the unit type */
-    hilti::Type type;                        /**< the unit's type. */
-    hilti::ID module_id;                     /**< name of module unit is defined in */
-    hilti::rt::filesystem::path module_path; /**< path of mpdule that unit is defined in */
-};
-
-/**
- * Captures meta information about an public Spicy enum type, derived from its AST.
- */
-struct EnumInfo {
-    hilti::ID id;                            /**< fully-qualified name of the enum type */
-    hilti::Type type;                        /**< the enum's type. */
-    hilti::ID module_id;                     /**< name of module enum is defined in */
-    hilti::rt::filesystem::path module_path; /**< path of mpdule that enum is defined in */
+struct TypeInfo {
+    hilti::ID id;                        /**< fully-qualified name of the type */
+    hilti::Type type;                    /**< the type itself */
+    hilti::declaration::Linkage linkage; /**< linkage of of the type's declaration */
+    bool is_resolved;    /**< true if we are far enough in processing that the type has been fully resolved */
+    hilti::ID module_id; /**< name of module type is defined in */
+    hilti::rt::filesystem::path module_path; /**< path of module that type is defined in */
 };
 
 /** Spicy compilation driver. */
@@ -74,22 +63,43 @@ public:
     hilti::Result<hilti::Nothing> compile();
 
     /**
-     * Returns a meta information for unit type. The Spicy module defining
-     * the unit must have been compiled already for it to be found.
+     * Returns meta information for a type. The Spicy module defining the type
+     * must have been compiled already for it to be found.
      *
-     * @param fully qualified name of unit to look up
+     * @param id fully qualified name of type to look up
      * @return meta data, or an error if the type is not (yet) known
      */
-    hilti::Result<UnitInfo> lookupUnit(const hilti::ID& unit);
+    hilti::Result<TypeInfo> lookupType(const hilti::ID& id);
 
     /**
-     * Returns a vector of all enum types with public linkage.The Spicy
-     * module defining the unit must have been compiled already to return
-     * something.
+     * Returns meta information for a type, enforcing it to be a of a certain
+     * kind. The Spicy module defining the type must have been compiled already
+     * for it to be found.
+     *
+     * @tparam T type to enforce; method will return an error if type is not of this class
+     * @param id fully qualified name of type to look up
+     * @return meta data, or an error if the type is not (yet) known
      */
-    const std::vector<EnumInfo>& publicEnumTypes() { return _enums; }
+    template<typename T>
+    hilti::Result<TypeInfo> lookupType(const hilti::ID& id) {
+        auto ti = lookupType(id);
+        if ( ! ti )
+            return ti.error();
 
-    /** Returs true if we're running out of the plugin's build directory. */
+        if ( ! ti->type.isA<T>() )
+            return hilti::result::Error(hilti::util::fmt("'%s' is not of expected type", id));
+
+        return ti;
+    }
+
+    /**
+     * Returns all types seen so far during processing of Spicy files.
+     * Depending on where we are at with processing, these may or may not be
+     * resolved yet (as indicated by their `is_resolved` field).
+     */
+    std::vector<TypeInfo> types() const;
+
+    /** Returns true if we're running out of the plugin's build directory. */
     bool usingBuildDirectory() const { return _using_build_directory; }
 
     /**
@@ -123,20 +133,15 @@ public:
 
 protected:
     /**
-     * Hook executed for all unit declarationss encountered in a Spicy
-     * module. Derived classes may override this to add custom processing.
+     * Hook executed for all type declarations encountered in a Spicy module.
+     * Derived classes may override this to add custom processing. This hooks
+     * executes twices for each declaration: once before we compile the AST
+     * (meaning types have not been resolved yet), and once after. The type
+     * info's `is_resolved` field indicates which of the two we're in.
      *
-     * @param e unit type's meta information
+     * @param t type's meta information
      */
-    virtual void hookNewUnitType(const UnitInfo& e) {}
-
-    /**
-     * Hook executed for all public enum declarations encountered in a Spicy
-     * module. Derived classes may override this to add custom processing.
-     *
-     * @param e enum type's meta information
-     */
-    virtual void hookNewEnumType(const EnumInfo& e) {}
+    virtual void hookNewType(const TypeInfo& ti) {}
 
     /** Overidden from HILTI driver. */
     void hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) override;
@@ -153,13 +158,10 @@ protected:
     /** Overidden from HILTI driver. */
     void hookFinishRuntime() override;
 
-    std::map<hilti::ID, UnitInfo> _units;
-    std::vector<EnumInfo> _enums;
-
-    std::unique_ptr<GlueCompiler> _glue;
-
-    bool _using_build_directory = false; // true if we're running out of the plugin's build directory
-    bool _need_glue = true;              // true if glue code has not yet been generated
+    std::unique_ptr<GlueCompiler> _glue;  // glue compiler in use
+    std::map<hilti::ID, TypeInfo> _types; // map of Spicy type declarations encountered so far
+    bool _using_build_directory = false;  // true if we're running out of the plugin's build directory
+    bool _need_glue = true;               // true if glue code has not yet been generated
 };
 
 } // namespace spicy::zeek

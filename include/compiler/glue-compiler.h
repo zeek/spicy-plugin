@@ -47,8 +47,8 @@ struct ProtocolAnalyzer {
     std::string replaces;     /**< Name of another analyzer this one replaces. */
 
     // Computed information.
-    std::optional<UnitInfo> unit_orig; /**< The type of the unit to parse the originator side. */
-    std::optional<UnitInfo> unit_resp; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit_orig; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit_resp; /**< The type of the unit to parse the originator side. */
 };
 
 /** Representation of a Spicy file analyzer, parsed from an EVT file. */
@@ -61,7 +61,7 @@ struct FileAnalyzer {
     std::string replaces;                /**< Name of another analyzer this one replaces. */
 
     // Computed information.
-    std::optional<UnitInfo> unit; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit; /**< The type of the unit to parse the originator side. */
 };
 
 /** Representation of a Spicy packet analyzer, parsed from an EVT file. */
@@ -73,7 +73,7 @@ struct PacketAnalyzer {
     std::string replaces;     /**< Name of another analyzer this one replaces. */
 
     // Computed information.
-    std::optional<UnitInfo> unit; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit; /**< The type of the unit to parse the originator side. */
 };
 
 /**

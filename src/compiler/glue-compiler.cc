@@ -773,21 +773,19 @@ bool GlueCompiler::compile() {
         ZEEK_DEBUG(hilti::util::fmt("Adding protocol analyzer '%s'", a.name));
 
         if ( a.unit_name_orig ) {
-            if ( auto ui = _driver->lookupUnit(a.unit_name_orig) )
+            if ( auto ui = _driver->lookupType<spicy::type::Unit>(a.unit_name_orig) )
                 a.unit_orig = *ui;
             else {
-                hilti::logger().error(
-                    hilti::util::fmt("unknown unit type %s with protocol analyzer %s", a.unit_name_orig, a.name));
+                hilti::logger().error(hilti::util::fmt("error with protocol analyzer %s: %s", a.name, ui.error()));
                 return false;
             }
         }
 
         if ( a.unit_name_resp ) {
-            if ( auto ui = _driver->lookupUnit(a.unit_name_resp) )
+            if ( auto ui = _driver->lookupType<spicy::type::Unit>(a.unit_name_resp) )
                 a.unit_resp = *ui;
             else {
-                hilti::logger().error(
-                    hilti::util::fmt("unknown unit type %s with protocol analyzer %s", a.unit_name_resp, a.name));
+                hilti::logger().error(hilti::util::fmt("error with protocol analyzer %s: %s", a.name, ui.error()));
                 return false;
             }
         }
@@ -816,11 +814,10 @@ bool GlueCompiler::compile() {
         ZEEK_DEBUG(hilti::util::fmt("Adding file analyzer '%s'", a.name));
 
         if ( a.unit_name ) {
-            if ( auto ui = _driver->lookupUnit(a.unit_name) )
+            if ( auto ui = _driver->lookupType<spicy::type::Unit>(a.unit_name) )
                 a.unit = *ui;
             else {
-                hilti::logger().error(
-                    hilti::util::fmt("unknown unit type %s with file analyzer %s", a.unit_name, a.name));
+                hilti::logger().error(hilti::util::fmt("error with file analyzer %s: %s", a.name, ui.error()));
                 return false;
             }
         }
@@ -836,11 +833,10 @@ bool GlueCompiler::compile() {
         ZEEK_DEBUG(hilti::util::fmt("Adding packet analyzer '%s'", a.name));
 
         if ( a.unit_name ) {
-            if ( auto ui = _driver->lookupUnit(a.unit_name) )
+            if ( auto ui = _driver->lookupType<spicy::type::Unit>(a.unit_name) )
                 a.unit = *ui;
             else {
-                hilti::logger().error(
-                    hilti::util::fmt("unknown unit type %s with packet analyzer %s", a.unit_name, a.name));
+                hilti::logger().error(hilti::util::fmt("error with packet analyzer %s: %s", a.name, ui.error()));
                 return false;
             }
         }
@@ -874,15 +870,18 @@ bool GlueCompiler::compile() {
     // Zeek, we also do it earlier through the GlueBuilder itself so that the
     // new types are already available when scripts are parsed. (And
     // registering twice isn't a problem.)
-    for ( auto&& e : _driver->publicEnumTypes() ) {
-        auto labels = hilti::rt::transform(e.type.as<type::Enum>().labels(), [](const auto& l) {
+    for ( auto&& ti : _driver->types() ) {
+        auto et = ti.type.tryAs<hilti::type::Enum>();
+        if ( ! et || ti.linkage != hilti::declaration::Linkage::Public )
+            continue;
+
+        auto labels = hilti::rt::transform(et->labels(), [](const auto& l) {
             return builder::tuple({builder::string(l.get().id()), builder::integer(l.get().value())});
         });
 
-        preinit_body.addCall("zeek_rt::register_enum_type", {builder::string(e.id.namespace_()),
-                                                             builder::string(e.id.local()), builder::vector(labels)});
+        preinit_body.addCall("zeek_rt::register_enum_type", {builder::string(ti.id.namespace_()),
+                                                             builder::string(ti.id.local()), builder::vector(labels)});
     }
-
 
     for ( auto&& [id, m] : _spicy_modules ) {
         // Import runtime module.
@@ -921,11 +920,12 @@ bool GlueCompiler::PopulateEvents() {
             // Already done.
             continue;
 
-        UnitInfo uinfo;
+        TypeInfo uinfo;
 
         // If we find the path itself, it's refering to a unit type directly;
         // then add a "%done" to form the hook name.
-        if ( auto ui = _driver->lookupUnit(ev.path) ) {
+        if ( auto ui = _driver->lookupType<spicy::type::Unit>(ev.path) ) {
+            // TOOD: Check that it's a unit type.
             uinfo = *ui;
             ev.unit = ev.path;
             ev.hook = ev.unit + hilti::ID("0x25_done");
@@ -940,7 +940,7 @@ bool GlueCompiler::PopulateEvents() {
                 return false;
             }
 
-            if ( auto ui = _driver->lookupUnit(ev.unit) ) {
+            if ( auto ui = _driver->lookupType(ev.unit) ) {
                 uinfo = *ui;
                 ev.hook = ev.path;
             }
