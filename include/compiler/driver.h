@@ -106,6 +106,9 @@ public:
     /** Returns true if we're running out of the plugin's build directory. */
     bool usingBuildDirectory() const { return _using_build_directory; }
 
+    /** Returns the glue compiler in use by the driver. */
+    const auto* glueCompiler() const { return _glue.get(); }
+
     /**
      * Parses some options command-line style *before* Zeek-side scripts have
      * been processed. Most of the option processing happens in

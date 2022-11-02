@@ -6,6 +6,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -160,6 +161,17 @@ public:
 
     /** Generates code to convert a HILTI type to a corresponding Zeek type at runtime. */
     hilti::Result<hilti::Expression> createZeekType(const hilti::Type& t, const hilti::ID& id) const;
+
+    using RecordField = std::tuple<std::string, hilti::Type, bool>; /**< (ID, type, optional) */
+
+    /**
+     * Helper to retrieve a list of Zeek-side record fields that converting a
+     * Spicy unit to a Zeek record will yield.
+     *
+     * @param unit the unit type to retrieve fields for
+     * @return list of fields
+     */
+    static std::vector<RecordField> recordFields(const ::spicy::type::Unit& unit);
 
 protected:
     friend class Driver;

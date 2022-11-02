@@ -120,6 +120,45 @@ void register_enum_type(const std::string& ns, const std::string& id,
 /** Registers a Spicy-generated type with Zeek. */
 void register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type);
 
+/**
+ * Identifies a Zeek-side type. Value assignments must match both Zeek's
+ * `TypeTag`, and `ZeekTypeTag` in `zeek_rt.hlt`.
+ */
+enum class ZeekTypeTag : uint64_t {
+    Void = 0,
+    Bool = 1,
+    Int = 2,
+    Count = 3,
+    Double = 4,
+    Time = 5,
+    Interval = 6,
+    String = 7,
+    Pattern = 8,
+    Enum = 9,
+    Port = 10,
+    Addr = 11,
+    Subnet = 12,
+    Any = 13,
+    Table = 14,
+    Record = 15,
+    List = 16,
+    Func = 17,
+    File = 18,
+    Vector = 19,
+    Opaque = 20,
+    Type = 21,
+    Error = 22
+};
+
+using RecordField = std::tuple<std::string, ::zeek::TypePtr, hilti::rt::Bool>; // (ID, type, optional)
+
+extern ::zeek::TypePtr create_record_type(const std::string& ns, const std::string& id,
+                                          const hilti::rt::Vector<RecordField>& fields);
+
+inline ::zeek::TypePtr create_base_type(ZeekTypeTag tag) {
+    return ::zeek::base_type(static_cast<::zeek::TypeTag>(tag));
+}
+
 /** Returns true if an event has at least one handler defined. */
 inline hilti::rt::Bool have_handler(const ::zeek::EventHandlerPtr& handler) { return static_cast<bool>(handler); }
 

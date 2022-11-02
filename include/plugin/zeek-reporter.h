@@ -27,13 +27,13 @@ inline const char* to_char_ptr(const std::string& p) { return p.c_str(); }
 extern void error(const std::string& msg);
 
 /** Reports an fatal error through the Zeek reporter, aborting execution. */
-extern void fatalError(const std::string& msg);
+[[noreturn]] extern void fatalError(const std::string& msg);
 
 /** Reports an warning through the Zeek reporter. */
 extern void warning(const std::string& msg);
 
 /** Reports an internal error through the Zeek reporter, aborting execution. */
-extern void internalError(const std::string& msg);
+[[noreturn]] extern void internalError(const std::string& msg);
 
 /** Report an error and disable a protocol analyzer's input processing */
 void analyzerError(::zeek::analyzer::Analyzer* a, const std::string& msg, const std::string& location);

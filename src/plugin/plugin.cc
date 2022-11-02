@@ -17,6 +17,8 @@
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
 
+#include <hilti/autogen/config.h>
+
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/plugin/file-analyzer.h>
 #include <zeek-spicy/plugin/packet-analyzer.h>
@@ -254,14 +256,16 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
 }
 
 hilti::Result<hilti::Nothing> plugin::Zeek_Spicy::Plugin::registerType(const hilti::ID& id) {
-    auto t = _driver->lookupType(id);
-    if ( ! t )
+    auto ti = _driver->lookupType(id);
+    if ( ! ti )
         return hilti::result::Error("unknown type");
 
-    if ( auto type = createZeekType(t->type, id) )
-        registerType(t->id, *type);
-    else
+    auto type = createZeekType(ti->type, id);
+    if ( ! type )
         return type.error();
+
+    registerType(ti->id, *type);
+    return hilti::Nothing();
 }
 
 void plugin::Zeek_Spicy::Plugin::registerType(const hilti::ID& id, const ::zeek::TypePtr& type) {
@@ -897,7 +901,117 @@ const ::zeek::plugin::Component* plugin::Zeek_Spicy::Plugin::findComponent(const
     return nullptr;
 }
 
+// Visitor instantiating a Zeek type corresponding to a give HILTI type.
+//
+// Note: Any logic changes here must be reflected in the glue builder's
+// corresponding `VisitorZeekType` as well.
+namespace {
+struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>, VisitorZeekType> {
+    VisitorZeekType(const plugin::Zeek_Spicy::Plugin* plugin) : plugin(plugin) {}
+
+    const plugin::Zeek_Spicy::Plugin* plugin;
+
+    std::map<hilti::ID, ::zeek::TypePtr> zeek_types;
+    std::optional<hilti::ID> id;
+    hilti::ID ns;
+
+    result_t createZeekType(const hilti::Type& t, std::optional<hilti::ID> id_ = {}) {
+        id = id_;
+
+        if ( id )
+            ns = id->namespace_();
+
+        auto x = dispatch(t);
+        if ( ! x )
+            return hilti::result::Error(
+                hilti::util::fmt("no support for automatic conversion into a Zeek type (%s)", t.typename_()));
+
+        if ( ! *x )
+            return x->error();
+
+        if ( id )
+            zeek_types[*id] = **x;
+
+        return *x;
+    }
+
+    result_t lookupType(const hilti::ID& id) const {
+        if ( auto t = plugin->findType(id) )
+            return t;
+
+        if ( auto t = zeek_types.find(id); t != zeek_types.end() ) {
+            if ( t->second )
+                return t->second;
+            else
+                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive", id));
+        }
+        else
+            return hilti::result::Error(
+                hilti::util::fmt("type requires another type that is not (yet) exported (%s)", id));
+    }
+
+    result_t operator()(const hilti::type::UnresolvedID& id) {
+        auto fqid = id.id();
+        if ( ! fqid.namespace_() )
+            fqid = ns + fqid;
+
+        return lookupType(fqid);
+    }
+
+    result_t operator()(const hilti::type::Bool& c) { return ::zeek::base_type(::zeek::TYPE_BOOL); }
+    result_t operator()(const hilti::type::SignedInteger& c) { return ::zeek::base_type(::zeek::TYPE_INT); }
+    result_t operator()(const hilti::type::String& c) { return ::zeek::base_type(::zeek::TYPE_STRING); }
+    result_t operator()(const hilti::type::UnsignedInteger& c) { return ::zeek::base_type(::zeek::TYPE_COUNT); }
+
+    result_t operator()(const hilti::type::Struct& s) {
+        auto decls = std::make_unique<::zeek::type_decl_list>();
+
+        for ( const auto& f : s.fields() ) {
+            auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
+
+            if ( f.isOptional() ) {
+                auto optional_ = ::zeek::make_intrusive<::zeek::detail::Attr>(::zeek::detail::ATTR_OPTIONAL);
+                attrs->AddAttr(optional_);
+            }
+
+            auto ztype = createZeekType(f.type());
+            if ( ! ztype )
+                return ztype.error();
+
+            decls->append(
+                new ::zeek::TypeDecl(::zeek::util::copy_string(f.id().str().c_str()), *ztype, std::move(attrs)));
+        }
+
+        return {::zeek::make_intrusive<::zeek::RecordType>(decls.release())};
+    }
+
+    result_t operator()(const spicy::type::Unit& u) {
+        auto decls = std::make_unique<::zeek::type_decl_list>();
+
+        for ( auto [id, type, optional] : GlueCompiler::recordFields(u) ) {
+            auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
+
+            if ( optional ) {
+                auto optional_ = ::zeek::make_intrusive<::zeek::detail::Attr>(::zeek::detail::ATTR_OPTIONAL);
+                attrs->AddAttr(optional_);
+            }
+
+            auto ztype = createZeekType(type);
+            if ( ! ztype )
+                return ztype.error();
+
+            decls->append(new ::zeek::TypeDecl(::zeek::util::copy_string(id.c_str()), *ztype, std::move(attrs)));
+        }
+
+        return {::zeek::make_intrusive<::zeek::RecordType>(decls.release())};
+    }
+};
+} // namespace
+
 hilti::Result<::zeek::TypePtr> plugin::Zeek_Spicy::Plugin::createZeekType(const hilti::Type& t,
                                                                           const hilti::ID& id) const {
-    return ::zeek::base_type(::zeek::TYPE_ERROR); // TODO: Fill in conversion code
+    if ( id.namespace_() )
+        return VisitorZeekType(this).createZeekType(t, id);
+    else
+        return hilti::result::Error("exported ID must be fully qualified");
 }

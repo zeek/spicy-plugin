@@ -43,6 +43,41 @@ void rt::register_type(const std::string& ns, const std::string& id, ::zeek::Typ
     OurPlugin->registerType(hilti::ID(ns, id), type);
 }
 
+// Helper to look up a global Zeek-side type, enforcing that it's of the expected type.
+static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, const std::string& id) {
+    auto id_ = hilti::ID(ns, id);
+    auto type = OurPlugin->findType(id_);
+
+    if ( ! type )
+        return nullptr;
+
+    if ( type->Tag() != tag )
+        reporter::fatalError(hilti::rt::fmt("ID %s is not of expected type %s", id_, ::zeek::type_name(tag)));
+
+    return type;
+}
+
+::zeek::TypePtr rt::create_record_type(const std::string& ns, const std::string& id,
+                                       const hilti::rt::Vector<RecordField>& fields) {
+    if ( auto t = findType(::zeek::TYPE_RECORD, ns, id) )
+        return t;
+
+    auto decls = std::make_unique<::zeek::type_decl_list>();
+
+    for ( auto [id, type, optional] : fields ) {
+        auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
+
+        if ( optional ) {
+            auto optional_ = ::zeek::make_intrusive<::zeek::detail::Attr>(::zeek::detail::ATTR_OPTIONAL);
+            attrs->AddAttr(optional_);
+        }
+
+        decls->append(new ::zeek::TypeDecl(::zeek::util::copy_string(id.c_str()), type, std::move(attrs)));
+    }
+
+    return ::zeek::make_intrusive<::zeek::RecordType>(decls.release());
+}
+
 void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(name); }
 
 ::zeek::EventHandlerPtr rt::internal_handler(const std::string& name) {

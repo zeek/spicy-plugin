@@ -9,6 +9,13 @@ public type Val = __library_type("::zeek::ValPtr");
 public type BroType = __library_type("::zeek::TypePtr");
 public type EventHandlerPtr = __library_type("::zeek::EventHandlerPtr");
 
+type ZeekTypeTag = enum {
+    # Value assignments must match both Zeek's `TypeTag`, and `ZeekTypeTag` in `runtime_support.h`.
+    Void = 0, Bool = 1, Int = 2, Count = 3, Double = 4, Time = 5, Interval = 6, String = 7,
+    Pattern = 8, Enum = 9, Port = 10, Addr = 11, Subnet = 12, Any = 13, Table = 14, Record = 15,
+    List = 16, Func = 17, File = 18, Vector = 19, Opaque = 20, Type = 21, Error = 22
+} &cxxname="::spicy::zeek::rt::ZeekTypeTag";
+
 declare public void register_protocol_analyzer(string name, hilti::Protocol protocol, vector<port> ports, string parser_orig, string parser_resp, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_protocol_analyzer" &have_prototype;
 declare public void register_file_analyzer(string name, vector<string> mime_types, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_file_analyzer" &have_prototype;
 declare public void register_packet_analyzer(string name, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_packet_analyzer" &have_prototype;
@@ -22,6 +29,10 @@ declare public void install_handler(string event) &cxxname="spicy::zeek::rt::ins
 declare public void raise_event(EventHandlerPtr handler, vector<Val> args, string location) &cxxname="spicy::zeek::rt::raise_event" &have_prototype;
 declare public BroType event_arg_type(EventHandlerPtr handler, uint<64> idx, string location) &cxxname="spicy::zeek::rt::event_arg_type" &have_prototype;
 declare public Val to_val(any x, BroType target, string location) &cxxname="spicy::zeek::rt::to_val" &have_prototype;
+
+type RecordField = tuple<string, BroType, bool>; # (ID, type, optional)
+declare public BroType create_base_type(ZeekTypeTag tag) &cxxname="spicy::zeek::rt::create_base_type" &have_prototype;
+declare public BroType create_record_type(string ns, string id, vector<RecordField> fields) &cxxname="spicy::zeek::rt::create_record_type" &have_prototype;
 
 declare public Val current_conn(string location) &cxxname="spicy::zeek::rt::current_conn" &have_prototype;
 declare public Val current_file(string location) &cxxname="spicy::zeek::rt::current_file" &have_prototype;

@@ -12,6 +12,7 @@
 #include <hilti/base/util.h>
 #include <hilti/compiler/unit.h>
 
+#include <spicy/ast/detail/visitor.h>
 #include <spicy/global.h>
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/compiler/debug.h>
@@ -1152,6 +1153,119 @@ hilti::Expression GlueCompiler::location(const glue::Event& ev) { return builder
 
 hilti::Expression GlueCompiler::location(const glue::ExpressionAccessor& e) { return builder::string(e.location); }
 
+namespace {
+// Visitor creasting code to instantiate a Zeek type corresponding to a give
+// HILTI type.
+//
+// Note: Any logic changes here must be reflected in the plugin driver's
+// corresponding `VisitorZeekType` as well.
+struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expression>, VisitorZeekType> {
+    VisitorZeekType(const GlueCompiler* gc) : gc(gc) {}
+
+    const GlueCompiler* gc;
+
+    std::set<hilti::ID> zeek_types;
+    std::optional<hilti::ID> id;
+
+    result_t base_type(const char* tag) { return builder::call("zeek_rt::create_base_type", {builder::id(tag)}); }
+
+    result_t createZeekType(const hilti::Type& t, std::optional<hilti::ID> id_ = {}) {
+        if ( id_ )
+            id = id_;
+        else if ( auto x = t.typeID() )
+            id = *x;
+        else
+            id = std::nullopt;
+
+        if ( id ) {
+            // Avoid infinite recursion.
+            if ( zeek_types.count(*id) )
+                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive", *id));
+
+            zeek_types.insert(*id);
+        }
+
+        auto x = dispatch(t);
+        if ( ! x )
+            return hilti::result::Error(
+                hilti::util::fmt("no support for automatic conversion into a Zeek type (%s)", t.typename_()));
+
+
+        return *x;
+    }
+
+    result_t operator()(const hilti::type::Bool& c) { return base_type("zeek_rt::ZeekTypeTag::Bool"); }
+    result_t operator()(const hilti::type::SignedInteger& c) { return base_type("zeek_rt::ZeekTypeTag::Int"); }
+    result_t operator()(const hilti::type::String& c) { return base_type("zeek_rt::ZeekTypeTag::String"); }
+    result_t operator()(const hilti::type::UnsignedInteger& c) { return base_type("zeek_rt::ZeekTypeTag::Count"); }
+
+    result_t operator()(const hilti::type::Struct& s) {
+        assert(id);
+
+        std::vector<hilti::Expression> fields;
+        for ( const auto& f : s.fields() ) {
+            auto ztype = createZeekType(f.type());
+            if ( ! ztype )
+                return ztype.error();
+
+            fields.emplace_back(builder::tuple({builder::string(f.id()), *ztype, builder::bool_(f.isOptional())}));
+        }
+
+        return builder::call("zeek_rt::create_record_type", {builder::string(id->namespace_()),
+                                                             builder::string(id->local()), builder::vector(fields)});
+    }
+
+    result_t operator()(const spicy::type::Unit& u) {
+        assert(id);
+
+        std::vector<hilti::Expression> fields;
+        for ( const auto& f : gc->recordFields(u) ) {
+            auto ztype = createZeekType(std::get<1>(f));
+            if ( ! ztype )
+                return ztype.error();
+
+            fields.emplace_back(
+                builder::tuple({builder::string(std::get<0>(f)), *ztype, builder::bool_(std::get<2>(f))}));
+        }
+
+        return builder::call("zeek_rt::create_record_type", {builder::string(id->namespace_()),
+                                                             builder::string(id->local()), builder::vector(fields)});
+    }
+};
+} // namespace
+
 hilti::Result<hilti::Expression> GlueCompiler::createZeekType(const hilti::Type& t, const hilti::ID& id) const {
-    return hilti::builder::null(); // TODO: Fill in conversion code.
+    if ( id.namespace_() )
+        return VisitorZeekType(this).createZeekType(t, id);
+    else
+        return hilti::result::Error("exported ID must be fully qualified");
+}
+
+namespace {
+struct VisitorUnitFields : hilti::visitor::PreOrder<void, VisitorUnitFields> {
+    // NOTE: Align this logic with struct generation in Spicy's unit builder.
+    std::vector<GlueCompiler::RecordField> fields;
+
+    void operator()(const spicy::type::unit::item::Field& f, position_t p) {
+        if ( f.isTransient() || f.parseType().isA<hilti::type::Void>() )
+            return;
+
+        fields.emplace_back(f.id(), f.itemType(), true);
+    }
+
+    void operator()(const spicy::type::unit::item::Variable& f, const position_t p) {
+        fields.emplace_back(f.id(), f.itemType(), f.isOptional());
+    }
+
+    // TODO: void operator()(const spicy::type::unit::item::Switch & f, const position_t p) {
+};
+} // namespace
+
+std::vector<GlueCompiler::RecordField> GlueCompiler::recordFields(const ::spicy::type::Unit& unit) {
+    VisitorUnitFields unit_field_converter;
+
+    for ( const auto& i : unit.items() )
+        unit_field_converter.dispatch(i);
+
+    return std::move(unit_field_converter.fields);
 }
