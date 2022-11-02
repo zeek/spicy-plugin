@@ -334,11 +334,17 @@ hilti::Result<TypeInfo> Driver::lookupType(const hilti::ID& id) {
         return hilti::result::Error(hilti::util::fmt("unknown type '%s'", id));
 }
 
-std::vector<TypeInfo> Driver::types() const {
+std::vector<TypeInfo> Driver::types(bool exported_only) const {
+    auto exported = _glue->exportedIDs();
+
     std::vector<TypeInfo> result;
     result.reserve(_types.size());
-    for ( const auto& t : _types )
+    for ( const auto& t : _types ) {
+        if ( exported_only && std::find(exported.begin(), exported.end(), t.first) == exported.end() )
+            continue;
+
         result.push_back(t.second);
+    }
 
     return result;
 }

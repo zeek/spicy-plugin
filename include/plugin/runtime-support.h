@@ -117,6 +117,9 @@ void register_packet_analyzer(const std::string& name, const std::string& parser
 void register_enum_type(const std::string& ns, const std::string& id,
                         const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels);
 
+/** Registers a Spicy-generated type with Zeek. */
+void register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type);
+
 /** Returns true if an event has at least one handler defined. */
 inline hilti::rt::Bool have_handler(const ::zeek::EventHandlerPtr& handler) { return static_cast<bool>(handler); }
 

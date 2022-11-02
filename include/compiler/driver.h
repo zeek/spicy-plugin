@@ -96,8 +96,12 @@ public:
      * Returns all types seen so far during processing of Spicy files.
      * Depending on where we are at with processing, these may or may not be
      * resolved yet (as indicated by their `is_resolved` field).
+     *
+     * @param exported_only if true, include only types that have already been
+     * exported by an EVT file
+     * @return list of types
      */
-    std::vector<TypeInfo> types() const;
+    std::vector<TypeInfo> types(bool exported_only = false) const;
 
     /** Returns true if we're running out of the plugin's build directory. */
     bool usingBuildDirectory() const { return _using_build_directory; }

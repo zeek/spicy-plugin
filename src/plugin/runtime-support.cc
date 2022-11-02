@@ -39,6 +39,10 @@ void rt::register_enum_type(
     OurPlugin->AddBifItem(::hilti::rt::fmt("%s::%s", ns, id), ::zeek::plugin::BifItem::TYPE);
 }
 
+void rt::register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type) {
+    OurPlugin->registerType(hilti::ID(ns, id), type);
+}
+
 void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(name); }
 
 ::zeek::EventHandlerPtr rt::internal_handler(const std::string& name) {

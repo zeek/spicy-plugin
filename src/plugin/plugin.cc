@@ -253,6 +253,41 @@ void plugin::Zeek_Spicy::Plugin::registerEnumType(
     zeek_id->MakeType();
 }
 
+hilti::Result<hilti::Nothing> plugin::Zeek_Spicy::Plugin::registerType(const hilti::ID& id) {
+    auto t = _driver->lookupType(id);
+    if ( ! t )
+        return hilti::result::Error("unknown type");
+
+    if ( auto type = createZeekType(t->type, id) )
+        registerType(t->id, *type);
+    else
+        return type.error();
+}
+
+void plugin::Zeek_Spicy::Plugin::registerType(const hilti::ID& id, const ::zeek::TypePtr& type) {
+    if ( ::zeek::detail::lookup_ID(id.str().c_str(), id.namespace_().str().c_str()) )
+        // Already exists, which means it's either done by the Spicy plugin
+        // already, or provided manually. We leave it alone then.
+        return;
+
+    ZEEK_DEBUG(hilti::rt::fmt("Registering Zeek type %s", id));
+    auto zeek_id = ::zeek::detail::install_ID(id.local().str().c_str(), id.namespace_().str().c_str(), true, true);
+    zeek_id->SetType(type);
+    zeek_id->MakeType();
+    AddBifItem(id, ::zeek::plugin::BifItem::TYPE);
+}
+
+::zeek::TypePtr plugin::Zeek_Spicy::Plugin::findType(const hilti::ID& id) const {
+    auto zid = ::zeek::detail::lookup_ID(id.local().str().c_str(), id.namespace_().str().c_str());
+    if ( ! zid )
+        return nullptr;
+
+    if ( ! zid->IsType() )
+        return nullptr;
+
+    return zid->GetType();
+}
+
 void plugin::Zeek_Spicy::Plugin::registerEvent(const std::string& name) {
     // Create a Zeek handler for the event.
     ::zeek::event_registry->Register(name);
@@ -860,4 +895,9 @@ const ::zeek::plugin::Component* plugin::Zeek_Spicy::Plugin::findComponent(const
     }
 
     return nullptr;
+}
+
+hilti::Result<::zeek::TypePtr> plugin::Zeek_Spicy::Plugin::createZeekType(const hilti::Type& t,
+                                                                          const hilti::ID& id) const {
+    return ::zeek::base_type(::zeek::TYPE_ERROR); // TODO: Fill in conversion code
 }

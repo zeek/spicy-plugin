@@ -464,8 +464,17 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
                 _imports.emplace_back(hilti::ID(module), std::move(scope));
             }
 
+            else if ( looking_at(*chunk, 0, "export") ) {
+                size_t i = 0;
+                eat_token(*chunk, &i, "export");
+
+                hilti::ID id = extract_id(*chunk, &i);
+                _exports.emplace_back(id);
+                newExport(id);
+            }
+
             else
-                throw ParseError("expected 'import', '{file,packet,protocol} analyzer', or 'on'");
+                throw ParseError("expected 'import', 'export', '{file,packet,protocol} analyzer', or 'on'");
 
             _locations.pop_back();
         }
@@ -883,6 +892,18 @@ bool GlueCompiler::compile() {
                                                              builder::string(ti.id.local()), builder::vector(labels)});
     }
 
+    // Create Zeek types for exported Spicy types. We do this here
+    // mainly for when compiling C+ code offline. When running live inside
+    // Zeek, we also do it earlier through the GlueBuilder itself so that the
+    // new types are already available when scripts are parsed.
+    for ( const auto& ti : _driver->types(true) ) {
+        if ( auto type = createZeekType(ti.type, ti.id) )
+            preinit_body.addCall("zeek_rt::register_type",
+                                 {builder::string(ti.id.namespace_()), builder::string(ti.id.local()), *type});
+        else
+            hilti::logger().fatalError(hilti::util::fmt("cannot export Spicy type '%s': %s", ti.id, type.error()));
+    }
+
     for ( auto&& [id, m] : _spicy_modules ) {
         // Import runtime module.
         auto import_ = hilti::builder::import(ID("zeek_rt"), ".hlt");
@@ -1130,3 +1151,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 hilti::Expression GlueCompiler::location(const glue::Event& ev) { return builder::string(ev.location); }
 
 hilti::Expression GlueCompiler::location(const glue::ExpressionAccessor& e) { return builder::string(e.location); }
+
+hilti::Result<hilti::Expression> GlueCompiler::createZeekType(const hilti::Type& t, const hilti::ID& id) const {
+    return hilti::builder::null(); // TODO: Fill in conversion code.
+}

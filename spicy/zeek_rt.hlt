@@ -13,6 +13,7 @@ declare public void register_protocol_analyzer(string name, hilti::Protocol prot
 declare public void register_file_analyzer(string name, vector<string> mime_types, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_file_analyzer" &have_prototype;
 declare public void register_packet_analyzer(string name, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_packet_analyzer" &have_prototype;
 declare public void register_enum_type(string ns, string id, vector<tuple<string, int<64>>> labels) &cxxname="spicy::zeek::rt::register_enum_type" &have_prototype;
+declare public void register_type(string ns, string id, BroType t) &cxxname="spicy::zeek::rt::register_type" &have_prototype;
 
 declare public bool have_handler(EventHandlerPtr handler) &cxxname="spicy::zeek::rt::have_handler" &have_prototype;
 declare public EventHandlerPtr internal_handler(string event) &cxxname="spicy::zeek::rt::internal_handler" &have_prototype;
