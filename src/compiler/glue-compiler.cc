@@ -875,24 +875,6 @@ bool GlueCompiler::compile() {
     for ( auto&& ev : _events )
         preinit_body.addCall("zeek_rt::install_handler", {builder::string(ev.name)});
 
-    // Create Zeek enum types for exported Spicy enums. We do this here
-    // mainly for when compiling C+ code offline. When running live inside
-    // Zeek, we also do it earlier through the GlueBuilder itself so that the
-    // new types are already available when scripts are parsed. (And
-    // registering twice isn't a problem.)
-    for ( auto&& ti : _driver->types() ) {
-        auto et = ti.type.tryAs<hilti::type::Enum>();
-        if ( ! et || ti.linkage != hilti::declaration::Linkage::Public )
-            continue;
-
-        auto labels = hilti::rt::transform(et->labels(), [](const auto& l) {
-            return builder::tuple({builder::string(l.get().id()), builder::integer(l.get().value())});
-        });
-
-        preinit_body.addCall("zeek_rt::register_enum_type", {builder::string(ti.id.namespace_()),
-                                                             builder::string(ti.id.local()), builder::vector(labels)});
-    }
-
     // Create Zeek types for exported Spicy types. We do this here
     // mainly for when compiling C+ code offline. When running live inside
     // Zeek, we also do it earlier through the GlueBuilder itself so that the
@@ -1198,6 +1180,17 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
     result_t operator()(const hilti::type::SignedInteger& c) { return base_type("zeek_rt::ZeekTypeTag::Int"); }
     result_t operator()(const hilti::type::String& c) { return base_type("zeek_rt::ZeekTypeTag::String"); }
     result_t operator()(const hilti::type::UnsignedInteger& c) { return base_type("zeek_rt::ZeekTypeTag::Count"); }
+
+    result_t operator()(const hilti::type::Enum& e) {
+        assert(id);
+
+        auto labels = hilti::rt::transform(e.labels(), [](const auto& l) {
+            return builder::tuple({builder::string(l.get().id()), builder::integer(l.get().value())});
+        });
+
+        return builder::call("zeek_rt::create_enum_type", {builder::string(id->namespace_()),
+                                                           builder::string(id->local()), builder::vector(labels)});
+    }
 
     result_t operator()(const hilti::type::Struct& s) {
         assert(id);

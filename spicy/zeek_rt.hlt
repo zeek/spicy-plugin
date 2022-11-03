@@ -19,7 +19,6 @@ type ZeekTypeTag = enum {
 declare public void register_protocol_analyzer(string name, hilti::Protocol protocol, vector<port> ports, string parser_orig, string parser_resp, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_protocol_analyzer" &have_prototype;
 declare public void register_file_analyzer(string name, vector<string> mime_types, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_file_analyzer" &have_prototype;
 declare public void register_packet_analyzer(string name, string parser, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_packet_analyzer" &have_prototype;
-declare public void register_enum_type(string ns, string id, vector<tuple<string, int<64>>> labels) &cxxname="spicy::zeek::rt::register_enum_type" &have_prototype;
 declare public void register_type(string ns, string id, BroType t) &cxxname="spicy::zeek::rt::register_type" &have_prototype;
 
 declare public bool have_handler(EventHandlerPtr handler) &cxxname="spicy::zeek::rt::have_handler" &have_prototype;
@@ -32,6 +31,7 @@ declare public Val to_val(any x, BroType target, string location) &cxxname="spic
 
 type RecordField = tuple<string, BroType, bool>; # (ID, type, optional)
 declare public BroType create_base_type(ZeekTypeTag tag) &cxxname="spicy::zeek::rt::create_base_type" &have_prototype;
+declare public BroType create_enum_type(string ns, string id, vector<tuple<string, int<64>>> labels) &cxxname="spicy::zeek::rt::create_enum_type" &have_prototype;
 declare public BroType create_record_type(string ns, string id, vector<RecordField> fields) &cxxname="spicy::zeek::rt::create_record_type" &have_prototype;
 
 declare public Val current_conn(string location) &cxxname="spicy::zeek::rt::current_conn" &have_prototype;

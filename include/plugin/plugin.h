@@ -85,16 +85,6 @@ public:
                                 const std::string& linker_scope);
 
     /**
-     * Runtime method to register a Spicy-generted enum time with Zeek.
-     *
-     * @param ns namespace to define the Zeek enum type in
-     * @param id local ID of the enum type
-     * @param labls mapping of enum label to numerical value
-     */
-    void registerEnumType(const std::string& ns, const std::string& id,
-                          const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels);
-
-    /**
      * Runtime method to register a Spicy-generated type with Zeek. The type
      * must have been encoutered during AST traversal alreadt, so that its ID
      * is known. The corresponding Zeek type will be created and registered with Zeek.

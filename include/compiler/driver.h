@@ -167,6 +167,7 @@ protected:
 
     std::unique_ptr<GlueCompiler> _glue;  // glue compiler in use
     std::map<hilti::ID, TypeInfo> _types; // map of Spicy type declarations encountered so far
+    std::vector<TypeInfo> _public_enums; // tracks Spicy enum types declared public, for automatic export
     bool _using_build_directory = false;  // true if we're running out of the plugin's build directory
     bool _need_glue = true;               // true if glue code has not yet been generated
 };

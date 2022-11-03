@@ -32,13 +32,6 @@ void rt::register_packet_analyzer(const std::string& name, const std::string& pa
     OurPlugin->registerPacketAnalyzer(name, parser, replaces, linker_scope);
 }
 
-void rt::register_enum_type(
-    const std::string& ns, const std::string& id,
-    const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels) {
-    OurPlugin->registerEnumType(ns, id, labels);
-    OurPlugin->AddBifItem(::hilti::rt::fmt("%s::%s", ns, id), ::zeek::plugin::BifItem::TYPE);
-}
-
 void rt::register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type) {
     OurPlugin->registerType(hilti::ID(ns, id), type);
 }
@@ -55,6 +48,28 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
         reporter::fatalError(hilti::rt::fmt("ID %s is not of expected type %s", id_, ::zeek::type_name(tag)));
 
     return type;
+}
+
+
+::zeek::TypePtr rt::create_enum_type(
+    const std::string& ns, const std::string& id,
+    const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels) {
+    if ( auto t = findType(::zeek::TYPE_ENUM, ns, id) )
+        return t;
+
+    auto etype = ::zeek::make_intrusive<::zeek::EnumType>(ns + "::" + id);
+
+    for ( auto [lid, lval] : labels ) {
+        auto name = ::hilti::rt::fmt("%s_%s", id, lid);
+
+        if ( lval == -1 )
+            // Zeek's enum can't be negative, so swap in max_int for our Undef.
+            lval = std::numeric_limits<::zeek_int_t>::max();
+
+        etype->AddName(ns, name.c_str(), lval, true);
+    }
+
+    return etype;
 }
 
 ::zeek::TypePtr rt::create_record_type(const std::string& ns, const std::string& id,

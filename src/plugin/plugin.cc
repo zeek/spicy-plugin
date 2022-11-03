@@ -227,34 +227,6 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     _packet_analyzers_by_type[info.type] = info;
 }
 
-void plugin::Zeek_Spicy::Plugin::registerEnumType(
-    const std::string& ns, const std::string& id,
-    const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels) {
-    if ( ::zeek::detail::lookup_ID(id.c_str(), ns.c_str()) )
-        // Already exists, which means it's either done by the Spicy plugin
-        // already, or provided manually. We leave it alone then.
-        return;
-
-    auto fqid = hilti::rt::fmt("%s::%s", ns, id);
-    ZEEK_DEBUG(hilti::rt::fmt("Adding Zeek enum type %s", fqid));
-
-    auto etype = ::zeek::make_intrusive<::zeek::EnumType>(fqid);
-
-    for ( auto [lid, lval] : labels ) {
-        auto name = ::hilti::rt::fmt("%s_%s", id, lid);
-
-        if ( lval == -1 )
-            // Zeek's enum can't be negative, so swap int max_int for our Undef.
-            lval = std::numeric_limits<::zeek_int_t>::max();
-
-        etype->AddName(ns, name.c_str(), lval, true);
-    }
-
-    auto zeek_id = ::zeek::detail::install_ID(id.c_str(), ns.c_str(), true, true);
-    zeek_id->SetType(etype);
-    zeek_id->MakeType();
-}
-
 hilti::Result<hilti::Nothing> plugin::Zeek_Spicy::Plugin::registerType(const hilti::ID& id) {
     auto ti = _driver->lookupType(id);
     if ( ! ti )
@@ -269,10 +241,12 @@ hilti::Result<hilti::Nothing> plugin::Zeek_Spicy::Plugin::registerType(const hil
 }
 
 void plugin::Zeek_Spicy::Plugin::registerType(const hilti::ID& id, const ::zeek::TypePtr& type) {
-    if ( ::zeek::detail::lookup_ID(id.str().c_str(), id.namespace_().str().c_str()) )
+    if ( ::zeek::detail::lookup_ID(id.str().c_str(), id.namespace_().str().c_str()) ) {
+        ZEEK_DEBUG(hilti::rt::fmt("Not registering Zeek type %s; it already exists", id));
         // Already exists, which means it's either done by the Spicy plugin
         // already, or provided manually. We leave it alone then.
         return;
+    }
 
     ZEEK_DEBUG(hilti::rt::fmt("Registering Zeek type %s", id));
     auto zeek_id = ::zeek::detail::install_ID(id.local().str().c_str(), id.namespace_().str().c_str(), true, true);
@@ -962,6 +936,27 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
     result_t operator()(const hilti::type::SignedInteger& c) { return ::zeek::base_type(::zeek::TYPE_INT); }
     result_t operator()(const hilti::type::String& c) { return ::zeek::base_type(::zeek::TYPE_STRING); }
     result_t operator()(const hilti::type::UnsignedInteger& c) { return ::zeek::base_type(::zeek::TYPE_COUNT); }
+
+    result_t operator()(const hilti::type::Enum& et) {
+        assert(id);
+
+        auto etype = ::zeek::make_intrusive<::zeek::EnumType>(*id);
+        auto labels = hilti::rt::transform(et.labels(), [](const auto& l) {
+            return std::make_tuple(l.get().id().str(), hilti::rt::integer::safe<int64_t>(l.get().value()));
+        });
+
+        for ( auto [lid, lval] : labels ) {
+            auto name = ::hilti::rt::fmt("%s_%s", id->local(), lid);
+
+            if ( lval == -1 )
+                // Zeek's enum can't be negative, so swap int max_int for our Undef.
+                lval = std::numeric_limits<::zeek_int_t>::max();
+
+            etype->AddName(id->namespace_(), name.c_str(), lval, true);
+        }
+
+        return {etype};
+    }
 
     result_t operator()(const hilti::type::Struct& s) {
         auto decls = std::make_unique<::zeek::type_decl_list>();

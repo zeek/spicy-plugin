@@ -346,6 +346,10 @@ std::vector<TypeInfo> Driver::types(bool exported_only) const {
         result.push_back(t.second);
     }
 
+    // Automatically export public enums for backwards compatibility.
+    for ( const auto& t : _public_enums )
+        result.push_back(t);
+
     return result;
 }
 
@@ -364,6 +368,12 @@ void Driver::hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) {
     for ( const auto& ti : v.types ) {
         ZEEK_DEBUG(hilti::util::fmt("  Got type '%s' (pre-compile)", ti.id));
         _types[ti.id] = ti;
+
+        if ( auto et = ti.type.tryAs<hilti::type::Enum>(); et && ti.linkage == hilti::declaration::Linkage::Public ) {
+            ZEEK_DEBUG("    Automatically exporting public enum for backwards compatibilty");
+            _public_enums.push_back(ti);
+        }
+
         hookNewType(ti);
     }
 }
