@@ -50,6 +50,38 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
     return type;
 }
 
+::zeek::TypePtr rt::create_base_type(ZeekTypeTag tag) {
+    ::zeek::TypeTag ztag;
+
+    switch ( tag ) {
+        case ZeekTypeTag::Addr: ztag = ::zeek::TYPE_ADDR; break;
+        case ZeekTypeTag::Any: ztag = ::zeek::TYPE_ANY; break;
+        case ZeekTypeTag::Bool: ztag = ::zeek::TYPE_BOOL; break;
+        case ZeekTypeTag::Count: ztag = ::zeek::TYPE_COUNT; break;
+        case ZeekTypeTag::Double: ztag = ::zeek::TYPE_DOUBLE; break;
+        case ZeekTypeTag::Enum: ztag = ::zeek::TYPE_ENUM; break;
+        case ZeekTypeTag::Error: ztag = ::zeek::TYPE_ERROR; break;
+        case ZeekTypeTag::File: ztag = ::zeek::TYPE_FILE; break;
+        case ZeekTypeTag::Func: ztag = ::zeek::TYPE_FUNC; break;
+        case ZeekTypeTag::List: ztag = ::zeek::TYPE_LIST; break;
+        case ZeekTypeTag::Int: ztag = ::zeek::TYPE_INT; break;
+        case ZeekTypeTag::Interval: ztag = ::zeek::TYPE_INTERVAL; break;
+        case ZeekTypeTag::Opaque: ztag = ::zeek::TYPE_OPAQUE; break;
+        case ZeekTypeTag::Pattern: ztag = ::zeek::TYPE_PATTERN; break;
+        case ZeekTypeTag::Port: ztag = ::zeek::TYPE_PORT; break;
+        case ZeekTypeTag::Record: ztag = ::zeek::TYPE_RECORD; break;
+        case ZeekTypeTag::String: ztag = ::zeek::TYPE_STRING; break;
+        case ZeekTypeTag::Subnet: ztag = ::zeek::TYPE_SUBNET; break;
+        case ZeekTypeTag::Table: ztag = ::zeek::TYPE_TABLE; break;
+        case ZeekTypeTag::Time: ztag = ::zeek::TYPE_TIME; break;
+        case ZeekTypeTag::Type: ztag = ::zeek::TYPE_TYPE; break;
+        case ZeekTypeTag::Vector: ztag = ::zeek::TYPE_VECTOR; break;
+        case ZeekTypeTag::Void: ztag = ::zeek::TYPE_VOID; break;
+        default: hilti::rt::cannot_be_reached();
+    }
+
+    return ::zeek::base_type(ztag);
+}
 
 ::zeek::TypePtr rt::create_enum_type(
     const std::string& ns, const std::string& id,
@@ -91,6 +123,16 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
     }
 
     return ::zeek::make_intrusive<::zeek::RecordType>(decls.release());
+}
+
+::zeek::TypePtr rt::create_table_type(::zeek::TypePtr key, std::optional<::zeek::TypePtr> value) {
+    auto idx = ::zeek::make_intrusive<::zeek::TypeList>();
+    idx->Append(std::move(key));
+    return ::zeek::make_intrusive<::zeek::TableType>(std::move(idx), value ? *value : nullptr);
+}
+
+::zeek::TypePtr rt::create_vector_type(::zeek::TypePtr elem) {
+    return ::zeek::make_intrusive<::zeek::VectorType>(elem);
 }
 
 void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(name); }

@@ -1162,7 +1162,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
         if ( id ) {
             // Avoid infinite recursion.
             if ( zeek_types.count(*id) )
-                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive", *id));
+                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive (1)", *id));
 
             zeek_types.insert(*id);
         }
@@ -1172,19 +1172,25 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
             return hilti::result::Error(
                 hilti::util::fmt("no support for automatic conversion into a Zeek type (%s)", t.typename_()));
 
-
+        zeek_types.erase(*id);
         return *x;
     }
 
-    result_t operator()(const hilti::type::Bool& c) { return base_type("zeek_rt::ZeekTypeTag::Bool"); }
-    result_t operator()(const hilti::type::SignedInteger& c) { return base_type("zeek_rt::ZeekTypeTag::Int"); }
-    result_t operator()(const hilti::type::String& c) { return base_type("zeek_rt::ZeekTypeTag::String"); }
-    result_t operator()(const hilti::type::UnsignedInteger& c) { return base_type("zeek_rt::ZeekTypeTag::Count"); }
+    result_t operator()(const hilti::type::Address& t) { return base_type("zeek_rt::ZeekTypeTag::Addr"); }
+    result_t operator()(const hilti::type::Bool& t) { return base_type("zeek_rt::ZeekTypeTag::Bool"); }
+    result_t operator()(const hilti::type::Bytes& t) { return base_type("zeek_rt::ZeekTypeTag::String"); }
+    result_t operator()(const hilti::type::Interval& t) { return base_type("zeek_rt::ZeekTypeTag::Interval"); }
+    result_t operator()(const hilti::type::Port& t) { return base_type("zeek_rt::ZeekTypeTag::Port"); }
+    result_t operator()(const hilti::type::Real& t) { return base_type("zeek_rt::ZeekTypeTag::Double"); }
+    result_t operator()(const hilti::type::SignedInteger& t) { return base_type("zeek_rt::ZeekTypeTag::Int"); }
+    result_t operator()(const hilti::type::String& t) { return base_type("zeek_rt::ZeekTypeTag::String"); }
+    result_t operator()(const hilti::type::Time& t) { return base_type("zeek_rt::ZeekTypeTag::Time"); }
+    result_t operator()(const hilti::type::UnsignedInteger& t) { return base_type("zeek_rt::ZeekTypeTag::Count"); }
 
-    result_t operator()(const hilti::type::Enum& e) {
+    result_t operator()(const hilti::type::Enum& t) {
         assert(id);
 
-        auto labels = hilti::rt::transform(e.labels(), [](const auto& l) {
+        auto labels = hilti::rt::transform(t.labels(), [](const auto& l) {
             return builder::tuple({builder::string(l.get().id()), builder::integer(l.get().value())});
         });
 
@@ -1192,11 +1198,33 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
                                                            builder::string(id->local()), builder::vector(labels)});
     }
 
-    result_t operator()(const hilti::type::Struct& s) {
+    result_t operator()(const hilti::type::Map& t) {
+        auto key = createZeekType(t.keyType());
+        if ( ! key )
+            return key.error();
+
+        auto value = createZeekType(t.valueType());
+        if ( ! value )
+            return value.error();
+
+        return builder::call("zeek_rt::create_table_type", {*key, *value});
+    }
+
+    result_t operator()(const hilti::type::Optional& t) { return createZeekType(t.dereferencedType()); }
+
+    result_t operator()(const hilti::type::Set& t) {
+        auto elem = createZeekType(t.elementType());
+        if ( ! elem )
+            return elem.error();
+
+        return builder::call("zeek_rt::create_table_type", {*elem, builder::null()});
+    }
+
+    result_t operator()(const hilti::type::Struct& t) {
         assert(id);
 
         std::vector<hilti::Expression> fields;
-        for ( const auto& f : s.fields() ) {
+        for ( const auto& f : t.fields() ) {
             auto ztype = createZeekType(f.type());
             if ( ! ztype )
                 return ztype.error();
@@ -1208,11 +1236,28 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
                                                              builder::string(id->local()), builder::vector(fields)});
     }
 
-    result_t operator()(const spicy::type::Unit& u) {
+    result_t operator()(const spicy::type::Tuple& t) {
+        std::vector<hilti::Expression> fields;
+        for ( const auto& f : t.elements() ) {
+            if ( ! f.id() )
+                return hilti::result::Error("can only convert tuple types with all named fields to Zeek");
+
+            auto ztype = createZeekType(f.type());
+            if ( ! ztype )
+                return ztype.error();
+
+            fields.emplace_back(builder::tuple({builder::string(*f.id()), *ztype, builder::bool_(false)}));
+        }
+
+        return builder::call("zeek_rt::create_record_type", {builder::string(id->namespace_()),
+                                                             builder::string(id->local()), builder::vector(fields)});
+    }
+
+    result_t operator()(const spicy::type::Unit& t) {
         assert(id);
 
         std::vector<hilti::Expression> fields;
-        for ( const auto& f : gc->recordFields(u) ) {
+        for ( const auto& f : gc->recordFields(t) ) {
             auto ztype = createZeekType(std::get<1>(f));
             if ( ! ztype )
                 return ztype.error();
@@ -1223,6 +1268,14 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
 
         return builder::call("zeek_rt::create_record_type", {builder::string(id->namespace_()),
                                                              builder::string(id->local()), builder::vector(fields)});
+    }
+
+    result_t operator()(const hilti::type::Vector& t) {
+        auto elem = createZeekType(t.elementType());
+        if ( ! elem )
+            return elem.error();
+
+        return builder::call("zeek_rt::create_vector_type", {*elem});
     }
 };
 } // namespace

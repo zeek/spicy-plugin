@@ -10,10 +10,7 @@ public type BroType = __library_type("::zeek::TypePtr");
 public type EventHandlerPtr = __library_type("::zeek::EventHandlerPtr");
 
 type ZeekTypeTag = enum {
-    # Value assignments must match both Zeek's `TypeTag`, and `ZeekTypeTag` in `runtime_support.h`.
-    Void = 0, Bool = 1, Int = 2, Count = 3, Double = 4, Time = 5, Interval = 6, String = 7,
-    Pattern = 8, Enum = 9, Port = 10, Addr = 11, Subnet = 12, Any = 13, Table = 14, Record = 15,
-    List = 16, Func = 17, File = 18, Vector = 19, Opaque = 20, Type = 21, Error = 22
+    Addr, Any, Bool, Count, Double, Enum, Error, File, Func, Int, Interval, List, Opaque, Pattern, Port, Record, String, Subnet, Table, Time, Type, Vector, Void
 } &cxxname="::spicy::zeek::rt::ZeekTypeTag";
 
 declare public void register_protocol_analyzer(string name, hilti::Protocol protocol, vector<port> ports, string parser_orig, string parser_resp, string replaces, string linker_scope) &cxxname="spicy::zeek::rt::register_protocol_analyzer" &have_prototype;
@@ -33,6 +30,8 @@ type RecordField = tuple<string, BroType, bool>; # (ID, type, optional)
 declare public BroType create_base_type(ZeekTypeTag tag) &cxxname="spicy::zeek::rt::create_base_type" &have_prototype;
 declare public BroType create_enum_type(string ns, string id, vector<tuple<string, int<64>>> labels) &cxxname="spicy::zeek::rt::create_enum_type" &have_prototype;
 declare public BroType create_record_type(string ns, string id, vector<RecordField> fields) &cxxname="spicy::zeek::rt::create_record_type" &have_prototype;
+declare public BroType create_table_type(BroType key, optional<BroType> value = Null) &cxxname="spicy::zeek::rt::create_table_type" &have_prototype;
+declare public BroType create_vector_type(BroType elem) &cxxname="spicy::zeek::rt::create_vector_type" &have_prototype;
 
 declare public Val current_conn(string location) &cxxname="spicy::zeek::rt::current_conn" &have_prototype;
 declare public Val current_file(string location) &cxxname="spicy::zeek::rt::current_file" &have_prototype;

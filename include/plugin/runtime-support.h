@@ -116,47 +116,46 @@ void register_packet_analyzer(const std::string& name, const std::string& parser
 /** Registers a Spicy-generated type to make it available inside Zeek. */
 void register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type);
 
-/**
- * Identifies a Zeek-side type. Value assignments must match both Zeek's
- * `TypeTag`, and `ZeekTypeTag` in `zeek_rt.hlt`.
- */
+/** Identifies a Zeek-side type. */
 enum class ZeekTypeTag : uint64_t {
-    Void = 0,
-    Bool = 1,
-    Int = 2,
-    Count = 3,
-    Double = 4,
-    Time = 5,
-    Interval = 6,
-    String = 7,
-    Pattern = 8,
-    Enum = 9,
-    Port = 10,
-    Addr = 11,
-    Subnet = 12,
-    Any = 13,
-    Table = 14,
-    Record = 15,
-    List = 16,
-    Func = 17,
-    File = 18,
-    Vector = 19,
-    Opaque = 20,
-    Type = 21,
-    Error = 22
+    Addr,
+    Any,
+    Bool,
+    Count,
+    Double,
+    Enum,
+    Error,
+    File,
+    Func,
+    Int,
+    Interval,
+    List,
+    Opaque,
+    Pattern,
+    Port,
+    Record,
+    String,
+    Subnet,
+    Table,
+    Time,
+    Type,
+    Vector,
+    Void,
 };
 
-inline ::zeek::TypePtr create_base_type(ZeekTypeTag tag) {
-    return ::zeek::base_type(static_cast<::zeek::TypeTag>(tag));
-}
+extern ::zeek::TypePtr create_base_type(ZeekTypeTag tag);
 
 extern ::zeek::TypePtr create_enum_type(
     const std::string& ns, const std::string& id,
     const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels);
 
+
 using RecordField = std::tuple<std::string, ::zeek::TypePtr, hilti::rt::Bool>; // (ID, type, optional)
 extern ::zeek::TypePtr create_record_type(const std::string& ns, const std::string& id,
                                           const hilti::rt::Vector<RecordField>& fields);
+
+extern ::zeek::TypePtr create_table_type(::zeek::TypePtr key, std::optional<::zeek::TypePtr> value);
+extern ::zeek::TypePtr create_vector_type(::zeek::TypePtr elem);
 
 /** Returns true if an event has at least one handler defined. */
 inline hilti::rt::Bool have_handler(const ::zeek::EventHandlerPtr& handler) { return static_cast<bool>(handler); }

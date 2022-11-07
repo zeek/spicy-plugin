@@ -917,7 +917,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
             if ( t->second )
                 return t->second;
             else
-                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive", id));
+                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive (2)", id));
         }
         else
             return hilti::result::Error(
@@ -932,16 +932,22 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
         return lookupType(fqid);
     }
 
-    result_t operator()(const hilti::type::Bool& c) { return ::zeek::base_type(::zeek::TYPE_BOOL); }
-    result_t operator()(const hilti::type::SignedInteger& c) { return ::zeek::base_type(::zeek::TYPE_INT); }
-    result_t operator()(const hilti::type::String& c) { return ::zeek::base_type(::zeek::TYPE_STRING); }
-    result_t operator()(const hilti::type::UnsignedInteger& c) { return ::zeek::base_type(::zeek::TYPE_COUNT); }
+    result_t operator()(const hilti::type::Address& t) { return ::zeek::base_type(::zeek::TYPE_ADDR); }
+    result_t operator()(const hilti::type::Bool& t) { return ::zeek::base_type(::zeek::TYPE_BOOL); }
+    result_t operator()(const hilti::type::Bytes& t) { return ::zeek::base_type(::zeek::TYPE_STRING); }
+    result_t operator()(const hilti::type::Interval& t) { return ::zeek::base_type(::zeek::TYPE_INTERVAL); }
+    result_t operator()(const hilti::type::Port& t) { return ::zeek::base_type(::zeek::TYPE_PORT); }
+    result_t operator()(const hilti::type::Real& t) { return ::zeek::base_type(::zeek::TYPE_DOUBLE); }
+    result_t operator()(const hilti::type::SignedInteger& t) { return ::zeek::base_type(::zeek::TYPE_INT); }
+    result_t operator()(const hilti::type::String& t) { return ::zeek::base_type(::zeek::TYPE_STRING); }
+    result_t operator()(const hilti::type::Time& t) { return ::zeek::base_type(::zeek::TYPE_TIME); }
+    result_t operator()(const hilti::type::UnsignedInteger& t) { return ::zeek::base_type(::zeek::TYPE_COUNT); }
 
-    result_t operator()(const hilti::type::Enum& et) {
+    result_t operator()(const hilti::type::Enum& t) {
         assert(id);
 
         auto etype = ::zeek::make_intrusive<::zeek::EnumType>(*id);
-        auto labels = hilti::rt::transform(et.labels(), [](const auto& l) {
+        auto labels = hilti::rt::transform(t.labels(), [](const auto& l) {
             return std::make_tuple(l.get().id().str(), hilti::rt::integer::safe<int64_t>(l.get().value()));
         });
 
@@ -958,10 +964,36 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
         return {etype};
     }
 
-    result_t operator()(const hilti::type::Struct& s) {
+    result_t operator()(const hilti::type::Optional& t) { return createZeekType(t.dereferencedType()); }
+
+    result_t operator()(const hilti::type::Map& t) {
+        auto key = createZeekType(t.keyType());
+        if ( ! key )
+            return key.error();
+
+        auto value = createZeekType(t.valueType());
+        if ( ! value )
+            return value.error();
+
+        auto idx = ::zeek::make_intrusive<::zeek::TypeList>();
+        idx->Append(std::move(*key));
+        return {::zeek::make_intrusive<::zeek::TableType>(std::move(idx), *value)};
+    }
+
+    result_t operator()(const hilti::type::Set& t) {
+        auto elem = createZeekType(t.elementType());
+        if ( ! elem )
+            return elem.error();
+
+        auto idx = ::zeek::make_intrusive<::zeek::TypeList>();
+        idx->Append(std::move(*elem));
+        return {::zeek::make_intrusive<::zeek::TableType>(std::move(idx), nullptr)};
+    }
+
+    result_t operator()(const hilti::type::Struct& t) {
         auto decls = std::make_unique<::zeek::type_decl_list>();
 
-        for ( const auto& f : s.fields() ) {
+        for ( const auto& f : t.fields() ) {
             auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
 
             if ( f.isOptional() ) {
@@ -980,10 +1012,30 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
         return {::zeek::make_intrusive<::zeek::RecordType>(decls.release())};
     }
 
-    result_t operator()(const spicy::type::Unit& u) {
+    result_t operator()(const hilti::type::Tuple& t) {
         auto decls = std::make_unique<::zeek::type_decl_list>();
 
-        for ( auto [id, type, optional] : GlueCompiler::recordFields(u) ) {
+        for ( const auto& f : t.elements() ) {
+            if ( ! f.id() )
+                return hilti::result::Error("can only convert tuple types with all named fields to Zeek");
+
+            auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
+
+            auto ztype = createZeekType(f.type());
+            if ( ! ztype )
+                return ztype.error();
+
+            decls->append(
+                new ::zeek::TypeDecl(::zeek::util::copy_string(f.id()->str().c_str()), *ztype, std::move(attrs)));
+        }
+
+        return {::zeek::make_intrusive<::zeek::RecordType>(decls.release())};
+    }
+
+    result_t operator()(const spicy::type::Unit& t) {
+        auto decls = std::make_unique<::zeek::type_decl_list>();
+
+        for ( auto [id, type, optional] : GlueCompiler::recordFields(t) ) {
             auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
 
             if ( optional ) {
@@ -999,6 +1051,14 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
         }
 
         return {::zeek::make_intrusive<::zeek::RecordType>(decls.release())};
+    }
+
+    result_t operator()(const hilti::type::Vector& t) {
+        auto elem = createZeekType(t.elementType());
+        if ( ! elem )
+            return elem.error();
+
+        return {::zeek::make_intrusive<::zeek::VectorType>(*elem)};
     }
 };
 } // namespace
