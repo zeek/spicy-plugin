@@ -917,7 +917,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
             if ( t->second )
                 return t->second;
             else
-                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive (2)", id));
+                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive", id));
         }
         else
             return hilti::result::Error(
@@ -1017,7 +1017,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<::zeek::TypePtr>
 
         for ( const auto& f : t.elements() ) {
             if ( ! f.id() )
-                return hilti::result::Error("can only convert tuple types with all named fields to Zeek");
+                return hilti::result::Error("can only convert tuple types with all-named fields to Zeek");
 
             auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
 

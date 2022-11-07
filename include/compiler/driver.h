@@ -22,6 +22,7 @@ struct TypeInfo {
     bool is_resolved;    /**< true if we are far enough in processing that the type has been fully resolved */
     hilti::ID module_id; /**< name of module type is defined in */
     hilti::rt::filesystem::path module_path; /**< path of module that type is defined in */
+    hilti::Location location;                /**< location of type's declaration */
 };
 
 /** Spicy compilation driver. */
@@ -167,7 +168,7 @@ protected:
 
     std::unique_ptr<GlueCompiler> _glue;  // glue compiler in use
     std::map<hilti::ID, TypeInfo> _types; // map of Spicy type declarations encountered so far
-    std::vector<TypeInfo> _public_enums; // tracks Spicy enum types declared public, for automatic export
+    std::vector<TypeInfo> _public_enums;  // tracks Spicy enum types declared public, for automatic export
     bool _using_build_directory = false;  // true if we're running out of the plugin's build directory
     bool _need_glue = true;               // true if glue code has not yet been generated
 };

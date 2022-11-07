@@ -52,6 +52,7 @@ struct VisitorTypes : public hilti::visitor::PreOrder<void, VisitorTypes> {
             .is_resolved = is_resolved,
             .module_id = module,
             .module_path = path,
+            .location = t.meta().location(),
         });
     }
 
@@ -340,7 +341,8 @@ std::vector<TypeInfo> Driver::types(bool exported_only) const {
     std::vector<TypeInfo> result;
     result.reserve(_types.size());
     for ( const auto& t : _types ) {
-        if ( exported_only && std::find(exported.begin(), exported.end(), t.first) == exported.end() )
+        if ( exported_only && std::find_if(exported.begin(), exported.end(),
+                                           [&t](const auto& i) { return i.first == t.first; }) == exported.end() )
             continue;
 
         result.push_back(t.second);

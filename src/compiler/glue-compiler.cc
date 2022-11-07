@@ -470,7 +470,7 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
                 eat_token(*chunk, &i, "export");
 
                 hilti::ID id = extract_id(*chunk, &i);
-                _exports.emplace_back(id);
+                _exports.emplace_back(id, _locations.back());
                 newExport(id);
             }
 
@@ -879,12 +879,26 @@ bool GlueCompiler::compile() {
     // mainly for when compiling C+ code offline. When running live inside
     // Zeek, we also do it earlier through the GlueBuilder itself so that the
     // new types are already available when scripts are parsed.
+    std::set<hilti::ID> exported_type_seen;
     for ( const auto& ti : _driver->types(true) ) {
         if ( auto type = createZeekType(ti.type, ti.id) )
             preinit_body.addCall("zeek_rt::register_type",
                                  {builder::string(ti.id.namespace_()), builder::string(ti.id.local()), *type});
         else
-            hilti::logger().fatalError(hilti::util::fmt("cannot export Spicy type '%s': %s", ti.id, type.error()));
+            hilti::logger().error(hilti::util::fmt("cannot export Spicy type '%s': %s", ti.id, type.error()),
+                                  ti.location);
+
+        exported_type_seen.insert(ti.id);
+    }
+
+    // Check if all exports are accounted for.
+    for ( const auto& [id, location] : _exports ) {
+        if ( exported_type_seen.find(id) == exported_type_seen.end() ) {
+            if ( ! id.namespace_() )
+                hilti::logger().error(hilti::util::fmt("exported type must provide namespace: %d", id), location);
+            else
+                hilti::logger().error(hilti::util::fmt("unknown type exported: %s", id), location);
+        }
     }
 
     for ( auto&& [id, m] : _spicy_modules ) {
@@ -1162,7 +1176,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
         if ( id ) {
             // Avoid infinite recursion.
             if ( zeek_types.count(*id) )
-                return hilti::result::Error(hilti::util::fmt("type '%s' is self-recursive (1)", *id));
+                return hilti::result::Error("type is self-recursive");
 
             zeek_types.insert(*id);
         }
@@ -1240,7 +1254,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
         std::vector<hilti::Expression> fields;
         for ( const auto& f : t.elements() ) {
             if ( ! f.id() )
-                return hilti::result::Error("can only convert tuple types with all named fields to Zeek");
+                return hilti::result::Error("can only convert tuple types with all-named fields to Zeek");
 
             auto ztype = createZeekType(f.type());
             if ( ! ztype )

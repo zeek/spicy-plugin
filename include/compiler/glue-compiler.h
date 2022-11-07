@@ -223,7 +223,7 @@ private:
     std::map<hilti::ID, std::shared_ptr<glue::SpicyModule>> _spicy_modules;
 
     std::vector<std::pair<ID, std::optional<ID>>> _imports;  /**< imports from EVT files, with ID and optional scope */
-    std::vector<ID> _exports;                                /**< exports from EVT files */
+    std::vector<std::pair<ID, hilti::Location>> _exports;    /**< exports from EVT files */
     std::vector<glue::Event> _events;                        /**< events parsed from EVT files */
     std::vector<glue::ProtocolAnalyzer> _protocol_analyzers; /**< protocol analyzers parsed from EVT files */
     std::vector<glue::FileAnalyzer> _file_analyzers;         /**< file analyzers parsed from EVT files */
