@@ -1,3 +1,7 @@
+1.4.1 | 2022-11-07 09:57:00 +0100
+
+  * Quote CMake string to ensure correct argument count. (Nic Boet)
+
 1.4.0 | 2022-10-26 14:53:45 +0200
 
   * Release 1.4.0.
