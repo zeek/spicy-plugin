@@ -113,6 +113,10 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
                 driver_options->output_cxx = true;
                 driver_options->output_cxx_prefix = optarg;
                 driver_options->execute_code = false;
+                compiler_options->cxx_namespace_extern =
+                    hilti::util::fmt("hlt_%s", hilti::rt::filesystem::path(optarg).stem().string());
+                compiler_options->cxx_namespace_intern =
+                    hilti::util::fmt("__hlt_%s", hilti::rt::filesystem::path(optarg).stem().string());
                 break;
 
             case 'C': {
