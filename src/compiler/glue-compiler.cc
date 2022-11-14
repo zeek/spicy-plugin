@@ -16,6 +16,7 @@
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/spicy-compat.h>
 
+#include "ast/declaration.h"
 #include "debug.h"
 
 using namespace spicy::zeek;
@@ -280,12 +281,23 @@ void GlueCompiler::Init(Driver* driver, int zeek_version) {
 
 GlueCompiler::~GlueCompiler() {}
 
-hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* lineno) const {
+hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* lineno,
+                                                         hilti::declaration::DocString* doc) const {
     std::string chunk;
 
-    // Parser need to track whether we are inside a string or a comment.
-    enum State { Default, InComment, InString } state = Default;
+    // Parser needs to track whether we are inside a string or a comment.
+    enum State {
+        Default,
+        InCommentPrefix,
+        InStandardComment,
+        InDocComment,
+        InDocText,
+        InDocSummary,
+        InString
+    } state = Default;
+
     char prev = '\0';
+    std::string docline;
 
     while ( true ) {
         char cur;
@@ -306,7 +318,7 @@ hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* 
                     state = InString;
 
                 if ( cur == '#' && prev != '\\' ) {
-                    state = InComment;
+                    state = InCommentPrefix;
                     continue;
                 }
 
@@ -333,13 +345,71 @@ hilti::Result<std::string> GlueCompiler::getNextEvtBlock(std::istream& in, int* 
 
                 break;
 
-            case InComment:
-                if ( cur != '\n' )
-                    // skip
+            case InCommentPrefix:
+                if ( cur == '#' ) {
+                    state = InDocComment;
                     continue;
+                }
 
-                state = Default;
-                ++*lineno;
+                state = InStandardComment;
+
+                if ( cur == '\n' ) {
+                    state = Default;
+                    ++*lineno;
+                    break;
+                }
+
+                // skip
+                continue;
+
+            case InStandardComment:
+                if ( cur == '\n' ) {
+                    state = Default;
+                    ++*lineno;
+                    break;
+                }
+
+                // skip
+                continue;
+
+            case InDocComment:
+                docline.clear();
+
+                if ( cur == '!' )
+                    state = InDocSummary;
+                else
+                    state = InDocText;
+
+                if ( cur == '\n' ) {
+                    state = Default;
+                    *lineno++;
+                    break;
+                }
+
+                // skip
+                continue;
+
+            case InDocSummary:
+                if ( cur == '\n' ) {
+                    doc->addSummary(docline);
+                    state = Default;
+                    *lineno++;
+                    break;
+                }
+
+                docline += cur;
+                continue;
+
+            case InDocText:
+                if ( cur == '\n' ) {
+                    doc->addText(docline);
+                    state = Default;
+                    *lineno++;
+                    break;
+                }
+
+                docline += cur;
+                continue;
         }
 
         chunk += cur;
@@ -407,7 +477,8 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
 
         while ( true ) {
             _locations.emplace_back(path, lineno);
-            auto chunk = getNextEvtBlock(preprocessed, &lineno);
+            hilti::declaration::DocString doc;
+            auto chunk = getNextEvtBlock(preprocessed, &lineno, &doc);
             if ( ! chunk )
                 throw ParseError(chunk.error());
 
@@ -440,6 +511,7 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
 
             else if ( looking_at(*chunk, 0, "on") ) {
                 auto ev = parseEvent(*chunk);
+                ev.doc = doc;
                 ev.file = path;
                 new_events.push_back(ev);
                 ZEEK_DEBUG(hilti::util::fmt("  Got event definition for %s", ev.name));

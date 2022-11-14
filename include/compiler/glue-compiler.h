@@ -102,13 +102,14 @@ struct SpicyModule {
 /** Representation of an event parsed from an EVT file. */
 struct Event {
     // Information parsed directly from the *.evt file.
-    hilti::rt::filesystem::path file; /**< The path of the *.evt file we parsed this from. */
-    hilti::ID name;                   /**< The name of the event. */
-    hilti::ID path;                   /**< The hook path as specified in the evt file. */
-    std::string condition;            /**< Condition that must be true for the event to trigger. */
-    std::vector<std::string> exprs;   /**< The argument expressions. */
-    int priority;                     /**< Event/hook priority. */
-    hilti::Location location;         /**< Location where event is defined. */
+    hilti::rt::filesystem::path file;  /**< The path of the *.evt file we parsed this from. */
+    hilti::ID name;                    /**< The name of the event. */
+    hilti::ID path;                    /**< The hook path as specified in the evt file. */
+    std::string condition;             /**< Condition that must be true for the event to trigger. */
+    std::vector<std::string> exprs;    /**< The argument expressions. */
+    int priority;                      /**< Event/hook priority. */
+    hilti::Location location;          /**< Location where event is defined. */
+    hilti::declaration::DocString doc; /** Extracted documentation */
 
     // Computed information.
     hilti::ID hook;                               /**< The name of the hook triggering the event. */
@@ -174,10 +175,11 @@ private:
      *
      * @param in stream to read from
      * @param lineno pointer to integer that will be increased with line breaks
+     * @param doc receiver for any documentation strings encountered
      * @return the read block of data, with comments removed, and empty if end of
      * data has been reached; error will be set if parsing failed
      */
-    hilti::Result<std::string> getNextEvtBlock(std::istream& in, int* lineno) const;
+    hilti::Result<std::string> getNextEvtBlock(std::istream& in, int* lineno, hilti::declaration::DocString* doc) const;
 
     // Parsers for parts from EVT files.
     glue::ProtocolAnalyzer parseProtocolAnalyzer(const std::string& chunk);
