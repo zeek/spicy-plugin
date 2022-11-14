@@ -110,6 +110,7 @@ struct Event {
     std::vector<std::string> exprs;                    /**< The argument expressions. */
     int priority;                                      /**< Event/hook priority. */
     hilti::Location location;                          /**< Location where event is defined. */
+    hilti::DocString doc;                              /**< Extracted documentation */
 
     // Computed information.
     hilti::ID hook;                               /**< The name of the hook triggering the event. */
@@ -192,10 +193,11 @@ private:
      *
      * @param in stream to read from
      * @param lineno pointer to integer that will be increased with line breaks
+     * @param doc receiver for any documentation strings encountered
      * @return the read block of data, with comments removed, and empty if end of
      * data has been reached; error will be set if parsing failed
      */
-    hilti::Result<std::string> getNextEvtBlock(std::istream& in, int* lineno) const;
+    hilti::Result<std::string> getNextEvtBlock(std::istream& in, int* lineno, hilti::DocString* doc) const;
 
     // Parsers for parts from EVT files.
     glue::ProtocolAnalyzer parseProtocolAnalyzer(const std::string& chunk);
