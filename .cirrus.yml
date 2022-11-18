@@ -69,7 +69,7 @@ standalone_task:
     - rm spicy-dev.deb
 
   build_script:
-    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -G Ninja .. && ninja -j4)
+    - (mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=/opt/spicy-plugin -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -G Ninja .. && ninja -j 2)
 
   clang_tidy_script:
     - (cd build && run-clang-tidy -j $(nproc) $(jq -r '.[].file | select(contains(".bif") | not)' <compile_commands.json ))
@@ -107,7 +107,7 @@ static_zeek_master_task:
     - git clone --recursive https://github.com/zeek/zeek
 
   build_script:
-    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python --disable-spicy && cd build && ninja -j4)
+    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python --disable-spicy && cd build && ninja -j 2)
 
   install_script:
     - (cd zeek/build && ninja install)
