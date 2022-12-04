@@ -1,3 +1,7 @@
+1.4.2 | 2022-12-04 17:17:04 +0100
+
+  * GH-1304: Adjust test for fixed gap recovery behavior in Spicy. (Benjamin Bannier, Corelight)
+
 1.4.1 | 2022-11-07 09:57:00 +0100
 
   * Quote CMake string to ensure correct argument count. (Nic Boet)
