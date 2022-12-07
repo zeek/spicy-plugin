@@ -1,25 +1,29 @@
 environment:
     CCACHE_BASEDIR: $CIRRUS_WORKING_DIR
     CCACHE_DIR: /tmp/ccache
-    CCACHE_COMPRESS: 1
+    CCACHE_COMPRESS: "1"
 
     # Enforce sequential JIT'ing of files for controlled memory usage.
-    HILTI_JIT_SEQUENTIAL: 1
+    HILTI_JIT_SEQUENTIAL: "1"
 
     # Cache JIT results.
     HILTI_CXX_COMPILER_LAUNCHER: ccache
 
-zkg_ubuntu_task:
+zkg_task:
   timeout_in: 120m
   container:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
-        - ZEEK_LTS: 1
-        - ZEEK_VERSION: 4.0.3-0
+        - ZEEK_VERSION: "v4.0.3"
+        - ZEEK_CONFFLAGS: ""
       - docker_arguments:
-        - ZEEK_LTS:
-        - ZEEK_VERSION: 4.2.1-0
+        - ZEEK_VERSION: "v4.2.1"
+        - ZEEK_CONFFLAGS: ""
+      - docker_arguments:
+        - ZEEK_VERSION: "v5.0.4"
+      - docker_arguments:
+        - ZEEK_VERSION: "v5.1.1"
     cpu: 2
     memory: 8G
 
@@ -28,7 +32,7 @@ zkg_ubuntu_task:
     fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
-    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy-dev.deb
+    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_debian11/packages/spicy-dev.deb
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
@@ -46,14 +50,13 @@ zkg_ubuntu_task:
   always:
     stderr_script: ./ci/show-zkg-stderr
 
-standalone_ubuntu_task:
+standalone_task:
   timeout_in: 120m
   container:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
-        - ZEEK_LTS:
-        - ZEEK_VERSION: 4.0.3-0
+        - ZEEK_VERSION: "v5.1.1"
     cpu: 2
     memory: 8G
 
@@ -63,7 +66,7 @@ standalone_ubuntu_task:
       fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
-    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy-dev.deb
+    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_debian11/packages/spicy-dev.deb
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
@@ -85,7 +88,7 @@ standalone_ubuntu_task:
     - zeek -N Zeek::Spicy
     - PATH=/opt/spicy-plugin/bin:$PATH make -C tests test-install
 
-static_zeek_master_ubuntu_task:
+static_zeek_master_task:
   timeout_in: 120m
   container:
     dockerfile: ci/Dockerfile
@@ -98,7 +101,7 @@ static_zeek_master_ubuntu_task:
       fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
-    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_ubuntu20/packages/spicy-dev.deb
+    - curl -o spicy-dev.deb https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_debian11/packages/spicy-dev.deb
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
