@@ -1,3 +1,9 @@
+1.4.2-3 | 2022-12-08 12:07:29 +0100
+
+  * Rewrite CI so we can run against zeek-5. (Benjamin Bannier, Corelight)
+
+  * Bump pre-commit hooks. (Benjamin Bannier, Corelight)
+
 1.4.2 | 2022-12-04 17:17:04 +0100
 
   * GH-1304: Adjust test for fixed gap recovery behavior in Spicy. (Benjamin Bannier, Corelight)
