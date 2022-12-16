@@ -15,6 +15,7 @@ include/zeek-spicy/packet-analyzer.h
 include/zeek-spicy/plugin.h
 include/zeek-spicy/protocol-analyzer.h
 include/zeek-spicy/runtime-support.h
+include/zeek-spicy/spicy-compat.h
 include/zeek-spicy/zeek-compat.h
 include/zeek-spicy/zeek-reporter.h
 spicy

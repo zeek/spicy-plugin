@@ -24,6 +24,7 @@
 #include <zeek-spicy/packet-analyzer.h>
 #include <zeek-spicy/plugin.h>
 #include <zeek-spicy/protocol-analyzer.h>
+#include <zeek-spicy/spicy-compat.h>
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
 
@@ -178,7 +179,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
 
     ::zeek::analyzer::Component::factory_callback factory = nullptr;
 
-    switch ( proto ) {
+    switch ( spicy::compat::enum_value(proto) ) {
         case hilti::rt::Protocol::TCP: factory = spicy::zeek::rt::TCP_Analyzer::InstantiateAnalyzer; break;
         case hilti::rt::Protocol::UDP: factory = spicy::zeek::rt::UDP_Analyzer::InstantiateAnalyzer; break;
         default: reporter::error("unsupported protocol in analyzer"); return;
@@ -603,7 +604,7 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
 // Returns a port's Zeek-side transport protocol.
 static ::TransportProto transport_protocol(const hilti::rt::Port port) {
-    switch ( port.protocol() ) {
+    switch ( spicy::compat::enum_value(port.protocol()) ) {
         case hilti::rt::Protocol::TCP: return ::TransportProto::TRANSPORT_TCP;
         case hilti::rt::Protocol::UDP: return ::TransportProto::TRANSPORT_UDP;
         case hilti::rt::Protocol::ICMP: return ::TransportProto::TRANSPORT_ICMP;
