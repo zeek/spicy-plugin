@@ -1,6 +1,7 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
 #include <zeek/analyzer/Analyzer.h>
+#include <zeek/session/Manager.h>
 
 #include <memory>
 
@@ -94,7 +95,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        return zeek::compat::Connection_ConnVal(x->analyzer->Conn());
+        return x->analyzer->Conn()->GetVal();
     else
         throw ValueUnavailable("$conn not available", location);
 }
@@ -253,7 +254,7 @@ void rt::confirm_protocol() {
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("confirming protocol %s", tag.AsString()));
-        return ::spicy::zeek::compat::Analyzer_AnalyzerConfirmation(x->analyzer, tag);
+        return x->analyzer->AnalyzerConfirmation(tag);
     }
     throw ValueUnavailable("no current connection available");
 }
@@ -265,7 +266,7 @@ void rt::reject_protocol(const std::string& reason) {
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("rejecting protocol %s", tag.AsString()));
-        return ::spicy::zeek::compat::Analyzer_AnalyzerViolation(x->analyzer, "protocol rejected", nullptr, 0, tag);
+        return x->analyzer->AnalyzerViolation("protocol rejected", nullptr, 0, tag);
     }
     else
         throw ValueUnavailable("no current connection available");
@@ -280,7 +281,7 @@ void rt::weird(const std::string& id, const std::string& addl) {
     else if ( const auto x = std::get_if<cookie::FileAnalyzer>(cookie) )
         ::zeek::reporter->Weird(x->analyzer->GetFile(), id.c_str(), addl.data());
     else if ( const auto x = std::get_if<cookie::PacketAnalyzer>(cookie) ) {
-        ::spicy::zeek::compat::PacketAnalyzer_Weird(x->analyzer, id.c_str(), x->packet, addl.data());
+        x->analyzer->Weird(id.c_str(), x->packet, addl.c_str());
     }
     else
         throw ValueUnavailable("none of $conn, $file, or $packet available for weird reporting");
@@ -446,11 +447,9 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
     }
     else {
         if ( offset )
-            ::zeek::file_mgr->DataIn(data_, len, *offset, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false,
-                                     fstate->fid, mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, *offset, ::zeek::Tag(), nullptr, false, fstate->fid, mime_type);
         else
-            ::zeek::file_mgr->DataIn(data_, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid,
-                                     mime_type);
+            ::zeek::file_mgr->DataIn(data_, len, ::zeek::Tag(), nullptr, false, fstate->fid, mime_type);
     }
 }
 
@@ -458,8 +457,10 @@ void rt::terminate_session() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
-        ::spicy::zeek::compat::SessionMgr_Remove(c->analyzer->Conn());
+    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+        assert(::zeek::session_mgr);
+        ::zeek::session_mgr->Remove(c->analyzer->Conn());
+    }
     else
         throw spicy::zeek::rt::ValueUnavailable("terminate_session() not available in the curent context");
 }
@@ -522,7 +523,7 @@ void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size, const std
         ::zeek::file_mgr->SetSize(size, tag, c->analyzer->Conn(), c->is_orig, fstate->fid);
     }
     else
-        ::zeek::file_mgr->SetSize(size, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid);
+        ::zeek::file_mgr->SetSize(size, ::zeek::Tag(), nullptr, false, fstate->fid);
 }
 
 void rt::file_data_in(const hilti::rt::Bytes& data, const std::optional<std::string>& fid) {
@@ -544,7 +545,7 @@ void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti:
         ::zeek::file_mgr->Gap(offset, len, tag, c->analyzer->Conn(), c->is_orig, fstate->fid);
     }
     else
-        ::zeek::file_mgr->Gap(offset, len, ::spicy::zeek::compat::AnalyzerTag(), nullptr, false, fstate->fid);
+        ::zeek::file_mgr->Gap(offset, len, ::zeek::Tag(), nullptr, false, fstate->fid);
 }
 
 void rt::file_end(const std::optional<std::string>& fid) {

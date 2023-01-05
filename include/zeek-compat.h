@@ -55,7 +55,6 @@
 #include <zeek/module_util.h>
 #include <zeek/packet_analysis/Analyzer.h>
 #include <zeek/plugin/Plugin.h>
-#include <zeek/session/Manager.h>
 
 #undef DEBUG
 
@@ -64,62 +63,3 @@
 #if ZEEK_VERSION_NUMBER < 50100 // Zeek < 5.1
 using zeek_int_t = bro_int_t;
 #endif
-
-//// Wrappers for functionality that differs by version.
-
-namespace spicy::zeek::compat {
-class AnalyzerTag : public ::zeek::Tag {
-public:
-    using ::zeek::Tag::Tag;
-    AnalyzerTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)) {}
-};
-
-class FileAnalysisTag : public ::zeek::Tag {
-public:
-    using ::zeek::Tag::Tag;
-    FileAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)) {}
-};
-
-class PacketAnalysisTag : public ::zeek::Tag {
-public:
-    using ::zeek::Tag::Tag;
-    PacketAnalysisTag(::zeek::Tag t) : ::zeek::Tag(std::move(t)) {}
-};
-
-} // namespace spicy::zeek::compat
-
-namespace spicy::zeek::compat {
-
-// Version-specific implementation for AnalyzerConfirmation().
-inline void Analyzer_AnalyzerConfirmation(::zeek::analyzer::Analyzer* analyzer, const AnalyzerTag& tag) {
-    analyzer->AnalyzerConfirmation(tag);
-}
-
-inline void Analyzer_AnalyzerViolation(::zeek::analyzer::Analyzer* analyzer, const char* reason, const char* data,
-                                       int len, const ::zeek::Tag& tag) {
-    analyzer->AnalyzerViolation(reason, data, len, tag);
-}
-
-inline void Analyzer_AnalyzerViolation(const ::zeek::Packet& packet, ::zeek::packet_analysis::Analyzer* analyzer,
-                                       const char* reason, const char* data, int len, const ::zeek::Tag& tag) {
-    if ( auto* session = packet.session )
-        analyzer->AnalyzerViolation(reason, session, data, len, tag);
-}
-
-inline void Analyzer_AnalyzerViolation(::zeek::file_analysis::Analyzer* analyzer, const char* reason, const char* data,
-                                       int len, const ::zeek::Tag& tag) {
-    // We do not a have good way to report this in any Zeek version.
-}
-
-inline void PacketAnalyzer_Weird(::zeek::packet_analysis::Analyzer* analyzer, const char* name, ::zeek::Packet* packet,
-                                 const char* addl) {
-    analyzer->Weird(name, packet, addl);
-}
-
-inline auto Connection_ConnVal(::zeek::Connection* c) { return c->GetVal(); }
-inline void SessionMgr_Remove(::zeek::Connection* c) {
-    assert(::zeek::session_mgr);
-    ::zeek::session_mgr->Remove(c);
-}
-
-} // namespace spicy::zeek::compat

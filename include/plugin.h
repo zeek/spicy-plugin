@@ -115,7 +115,7 @@ public:
      * @return parser, or null if we don't have one for this tag. The pointer will remain valid for the life-time of the
      * process.
      */
-    const spicy::rt::Parser* parserForProtocolAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag, bool is_orig);
+    const spicy::rt::Parser* parserForProtocolAnalyzer(const ::zeek::Tag& tag, bool is_orig);
 
     /**
      * Runtime method to retrieve the Spicy parser for a given Zeek file analyzer tag.
@@ -124,7 +124,7 @@ public:
      * @return parser, or null if we don't have one for this tag. The pointer will remain valid for the life-time of the
      * process.
      */
-    const spicy::rt::Parser* parserForFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag);
+    const spicy::rt::Parser* parserForFileAnalyzer(const ::zeek::Tag& tag);
 
     /**
      * Runtime method to retrieve the Spicy parser for a given Zeek packet analyzer tag.
@@ -133,7 +133,7 @@ public:
      * @return parser, or null if we don't have one for this tag. The pointer will remain
      * valid for the life-time of the process.
      */
-    const spicy::rt::Parser* parserForPacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag);
+    const spicy::rt::Parser* parserForPacketAnalyzer(const ::zeek::Tag& tag);
 
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
@@ -144,7 +144,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    spicy::zeek::compat::AnalyzerTag tagForProtocolAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag);
+    ::zeek::Tag tagForProtocolAnalyzer(const ::zeek::Tag& tag);
 
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
@@ -155,7 +155,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    spicy::zeek::compat::FileAnalysisTag tagForFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag);
+    ::zeek::Tag tagForFileAnalyzer(const ::zeek::Tag& tag);
 
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
@@ -166,7 +166,7 @@ public:
      * @param tag original tag we query for how to pass it to script-land.
      * @return desired tag for passing to script-land.
      */
-    spicy::zeek::compat::PacketAnalysisTag tagForPacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag);
+    ::zeek::Tag tagForPacketAnalyzer(const ::zeek::Tag& tag);
 
     /**
      * Explicitly enable/disable a protocol analyzer. By default, all analyzers
@@ -176,7 +176,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleProtocolAnalyzer(const spicy::zeek::compat::AnalyzerTag& tag, bool enable);
+    bool toggleProtocolAnalyzer(const ::zeek::Tag& tag, bool enable);
 
     /**
      * Explicitly enable/disable a file analyzer. By default, all analyzers
@@ -186,7 +186,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool toggleFileAnalyzer(const spicy::zeek::compat::FileAnalysisTag& tag, bool enable);
+    bool toggleFileAnalyzer(const ::zeek::Tag& tag, bool enable);
 
     /**
      * Explicitly enable/disable a packet analyzer. By default, all analyzers
@@ -199,7 +199,7 @@ public:
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
-    bool togglePacketAnalyzer(const spicy::zeek::compat::PacketAnalysisTag& tag, bool enable);
+    bool togglePacketAnalyzer(const ::zeek::Tag& tag, bool enable);
 
     /**
      * Explicitly enable/disable an analyzer. By default, all analyzers
@@ -278,10 +278,10 @@ private:
         // Computed and available once the analyzer has been registered.
         std::string name_zeek;
         std::string name_zeekygen;
-        spicy::zeek::compat::AnalyzerTag::type_t type;
+        ::zeek::Tag::type_t type;
         const spicy::rt::Parser* parser_orig;
         const spicy::rt::Parser* parser_resp;
-        spicy::zeek::compat::AnalyzerTag replaces;
+        ::zeek::Tag replaces;
 
         bool operator==(const ProtocolAnalyzerInfo& other) const {
             return name_analyzer == other.name_analyzer && name_parser_orig == other.name_parser_orig &&
@@ -304,9 +304,9 @@ private:
         // Computed and available once the analyzer has been registered.
         std::string name_zeek;
         std::string name_zeekygen;
-        spicy::zeek::compat::FileAnalysisTag::type_t type;
+        ::zeek::Tag::type_t type;
         const spicy::rt::Parser* parser;
-        spicy::zeek::compat::FileAnalysisTag replaces;
+        ::zeek::Tag replaces;
 
         bool operator==(const FileAnalyzerInfo& other) const {
             return name_analyzer == other.name_analyzer && name_parser == other.name_parser &&
@@ -328,9 +328,9 @@ private:
         // Computed and available once the analyzer has been registered.
         std::string name_zeek;
         std::string name_zeekygen;
-        spicy::zeek::compat::PacketAnalysisTag::type_t type;
+        ::zeek::Tag::type_t type;
         const spicy::rt::Parser* parser;
-        spicy::zeek::compat::PacketAnalysisTag replaces;
+        ::zeek::Tag replaces;
 
         // Compares only the provided attributes, as that's what defines us.
         bool operator==(const PacketAnalyzerInfo& other) const {

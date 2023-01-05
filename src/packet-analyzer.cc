@@ -57,7 +57,9 @@ bool PacketAnalyzer::AnalyzePacket(size_t len, const uint8_t* data, ::zeek::Pack
     } catch ( const spicy::rt::ParseError& e ) {
         STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = _state.cookie().analyzer->GetAnalyzerTag();
-        spicy::zeek::compat::Analyzer_AnalyzerViolation(*packet, _state.cookie().analyzer, e.what(), nullptr, 0, tag);
+
+        if ( auto* session = packet->session )
+            _state.cookie().analyzer->AnalyzerViolation(e.what(), session, nullptr, 0, tag);
         _state.reset();
         return false;
     } catch ( const hilti::rt::Exception& e ) {

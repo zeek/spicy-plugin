@@ -66,7 +66,7 @@ void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
     } catch ( const spicy::rt::ParseError& e ) {
         STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
-        spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);
+        endp->cookie().analyzer->AnalyzerViolation(e.what(), nullptr, 0, tag);
         originator().skipRemaining();
         responder().skipRemaining();
         endp->cookie().analyzer->SetSkip(true);
@@ -88,7 +88,7 @@ void ProtocolAnalyzer::Finish(bool is_orig) {
     } catch ( const spicy::rt::ParseError& e ) {
         STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
-        spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);
+        endp->cookie().analyzer->AnalyzerViolation(e.what(), nullptr, 0, tag);
         endp->skipRemaining();
     } catch ( const hilti::rt::Exception& e ) {
         reporter::analyzerError(endp->cookie().analyzer, e.description(),
