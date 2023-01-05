@@ -13,6 +13,9 @@
 
 #include <zeek-spicy/debug.h>
 
+#include <zeek/file_analysis/Analyzer.h>
+#include <zeek/packet_analysis/Analyzer.h>
+
 #include "plugin.h"
 
 namespace spicy::zeek::reporter {

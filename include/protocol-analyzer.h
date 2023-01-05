@@ -14,6 +14,8 @@
 #include <zeek-spicy/cookie.h>
 #include <zeek-spicy/zeek-compat.h>
 
+#include <zeek/analyzer/protocol/tcp/TCP.h>
+
 namespace spicy::zeek::rt {
 
 /** Parsing state for one endpoint of the connection. */
