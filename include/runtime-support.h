@@ -20,6 +20,7 @@
 
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/cookie.h>
+#include <zeek-spicy/spicy-compat.h>
 #include <zeek-spicy/zeek-compat.h>
 
 namespace spicy::zeek::rt {
@@ -332,6 +333,8 @@ template<typename T, typename std::enable_if_t<hilti::rt::is_tuple<T>::value>* =
 ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
 template<typename T, typename std::enable_if_t<std::is_base_of<::hilti::rt::trait::isStruct, T>::value>* = nullptr>
 ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
+template<typename T, typename std::enable_if_t<std::is_enum<typename T::Value>::value>* = nullptr>
+::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
 template<typename T, typename std::enable_if_t<std::is_enum<T>::value>* = nullptr>
 ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location);
 template<typename K, typename V>
@@ -495,7 +498,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Port& p, ::zeek::TypePtr target, c
     if ( target->Tag() != ::zeek::TYPE_PORT )
         throw TypeMismatch("port", target, location);
 
-    switch ( p.protocol() ) {
+    switch ( spicy::compat::enum_value(p.protocol()) ) {
         case hilti::rt::Protocol::TCP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_TCP);
 
         case hilti::rt::Protocol::UDP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_UDP);
@@ -707,6 +710,17 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
 /**
  * Converts a Spicy-side enum to a Zeek record value. The result is returned
  * with ref count +1.
+ */
+template<typename T, typename std::enable_if_t<std::is_enum<typename T::Value>::value>*>
+inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location) {
+    return to_val(spicy::compat::enum_value(t), target, location);
+}
+
+/**
+ * Converts a C++ Spicy-side enum to a Zeek record value. The result is returned
+ * with ref count +1. This specialization is provided for compatibility with <spicy-1.7.0.
+ *
+ * TODO(bbannier): remove this once we drop support for Spicy versions before 1.7.0.
  */
 template<typename T, typename std::enable_if_t<std::is_enum<T>::value>*>
 inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location) {

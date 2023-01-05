@@ -14,6 +14,7 @@
 
 #include <spicy/global.h>
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/spicy-compat.h>
 
 #include "debug.h"
 
@@ -795,7 +796,7 @@ bool GlueCompiler::compile() {
 
         hilti::ID protocol;
 
-        switch ( a.protocol ) {
+        switch ( spicy::compat::enum_value(a.protocol) ) {
             case hilti::rt::Protocol::TCP: protocol = hilti::ID("hilti::Protocol::TCP"); break;
             case hilti::rt::Protocol::UDP: protocol = hilti::ID("hilti::Protocol::UDP"); break;
             default: hilti::logger().internalError("unexpected protocol");

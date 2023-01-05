@@ -1,3 +1,7 @@
+1.4.2-5 | 2023-01-05 15:42:56 +0100
+
+  * Adjust plugin for changes for zeek/spicy#1326. (Benjamin Bannier, Corelight)
+
 1.4.2-3 | 2022-12-08 12:07:29 +0100
 
   * Rewrite CI so we can run against zeek-5. (Benjamin Bannier, Corelight)

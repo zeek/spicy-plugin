@@ -37,6 +37,7 @@ set(AUX_HEADERS
     include/zeek-spicy/protocol-analyzer.h
     include/zeek-spicy/runtime-support.h
     include/zeek-spicy/zeek-compat.h
+    include/zeek-spicy/spicy-compat.h
     include/zeek-spicy/zeek-reporter.h)
 
 set(AUX_SPICY spicy/zeek.spicy spicy/zeek_file.spicy spicy/zeek_rt.hlt)
