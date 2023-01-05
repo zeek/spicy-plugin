@@ -1,3 +1,7 @@
+1.4.2-7 | 2023-01-05 18:29:40 +0100
+
+  * GH-150: Only add plugin directory to library paths if not building standalone. (Benjamin Bannier, Corelight)
+
 1.4.2-5 | 2023-01-05 15:42:56 +0100
 
   * Adjust plugin for changes for zeek/spicy#1326. (Benjamin Bannier, Corelight)
