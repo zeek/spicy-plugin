@@ -588,7 +588,9 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
     if ( auto dir = hilti::rt::getenv("ZEEK_SPICY_PATH") )
         addLibraryPaths(*dir);
 
-    addLibraryPaths(hilti::rt::normalizePath(OurPlugin->PluginDirectory()).string() + "/spicy");
+    if ( const auto& dir = OurPlugin->PluginDirectory(); ! dir.empty() )
+        addLibraryPaths(hilti::rt::normalizePath(dir).string() + "/spicy");
+
     autoDiscoverModules();
 
     if ( strlen(spicy::zeek::configuration::PluginScriptsDirectory) &&
