@@ -183,8 +183,6 @@ public:
      * loaded will also be activated. By calling this method, an analyzer can
      * toggled.
      *
-     * @note This functionality requires Zeek >= 4.1.
-     *
      * @param analyzer tag of analyer
      * @param enable true to enable, false to disable
      */
@@ -259,9 +257,7 @@ private:
     // Disable any Zeek-side analyzers that are replaced by one of ours.
     void disableReplacedAnalyzers();
 
-    // Record the component-to-tag-type mapping for our analyzers. This is
-    // needed for Zeek < 4.2 only, newer versions provide the mapping
-    // directly.
+    // Record the component-to-tag-type mapping for our analyzers.
     void trackComponent(::zeek::plugin::Component* c, int32_t tag_type);
 
     // Lookup a previously registered component by name. Returns null if not
@@ -354,9 +350,7 @@ private:
     std::set<std::string> _locations;
     std::unordered_map<std::string, ::zeek::detail::IDPtr> _events;
 
-    // Before Zeek 4.2, Zeek's `Component` wouldn't know its tag type, so we
-    // store an explicit mapping here for our components. This additional state
-    // can be dropped once we do no longer want to support < 4.2.
+    // Mapping of component names to tag types. We use this to ensure analyzer uniqueness.
     std::unordered_map<std::string, int32_t> _analyzer_name_to_tag_type;
 
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT

@@ -620,9 +620,6 @@ glue::FileAnalyzer GlueCompiler::parseFileAnalyzer(const std::string& chunk) {
         }
 
         else if ( looking_at(chunk, i, "replaces") ) {
-            if ( *_zeek_version < 40100 )
-                throw ParseError("file analyzer replacement requires Zeek 4.1+");
-
             eat_token(chunk, &i, "replaces");
             a.replaces = extract_id(chunk, &i);
         }

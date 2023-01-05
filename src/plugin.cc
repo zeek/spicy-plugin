@@ -197,7 +197,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     // this point already, so ours won't get initialized anymore.
     c->Initialize();
 
-    trackComponent(c, c->Tag().Type()); // must come after Initialize(); needed for Zeek < 4.2
+    trackComponent(c, c->Tag().Type()); // Must come after Initialize().
 
     info.type = c->Tag().Type();
     _protocol_analyzers_by_type.resize(info.type + 1);
@@ -248,7 +248,7 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     // this point already, so ours won't get initialized anymore.
     c->Initialize();
 
-    trackComponent(c, c->Tag().Type()); // must come after Initialize(); needed for Zeek < 4.2
+    trackComponent(c, c->Tag().Type()); // Must come after Initialize().
 
     info.type = c->Tag().Type();
     _file_analyzers_by_type.resize(info.type + 1);
@@ -300,7 +300,7 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     // this point already, so ours won't get initialized anymore.
     c->Initialize();
 
-    trackComponent(c, c->Tag().Type()); // must come after Initialize(); needed for Zeek < 4.2
+    trackComponent(c, c->Tag().Type()); // Must come after Initialize().
 
     info.type = c->Tag().Type();
     _packet_analyzers_by_type.resize(info.type + 1);
@@ -448,7 +448,6 @@ bool plugin::Zeek_Spicy::Plugin::toggleFileAnalyzer(const ::spicy::zeek::compat:
         // not set -> not ours
         return false;
 
-#if ZEEK_VERSION_NUMBER >= 40100
     ::zeek::file_analysis::Component* component = ::zeek::file_mgr->Lookup(tag);
     ::zeek::file_analysis::Component* component_replaces =
         analyzer.replaces ? ::zeek::file_mgr->Lookup(analyzer.replaces) : nullptr;
@@ -479,11 +478,6 @@ bool plugin::Zeek_Spicy::Plugin::toggleFileAnalyzer(const ::spicy::zeek::compat:
     }
 
     return true;
-#else
-    ZEEK_DEBUG(hilti::rt::fmt("supposed to toggle file analyzer %s, but that is not supported by Zeek version",
-                              analyzer.name_analyzer));
-    return false;
-#endif
 }
 
 bool plugin::Zeek_Spicy::Plugin::togglePacketAnalyzer(const ::spicy::zeek::compat::PacketAnalysisTag& tag,
@@ -871,12 +865,6 @@ void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
         ::zeek::analyzer_mgr->DisableAnalyzer(tag);
     }
 
-#if ZEEK_VERSION_NUMBER >= 40100
-    // Zeek does not have a way to disable file analyzers until 4.1.
-    // There's separate logic to nicely reject 'replaces' usages found
-    // in .evt files if using inadequate Zeek version; this #ifdef is just
-    // to make Spicy compilation work regardless.
-
     for ( auto& info : _file_analyzers_by_type ) {
         if ( info.name_replaces.empty() )
             continue;
@@ -898,7 +886,6 @@ void plugin::Zeek_Spicy::Plugin::disableReplacedAnalyzers() {
         info.replaces = component->Tag();
         component->SetEnabled(false);
     }
-#endif
 
 #if ZEEK_VERSION_NUMBER >= 50200
     // Zeek does not have a way to disable packet analyzers until 4.1. There's
