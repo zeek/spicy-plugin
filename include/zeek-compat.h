@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include <zeek/zeek-config.h>
-
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <zeek-spicy/autogen/config.h>
+
+#include <zeek/zeek-config.h>
 
 #ifdef ZEEK_VERSION_NUMBER
 #if ZEEK_SPICY_VERSION_NUMBER != ZEEK_VERSION_NUMBER
