@@ -10,6 +10,8 @@
 
 #include <zeek-spicy/zeek-compat.h>
 
+#include <zeek/plugin/Plugin.h>
+
 namespace spicy::rt {
 struct Parser;
 }

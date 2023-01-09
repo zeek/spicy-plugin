@@ -1,3 +1,17 @@
+1.4.2-14 | 2023-01-09 17:29:42 +0100
+
+  * Push includes from `zeek-compat.h` into actual users. (Benjamin Bannier, Corelight)
+
+  * Update clang-format to sort zeek headers after zeek-spicy headers. (Benjamin Bannier, Corelight)
+
+  * Remove unneeded compat functions and types. (Benjamin Bannier, Corelight)
+
+  * Add explicit Zeek version requirement to package meta. (Benjamin Bannier, Corelight)
+
+  * Bump GH actions. (Benjamin Bannier, Corelight)
+
+  * GH-153: Remove support for zeek-4.x. (Benjamin Bannier, Corelight)
+
 1.4.2-7 | 2023-01-05 18:29:40 +0100
 
   * GH-150: Only add plugin directory to library paths if not building standalone. (Benjamin Bannier, Corelight)

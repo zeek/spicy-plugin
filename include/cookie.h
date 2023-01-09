@@ -18,6 +18,9 @@
 
 #include <zeek-spicy/zeek-compat.h>
 
+#include <zeek/file_analysis/Analyzer.h>
+#include <zeek/packet_analysis/protocol/tcp/TCPSessionAdapter.h>
+
 namespace spicy::zeek::rt {
 
 namespace cookie {

@@ -8,6 +8,8 @@
 #include <zeek-spicy/runtime-support.h>
 #include <zeek-spicy/zeek-reporter.h>
 
+#include <zeek/file_analysis/File.h>
+
 #include "consts.bif.h"
 #include "events.bif.h"
 
@@ -99,7 +101,7 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
     } catch ( const spicy::rt::ParseError& e ) {
         STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
-        spicy::zeek::compat::Analyzer_AnalyzerViolation(_state.cookie().analyzer, e.what(), nullptr, 0, tag);
+        // TODO: Report a weird from this file analysis once Zeek supports it.
     } catch ( const hilti::rt::Exception& e ) {
         STATE_DEBUG_MSG(e.what());
         reporter::analyzerError(_state.cookie().analyzer, e.description(),
@@ -116,7 +118,7 @@ void FileAnalyzer::Finish() {
     } catch ( const spicy::rt::ParseError& e ) {
         STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
-        spicy::zeek::compat::Analyzer_AnalyzerViolation(_state.cookie().analyzer, e.what(), nullptr, 0, tag);
+        // TODO: Report a weird from this file analysis once Zeek supports it.
     } catch ( const hilti::rt::Exception& e ) {
         reporter::analyzerError(_state.cookie().analyzer, e.description(),
                                 e.location()); // this sets Zeek to skip sending any further input

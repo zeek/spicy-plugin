@@ -61,21 +61,18 @@ ForEachMacros:
   - BOOST_FOREACH
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^<spicy/autogen/__dispatchers'
-    Priority:        4
-  - Regex:           '^<hilti/autogen/__dispatchers'
-  - Regex:           'spicy/rt.*\.(h|hpp)>'
-    Priority:        6
   - Regex:           'hilti/rt.*\.(h|hpp)>'
     Priority:        5
-  - Regex:           'clang.*\.h>'
-    Priority:        10
-  - Regex:           'llvm.*\.h>'
-    Priority:        9
-  - Regex:           'spicy.*\.(h|hpp)>'
-    Priority:        8
+  - Regex:           'spicy/rt.*\.(h|hpp)>'
+    Priority:        6
   - Regex:           'hilti.*\.(h|hpp)>'
     Priority:        7
+  - Regex:           'spicy.*\.(h|hpp)>'
+    Priority:        8
+  - Regex:           '<zeek-spicy\/'
+    Priority:        9
+  - Regex:           '<zeek\/'
+    Priority:        10
   - Regex:           '^<([[:alnum:]]|_)+>'
     Priority:        2
   - Regex:           '^<.*\.h>'
