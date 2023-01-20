@@ -6,10 +6,16 @@ module zeek;
 
 %cxx-include = "zeek-spicy/runtime-support.h";
 
-## Triggers a DPD protocol confirmation for the current connection.
+## [Deprecated] Triggers a DPD protocol confirmation for the current connection.
+##
+## This function has been deprecated and will be removed. Use ``spicy::confirm_input``
+## instead, which will have the same effect with Zeek.
 public function confirm_protocol() : void &cxxname="spicy::zeek::rt::confirm_protocol";
 
-## Triggers a DPD protocol violation for the current connection.
+## [Deprecated] Triggers a DPD protocol violation for the current connection.
+##
+## This function has been deprecated and will be removed. Use ``spicy::reject_input``
+## instead, which will have the same effect with Zeek.
 public function reject_protocol(reason: string) : void &cxxname="spicy::zeek::rt::reject_protocol";
 
 ## Reports a "weird" to Zeek. This should be used with similar semantics as in
