@@ -29,6 +29,7 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"library-path", required_argument, nullptr, 'L'},
                                               {"output", required_argument, nullptr, 'o'},
                                               {"output-c++", required_argument, nullptr, 'c'},
+                                              {"output-c++-files", no_argument, nullptr, 'x'},
                                               {"print-module-path", no_argument, nullptr, 'M'},
                                               {"print-plugin-path", no_argument, nullptr, 'P'},
                                               {"print-prefix-path", no_argument, nullptr, 'p'},
@@ -48,6 +49,7 @@ static void usage() {
                  "  -g | --disable-optimizations    Disable HILTI-side optimizations of the generated code.\n"
                  "  -o | --output-to <path>         Path for saving output.\n"
                  "  -v | --version                  Print version information.\n"
+                 "  -x | --output-c++ <prefix>      Output generated C++ code into set of files.\n"
                  "  -z | --print-zeek-config        Print path to zeek-config.\n"
                  "  -A | --abort-on-exceptions      When executing compiled code, abort() instead of throwing HILTI "
                  "exceptions.\n"
@@ -99,7 +101,7 @@ static auto pluginPath() {
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:CdgX:D:L:Mo:pPRSTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:Cdgx:X:D:L:Mo:pPRSTvhz", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -137,6 +139,17 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'p': std::cout << spicy::zeek::configuration::InstallPrefix << std::endl; return Nothing();
 
             case 'P': std::cout << pluginPath().native() << std::endl; return Nothing();
+
+            case 'x':
+                driver_options->output_cxx = true;
+                driver_options->output_cxx_prefix = optarg;
+                driver_options->execute_code = false;
+                driver_options->include_linker = true;
+                compiler_options->cxx_namespace_extern =
+                    hilti::util::fmt("hlt_%s", hilti::rt::filesystem::path(optarg).stem().string());
+                compiler_options->cxx_namespace_intern =
+                    hilti::util::fmt("__hlt_%s", hilti::rt::filesystem::path(optarg).stem().string());
+                break;
 
             case 'X': {
                 auto arg = std::string(optarg);

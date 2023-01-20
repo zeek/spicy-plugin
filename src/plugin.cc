@@ -573,7 +573,7 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
     ZEEK_DEBUG("Beginning pre-script initialization");
 
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    hilti::rt::executeCustomPreInits();
+    hilti::rt::executeManualPreInits();
     _driver->InitPreScript();
 #endif
 
