@@ -8,8 +8,6 @@
 #include <zeek-spicy/runtime-support.h>
 #include <zeek-spicy/zeek-reporter.h>
 
-#include <zeek/file_analysis/File.h>
-
 #include "consts.bif.h"
 #include "events.bif.h"
 

@@ -28,11 +28,6 @@
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
 
-#include <zeek/analyzer/Component.h>
-#include <zeek/analyzer/Manager.h>
-#include <zeek/file_analysis/Component.h>
-#include <zeek/file_analysis/Manager.h>
-
 #ifdef ZEEK_SPICY_PLUGIN_USE_JIT
 namespace spicy::zeek::debug {
 const hilti::logging::DebugStream ZeekPlugin("zeek");

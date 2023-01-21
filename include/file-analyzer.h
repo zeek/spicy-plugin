@@ -14,8 +14,6 @@
 #include <zeek-spicy/cookie.h>
 #include <zeek-spicy/zeek-compat.h>
 
-#include <zeek/file_analysis/Analyzer.h>
-
 namespace spicy::zeek::rt {
 
 /** Parsing state for a file. */
