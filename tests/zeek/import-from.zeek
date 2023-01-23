@@ -1,5 +1,6 @@
 # @TEST-EXEC: mkdir -p a/b/c && mv y.spicy a/b/c
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace  ssh.spicy ./ssh.evt %INPUT >output
+# @TEST-EXEC: spicyz -o test.hlto ssh.spicy ./ssh.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace  test.hlto %INPUT >output
 # @TEST-EXEC: btest-diff output
 
 event ssh::test(x: string, y: string)

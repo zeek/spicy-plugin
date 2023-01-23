@@ -14,10 +14,6 @@
 
 #include <zeek-spicy/zeek-compat.h>
 
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-#include <zeek-spicy/driver.h>
-#endif
-
 namespace spicy::rt {
 struct Parser;
 }
@@ -352,10 +348,6 @@ private:
 
     // Mapping of component names to tag types. We use this to ensure analyzer uniqueness.
     std::unordered_map<std::string, int32_t> _analyzer_name_to_tag_type;
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    std::unique_ptr<Driver> _driver;
-#endif
 };
 
 // Will be initalized to point to whatever type of plugin is instantiated.

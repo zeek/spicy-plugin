@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace listconv.spicy ./listconv.evt %INPUT >output
+# @TEST-EXEC: spicyz -o test.hlto listconv.spicy ./listconv.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace test.hlto %INPUT >output
 # @TEST-EXEC: btest-diff output
 
 @TEST-START-FILE listconv.spicy

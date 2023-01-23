@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace ssh.spicy ./ssh-cond.evt %INPUT | sort >output
+# @TEST-EXEC: spicyz -o test.hlto ssh.spicy ./ssh-cond.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace test.hlto %INPUT | sort >output
 # @TEST-EXEC: btest-diff output
 
 event ssh::banner(i: int, software: string)

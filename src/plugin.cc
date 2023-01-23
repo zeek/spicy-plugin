@@ -90,45 +90,11 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
         reporter::fatalError(
             hilti::rt::fmt("Zeek version mismatch: running with Zeek %d, but plugin compiled for Zeek %s",
                            ZEEK_VERSION_NUMBER, spicy::zeek::configuration::ZeekVersionNumber));
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    hilti::rt::filesystem::path plugin_path;
-    std::string name;
-
-#ifdef ZEEK_SPICY_PLUGIN_INTERNAL_BUILD
-    auto zeek = hilti::util::currentExecutable();
-    auto build_path = zeek.parent_path() / "builtin-plugins" / spicy::zeek::configuration::StaticBuildName;
-
-    if ( hilti::rt::filesystem::exists(build_path) )
-        // Running out of build directory. Note that the path below
-        // "builtin-plugins/" depends on the directory name where the
-        // spicy-plugin code resaides.
-        plugin_path = build_path;
-    else
-        // Installation otherwise.
-        plugin_path = zeek.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
-
-    name = zeek.native();
-#else
-    Dl_info info;
-    if ( ! dladdr(&SpicyPlugin, &info) )
-        reporter::fatalError("Spicy plugin cannot determine its file system path");
-
-    plugin_path = hilti::rt::filesystem::path(info.dli_fname).parent_path().parent_path();
-    name = info.dli_fname;
-#endif
-
-    _driver = std::make_unique<Driver>(std::make_unique<OurGlueCompiler>(this), name.c_str(), plugin_path,
-                                       spicy::zeek::configuration::ZeekVersionNumber);
-#endif
 }
 
 void ::spicy::zeek::debug::do_log(const std::string& msg) {
     PLUGIN_DBG_LOG(*plugin::Zeek_Spicy::OurPlugin, "%s", msg.c_str());
     HILTI_RT_DEBUG("zeek", msg);
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    HILTI_DEBUG(::spicy::zeek::debug::ZeekPlugin, msg);
-#endif
 }
 
 plugin::Zeek_Spicy::Plugin::~Plugin() {}
@@ -136,10 +102,6 @@ plugin::Zeek_Spicy::Plugin::~Plugin() {}
 void plugin::Zeek_Spicy::Plugin::addLibraryPaths(const std::string& dirs) {
     for ( const auto& dir : hilti::rt::split(dirs, ":") )
         ::zeek::util::detail::add_to_zeek_path(std::string(dir)); // Add to Zeek's search path.
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    _driver->addLibraryPaths(dirs);
-#endif
 }
 
 void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& name, hilti::rt::Protocol proto,
@@ -552,7 +514,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enabl
 ::zeek::plugin::Configuration plugin::Zeek_Spicy::Plugin::Configure() {
     ::zeek::plugin::Configuration config;
     config.name = "Zeek::Spicy";
-    config.description = "Support for Spicy parsers (``*.spicy``, ``*.evt``, ``*.hlto``)";
+    config.description = "Support for Spicy parsers (``*.hlto``)";
     config.version.major = spicy::zeek::configuration::PluginVersionMajor;
     config.version.minor = spicy::zeek::configuration::PluginVersionMinor;
     config.version.patch = spicy::zeek::configuration::PluginVersionPatch;
@@ -567,10 +529,7 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
     ZEEK_DEBUG("Beginning pre-script initialization");
 
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     hilti::rt::executeManualPreInits();
-    _driver->InitPreScript();
-#endif
 
     // Note that, different from Spicy's own SPICY_PATH, this extends the
     // search path, it doesn't replace it.
@@ -631,10 +590,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     zeek::plugin::Plugin::InitPostScript();
 
     ZEEK_DEBUG("Beginning post-script initialization");
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    _driver->InitPostScript();
-#endif
 
     disableReplacedAnalyzers();
 
@@ -810,11 +765,6 @@ void plugin::Zeek_Spicy::Plugin::loadModule(const hilti::rt::filesystem::path& p
 
 int plugin::Zeek_Spicy::Plugin::HookLoadFile(const LoadType type, const std::string& file,
                                              const std::string& resolved) {
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    if ( int rc = _driver->HookLoadFile(type, file, resolved) >= 0 )
-        return rc;
-#endif
-
     auto ext = hilti::rt::filesystem::path(file).extension();
 
     if ( ext == ".hlto" ) {
@@ -823,7 +773,7 @@ int plugin::Zeek_Spicy::Plugin::HookLoadFile(const LoadType type, const std::str
     }
 
     if ( ext == ".spicy" || ext == ".evt" || ext == ".hlt" )
-        reporter::fatalError(hilti::rt::fmt("cannot load '%s', Spicy plugin was not compiled with JIT support", file));
+        reporter::fatalError(hilti::rt::fmt("cannot load '%s': analyzers need to be precompiled with 'spicyz' ", file));
 
     return -1;
 }

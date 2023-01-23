@@ -105,12 +105,6 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 if (SPICY_HAVE_TOOLCHAIN)
-    set(ZEEK_SPICY_PLUGIN_USE_JIT "yes")
-else ()
-    set(ZEEK_SPICY_PLUGIN_USE_JIT "no")
-endif ()
-
-if (SPICY_HAVE_TOOLCHAIN)
     add_subdirectory(src/compiler)
 endif ()
 
@@ -309,7 +303,6 @@ message(
     "\nModules directory:     ${ZEEK_SPICY_MODULE_DIR}"
     "\nScripts directory:     ${ZEEK_SPICY_SCRIPTS_DIR}"
     "\nBuild directory:       ${PROJECT_BINARY_DIR}"
-    "\nHave JIT:              ${ZEEK_SPICY_PLUGIN_USE_JIT}"
     "\nZeek debug build:      ${ZEEK_DEBUG_BUILD}"
     "\nZeek-internal build:   ${ZEEK_SPICY_PLUGIN_INTERNAL_BUILD}"
     "\nspicy-config:          ${SPICY_CONFIG}"
