@@ -10,7 +10,6 @@
 #include <hilti/rt/filesystem.h>
 
 #include <spicy/compiler/driver.h>
-#include <zeek-spicy/compiler/glue-compiler-interface.h>
 
 namespace spicy::zeek {
 

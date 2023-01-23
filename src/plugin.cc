@@ -19,7 +19,6 @@
 #include <hilti/autogen/config.h>
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/compiler/glue-compiler.h>
 #include <zeek-spicy/file-analyzer.h>
 #include <zeek-spicy/packet-analyzer.h>
 #include <zeek-spicy/plugin.h>
@@ -40,42 +39,6 @@ plugin::Zeek_Spicy::Plugin SpicyPlugin;
 plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 
 using namespace spicy::zeek;
-
-class OurGlueCompiler : public spicy::zeek::GlueCompiler {
-public:
-    OurGlueCompiler(plugin::Zeek_Spicy::Plugin* plugin) : _plugin(plugin) {}
-
-protected:
-    void newFileAnalyzer(const glue::FileAnalyzer& analyzer) override {
-        // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerFileAnalyzer(analyzer.name, to_rt_vector(analyzer.mime_types), analyzer.unit_name,
-                                      analyzer.replaces, "");
-    }
-
-    void newPacketAnalyzer(const glue::PacketAnalyzer& analyzer) override {
-        // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerPacketAnalyzer(analyzer.name, analyzer.unit_name, analyzer.replaces, "");
-    }
-
-    void newProtocolAnalyzer(const glue::ProtocolAnalyzer& analyzer) override {
-        // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerProtocolAnalyzer(analyzer.name, analyzer.protocol, to_rt_vector(analyzer.ports),
-                                          analyzer.unit_name_orig, analyzer.unit_name_resp, analyzer.replaces, "");
-    }
-
-private:
-    template<typename T>
-    hilti::rt::Vector<T> to_rt_vector(std::vector<T> in) {
-        hilti::rt::Vector<T> out;
-        out.reserve(in.size());
-        for ( auto&& x : in )
-            out.push_back(std::move(x));
-
-        return out;
-    }
-
-    plugin::Zeek_Spicy::Plugin* _plugin;
-};
 
 plugin::Zeek_Spicy::Plugin::Plugin() {
 #ifdef HILTI_VERSION_FUNCTION
@@ -98,11 +61,6 @@ void ::spicy::zeek::debug::do_log(const std::string& msg) {
 }
 
 plugin::Zeek_Spicy::Plugin::~Plugin() {}
-
-void plugin::Zeek_Spicy::Plugin::addLibraryPaths(const std::string& dirs) {
-    for ( const auto& dir : hilti::rt::split(dirs, ":") )
-        ::zeek::util::detail::add_to_zeek_path(std::string(dir)); // Add to Zeek's search path.
-}
 
 void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& name, hilti::rt::Protocol proto,
                                                           const hilti::rt::Vector<hilti::rt::Port>& ports,
@@ -530,14 +488,6 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
     ZEEK_DEBUG("Beginning pre-script initialization");
 
     hilti::rt::executeManualPreInits();
-
-    // Note that, different from Spicy's own SPICY_PATH, this extends the
-    // search path, it doesn't replace it.
-    if ( auto dir = hilti::rt::getenv("ZEEK_SPICY_PATH") )
-        addLibraryPaths(*dir);
-
-    if ( const auto& dir = OurPlugin->PluginDirectory(); ! dir.empty() )
-        addLibraryPaths(hilti::rt::normalizePath(dir).string() + "/spicy");
 
     autoDiscoverModules();
 

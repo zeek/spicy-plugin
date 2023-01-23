@@ -212,16 +212,6 @@ public:
     bool toggleAnalyzer(::zeek::EnumVal* tag, bool enable);
 
 protected:
-    /**
-     * Adds one or more paths to search for *.spicy modules. The path will be
-     * passed to the compiler. Note that this must be called only before
-     * InitPreScripts().
-     *
-     * @param paths The directories to search. Multiple directories can be
-     * given at once by separating them with a colon.
-     */
-    virtual void addLibraryPaths(const std::string& dirs);
-
     // Overriding method from Zeek's plugin API.
     zeek::plugin::Configuration Configure() override;
 

@@ -30,7 +30,6 @@ set(AUX_CMAKE cmake/FindSpicy.cmake cmake/FindZeek.cmake cmake/ZeekSpicyAnalyzer
 set(AUX_HEADERS
     include/zeek-spicy/cookie.h
     include/zeek-spicy/debug.h
-    include/zeek-spicy/driver.h
     include/zeek-spicy/file-analyzer.h
     include/zeek-spicy/packet-analyzer.h
     include/zeek-spicy/plugin.h
@@ -136,10 +135,6 @@ set(CMAKE_CXX_FLAGS ${save_cxx_flags})
 
 zeek_plugin_begin(Zeek Spicy)
 
-if (SPICY_HAVE_TOOLCHAIN)
-    zeek_plugin_cc(src/driver.cc)
-endif ()
-
 zeek_plugin_cc(src/file-analyzer.cc)
 zeek_plugin_cc(src/plugin.cc)
 zeek_plugin_cc(src/packet-analyzer.cc)
@@ -164,36 +159,12 @@ endforeach ()
 
 zeek_plugin_end()
 
-if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    if (SPICY_HAVE_TOOLCHAIN)
-        zeek_plugin_link_library($<TARGET_OBJECTS:zeek-compiler>)
-        # This gets picked up when linking the "zeek" binary.
-        set(zeekdeps ${zeekdeps} ${HILTI_LIBRARY} ${SPICY_LIBRARY} PARENT_SCOPE)
-    endif ()
-else ()
-    if (SPICY_HAVE_TOOLCHAIN)
-        target_link_libraries(${_plugin_lib} zeek-compiler)
-    endif ()
-
+if (NOT ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     spicy_link_libraries(${_plugin_lib})
 endif ()
 
 spicy_include_directories(${_plugin_lib} PRIVATE)
 set_property(TARGET ${_plugin_lib} PROPERTY ENABLE_EXPORTS true)
-
-# TODO: The following is temporary to help people building from source
-# avoid trouble. We can remove this a couple releases after v1.3.10.
-if (NOT ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    # Remove any old _Zeek_Spicy.so left-over from previous versions.
-    get_property(plugin_dir TARGET ${_plugin_lib} PROPERTY LIBRARY_OUTPUT_DIRECTORY)
-    set(old_plugin_location
-        "${plugin_dir}/_Zeek-Spicy.${HOST_ARCHITECTURE}${CMAKE_SHARED_MODULE_SUFFIX}")
-    add_custom_command(
-        TARGET ${_plugin_lib}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove -f "${old_plugin_location}"
-        COMMENT "")
-endif ()
 
 ####
 #### Prepare the plugin build directory so that it resembles our installation layout.

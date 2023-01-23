@@ -427,21 +427,18 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
                 auto a = parseProtocolAnalyzer(*chunk);
                 ZEEK_DEBUG(hilti::util::fmt("  Got protocol analyzer definition for %s", a.name));
                 _protocol_analyzers.push_back(a);
-                newProtocolAnalyzer(_protocol_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "file") ) {
                 auto a = parseFileAnalyzer(*chunk);
                 ZEEK_DEBUG(hilti::util::fmt("  Got file analyzer definition for %s", a.name));
                 _file_analyzers.push_back(a);
-                newFileAnalyzer(_file_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "packet") ) {
                 auto a = parsePacketAnalyzer(*chunk);
                 ZEEK_DEBUG(hilti::util::fmt("  Got packet analyzer definition for %s", a.name));
                 _packet_analyzers.push_back(a);
-                newPacketAnalyzer(_packet_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "on") ) {
@@ -1125,6 +1122,8 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     return true;
 }
+
+
 
 hilti::Expression GlueCompiler::location(const glue::Event& ev) { return builder::string(ev.location); }
 

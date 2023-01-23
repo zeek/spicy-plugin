@@ -24,7 +24,6 @@
 
 #include <spicy/ast/declarations/unit-hook.h>
 #include <spicy/ast/types/unit.h>
-#include <zeek-spicy/compiler/glue-compiler-interface.h>
 
 #include "driver.h"
 
@@ -130,7 +129,7 @@ struct Event {
 } // namespace glue
 
 /** Generates the glue code between Zeek and Spicy based on *.evt files. */
-class GlueCompiler : public glue::GlueCompilerInterface {
+class GlueCompiler {
 public:
     /** Constructor. */
     GlueCompiler() {}
