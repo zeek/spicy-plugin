@@ -4,7 +4,7 @@ module zeek;
 
 # Note: Retain the formatting here, doc/scripts/autogen-spicy-lib is picking up on that.
 
-%cxx-include = "zeek-spicy/runtime-support.h";
+%cxx-include = "zeek-spicy/plugin/runtime-support.h";
 
 ## [Deprecated] Triggers a DPD protocol confirmation for the current connection.
 ##

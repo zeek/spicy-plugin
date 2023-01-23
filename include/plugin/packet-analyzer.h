@@ -15,8 +15,8 @@
 #include <hilti/base/util.h>
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/cookie.h>
-#include <zeek-spicy/zeek-compat.h>
+#include <zeek-spicy/plugin/cookie.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
 
 namespace spicy::zeek::rt {
 

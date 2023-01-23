@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include <zeek-spicy/debug.h>
+#include <zeek-spicy/plugin/debug.h>
 
 #include "plugin.h"
 

@@ -12,7 +12,7 @@
 #include <hilti/rt/library.h>
 #include <hilti/rt/types/port.h>
 
-#include <zeek-spicy/zeek-compat.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
 
 namespace spicy::rt {
 struct Parser;

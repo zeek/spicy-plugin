@@ -19,47 +19,54 @@
 #include <hilti/rt/types/all.h>
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/cookie.h>
-#include <zeek-spicy/spicy-compat.h>
-#include <zeek-spicy/zeek-compat.h>
+#include <zeek-spicy/plugin/cookie.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
+
 
 namespace spicy::zeek::rt {
+
+// Adapt to rename of exception.
+#if SPICY_VERSION_NUMBER >= 10700
+using UsageError = ::hilti::rt::UsageError;
+#else
+using UsageError = ::hilti::rt::UserException;
+#endif
 
 /**
  * Exception thrown by event generation code if the value of an `$...`
  * expression isn't available.
  */
-class ValueUnavailable : public spicy::compat::UsageError {
+class ValueUnavailable : public UsageError {
 public:
-    using spicy::compat::UsageError::UsageError;
+    using UsageError::UsageError;
 };
 
 /**
  * Exception thrown by event generation code if the values can't be converted
  * to Zeek.
  */
-class InvalidValue : public spicy::compat::UsageError {
+class InvalidValue : public UsageError {
 public:
-    using spicy::compat::UsageError::UsageError;
+    using UsageError::UsageError;
 };
 
 /**
  * Exception thrown by event generation code if functionality is used
  * that the current build does not support.
  */
-class Unsupported : public spicy::compat::UsageError {
+class Unsupported : public UsageError {
 public:
-    using spicy::compat::UsageError::UsageError;
+    using UsageError::UsageError;
 };
 
 /**
  * Exception thrown by event generation code if there's a type mismatch
  * between the Spicy-side value and what the Zeek event expects.
  */
-class TypeMismatch : public spicy::compat::UsageError {
+class TypeMismatch : public UsageError {
 public:
     TypeMismatch(const std::string_view& msg, std::string_view location = "")
-        : spicy::compat::UsageError(hilti::rt::fmt("Event parameter mismatch, %s", msg), location) {}
+        : UsageError(hilti::rt::fmt("Event parameter mismatch, %s", msg), location) {}
     TypeMismatch(const std::string_view& have, ::zeek::TypePtr want, std::string_view location = "")
         : TypeMismatch(_fmt(have, want), location) {}
 
@@ -75,9 +82,9 @@ private:
 /**
  * Exception thrown by the runtime library when Zeek has flagged a problem.
  */
-class ZeekError : public spicy::compat::UsageError {
+class ZeekError : public UsageError {
 public:
-    using spicy::compat::UsageError::UsageError;
+    using UsageError::UsageError;
 };
 
 /**
@@ -498,7 +505,13 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Port& p, ::zeek::TypePtr target, c
     if ( target->Tag() != ::zeek::TYPE_PORT )
         throw TypeMismatch("port", target, location);
 
-    switch ( spicy::compat::enum_value(p.protocol()) ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    auto proto = p.protocol().value();
+#else
+    auto proto = p.protocol();
+#endif
+
+    switch ( proto ) {
         case hilti::rt::Protocol::TCP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_TCP);
 
         case hilti::rt::Protocol::UDP: return ::zeek::val_mgr->Port(p.port(), ::TransportProto::TRANSPORT_UDP);
@@ -713,7 +726,13 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::stri
  */
 template<typename T, typename std::enable_if_t<std::is_enum<typename T::Value>::value>*>
 inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target, const std::string& location) {
-    return to_val(spicy::compat::enum_value(t), target, location);
+#if SPICY_VERSION_NUMBER >= 10700
+    auto proto = typename T::Value(t.value());
+#else
+    auto proto = t;
+#endif
+
+    return to_val(proto, target, location);
 }
 
 /**

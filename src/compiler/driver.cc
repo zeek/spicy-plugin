@@ -16,7 +16,7 @@
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/compiler/driver.h>
 #include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/debug.h>
+#include <zeek-spicy/compiler/debug.h>
 
 // Must come after Bro includes to avoid namespace conflicts.
 #include <spicy/rt/libspicy.h>

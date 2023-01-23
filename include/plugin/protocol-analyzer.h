@@ -11,8 +11,8 @@
 #include <spicy/rt/driver.h>
 #include <spicy/rt/parser.h>
 
-#include <zeek-spicy/cookie.h>
-#include <zeek-spicy/zeek-compat.h>
+#include <zeek-spicy/plugin/cookie.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
 
 namespace spicy::zeek::rt {
 

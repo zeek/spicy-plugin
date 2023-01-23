@@ -3,7 +3,7 @@ module zeek_rt {
 
 import hilti;
 
-%cxx-include = "zeek-spicy/runtime-support.h";
+%cxx-include = "zeek-spicy/plugin/runtime-support.h";
 
 public type Val = __library_type("::zeek::ValPtr");
 public type BroType = __library_type("::zeek::TypePtr");

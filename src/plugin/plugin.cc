@@ -19,19 +19,12 @@
 #include <hilti/autogen/config.h>
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/file-analyzer.h>
-#include <zeek-spicy/packet-analyzer.h>
-#include <zeek-spicy/plugin.h>
-#include <zeek-spicy/protocol-analyzer.h>
-#include <zeek-spicy/spicy-compat.h>
-#include <zeek-spicy/zeek-compat.h>
-#include <zeek-spicy/zeek-reporter.h>
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-namespace spicy::zeek::debug {
-const hilti::logging::DebugStream ZeekPlugin("zeek");
-}
-#endif
+#include <zeek-spicy/plugin/file-analyzer.h>
+#include <zeek-spicy/plugin/packet-analyzer.h>
+#include <zeek-spicy/plugin/plugin.h>
+#include <zeek-spicy/plugin/protocol-analyzer.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
+#include <zeek-spicy/plugin/zeek-reporter.h>
 
 const char* ZEEK_SPICY_PLUGIN_VERSION_FUNCTION() { return spicy::zeek::configuration::PluginVersion; }
 
@@ -99,7 +92,13 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
 
     ::zeek::analyzer::Component::factory_callback factory = nullptr;
 
-    switch ( spicy::compat::enum_value(proto) ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    auto proto_ = proto.value();
+#else
+    auto proto_ = proto;
+#endif
+
+    switch ( proto_ ) {
         case hilti::rt::Protocol::TCP: factory = spicy::zeek::rt::TCP_Analyzer::InstantiateAnalyzer; break;
         case hilti::rt::Protocol::UDP: factory = spicy::zeek::rt::UDP_Analyzer::InstantiateAnalyzer; break;
         default: reporter::error("unsupported protocol in analyzer"); return;
@@ -503,7 +502,13 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
 // Returns a port's Zeek-side transport protocol.
 static ::TransportProto transport_protocol(const hilti::rt::Port port) {
-    switch ( spicy::compat::enum_value(port.protocol()) ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    auto proto = port.protocol().value();
+#else
+    auto proto = port.protocol();
+#endif
+
+    switch ( proto ) {
         case hilti::rt::Protocol::TCP: return ::TransportProto::TRANSPORT_TCP;
         case hilti::rt::Protocol::UDP: return ::TransportProto::TRANSPORT_UDP;
         case hilti::rt::Protocol::ICMP: return ::TransportProto::TRANSPORT_ICMP;
@@ -708,7 +713,11 @@ void plugin::Zeek_Spicy::Plugin::loadModule(const hilti::rt::filesystem::path& p
         else {
             ZEEK_DEBUG(hilti::rt::fmt("Ignoring duplicate loading request for %s", canonical_path.native()));
         }
-    } catch ( const spicy::compat::UsageError& e ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    } catch ( const ::hilti::rt::UsageError& e ) {
+#else
+    } catch ( const ::hilti::rt::UserException& e ) {
+#endif
         hilti::rt::fatalError(e.what());
     }
 }

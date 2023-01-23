@@ -28,16 +28,15 @@ project(SpicyPlugin VERSION "${ZEEK_SPICY_PLUGIN_VERSION_MAIN}" LANGUAGES CXX)
 set(AUX_CMAKE cmake/FindSpicy.cmake cmake/FindZeek.cmake cmake/ZeekSpicyAnalyzerSupport.cmake)
 
 set(AUX_HEADERS
-    include/zeek-spicy/cookie.h
-    include/zeek-spicy/debug.h
-    include/zeek-spicy/file-analyzer.h
-    include/zeek-spicy/packet-analyzer.h
-    include/zeek-spicy/plugin.h
-    include/zeek-spicy/protocol-analyzer.h
-    include/zeek-spicy/runtime-support.h
-    include/zeek-spicy/zeek-compat.h
-    include/zeek-spicy/spicy-compat.h
-    include/zeek-spicy/zeek-reporter.h)
+    include/zeek-spicy/plugin/cookie.h
+    include/zeek-spicy/plugin/debug.h
+    include/zeek-spicy/plugin/file-analyzer.h
+    include/zeek-spicy/plugin/packet-analyzer.h
+    include/zeek-spicy/plugin/plugin.h
+    include/zeek-spicy/plugin/protocol-analyzer.h
+    include/zeek-spicy/plugin/runtime-support.h
+    include/zeek-spicy/plugin/zeek-compat.h
+    include/zeek-spicy/plugin/zeek-reporter.h)
 
 set(AUX_SPICY spicy/zeek.spicy spicy/zeek_file.spicy spicy/zeek_rt.hlt)
 
@@ -108,7 +107,12 @@ if (SPICY_HAVE_TOOLCHAIN)
 endif ()
 
 ###
-### Setup Zeek plugin
+### Set up Zeek plugin
+###
+### Note that we leave this logic here at the top-level, rather than creating
+### src/projects/CMakelists.txt, because otherwise Zeek's plugin machinery
+### would place the resulting plugin into a subdirectory of the build directory
+### as well.
 ###
 
 list(APPEND CMAKE_MODULE_PATH "${ZEEK_CMAKE_DIR}")
@@ -135,16 +139,16 @@ set(CMAKE_CXX_FLAGS ${save_cxx_flags})
 
 zeek_plugin_begin(Zeek Spicy)
 
-zeek_plugin_cc(src/file-analyzer.cc)
-zeek_plugin_cc(src/plugin.cc)
-zeek_plugin_cc(src/packet-analyzer.cc)
-zeek_plugin_cc(src/protocol-analyzer.cc)
-zeek_plugin_cc(src/runtime-support.cc)
-zeek_plugin_cc(src/zeek-reporter.cc)
+zeek_plugin_cc(src/plugin/file-analyzer.cc)
+zeek_plugin_cc(src/plugin/plugin.cc)
+zeek_plugin_cc(src/plugin/packet-analyzer.cc)
+zeek_plugin_cc(src/plugin/protocol-analyzer.cc)
+zeek_plugin_cc(src/plugin/runtime-support.cc)
+zeek_plugin_cc(src/plugin/zeek-reporter.cc)
 
-zeek_plugin_bif(src/consts.bif)
-zeek_plugin_bif(src/events.bif)
-zeek_plugin_bif(src/functions.bif)
+zeek_plugin_bif(src/plugin/consts.bif)
+zeek_plugin_bif(src/plugin/events.bif)
+zeek_plugin_bif(src/plugin/functions.bif)
 
 if (ZEEK_DEBUG_BUILD)
     # This one needs the DEBUG defined earlier than zeek-compat would.
@@ -184,6 +188,7 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     endif ()
 
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/cmake")
+    file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/include/zeek-spicy/plugin")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/spicy")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/tests")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/tests/Scripts")
@@ -191,7 +196,8 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     add_custom_target(
         copy-zeek-spicy-dist-files ALL
         COMMENT "Copying distribution files"
-        COMMAND ${CMAKE_COMMAND} -E copy ${AUX_HEADERS} ${PROJECT_BINARY_DIR}/include/zeek-spicy/
+        COMMAND ${CMAKE_COMMAND} -E copy ${AUX_HEADERS}
+                ${PROJECT_BINARY_DIR}/include/zeek-spicy/plugin
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_CMAKE} ${PROJECT_BINARY_DIR}/cmake/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_SPICY} ${PROJECT_BINARY_DIR}/spicy/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_TESTS} ${PROJECT_BINARY_DIR}/tests/
