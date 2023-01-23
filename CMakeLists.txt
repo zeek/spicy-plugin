@@ -163,8 +163,13 @@ endforeach ()
 
 zeek_plugin_end()
 
-if (NOT ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    spicy_link_libraries(${_plugin_lib})
+spicy_get_runtime_libraries(rt_libs)
+
+if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
+    # This gets picked up when linking the "zeek" binary.
+    set(zeekdeps ${zeekdeps} ${rt_libs} PARENT_SCOPE)
+else ()
+    target_link_libraries(${_plugin_lib} PUBLIC ${rt_libs})
 endif ()
 
 spicy_include_directories(${_plugin_lib} PRIVATE)

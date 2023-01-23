@@ -92,6 +92,16 @@ macro (configure)
             NAMES hilti
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+        find_library(
+            SPICY_LIBRARY_RT
+            NAMES spicy-rt
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+        find_library(
+            HILTI_LIBRARY_RT
+            NAMES hilti-rt
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
     endif ()
 endmacro ()
 
@@ -111,7 +121,7 @@ function (spicy_include_directories target)
                                ${SPICY_INCLUDE_DIRS_RUNTIME})
 endfunction ()
 
-# Add Spicy links to given target.
+# Add Spicy libraries to given target.
 function (spicy_link_libraries lib)
     target_link_directories(${lib} PRIVATE ${SPICY_LIBRARY_DIRS_TOOLCHAIN}
                             ${SPICY_LIBRARY_DIRS_RUNTIME})
@@ -128,6 +138,23 @@ function (spicy_link_executable exe)
     spicy_link_libraries(${exe} PRIVATE)
     set_property(TARGET ${exe} PROPERTY ENABLE_EXPORTS true)
 endfunction ()
+
+# Helper to link with `--whole-archive/-force-load`.
+#
+# This is adapted from https://github.com/horance-liu/flink.cmake
+#
+# With CMake >= 3.24, we could instead use LINK_LIBRARY, see
+# https://cmake.org/cmake/help/v3.24/manual/cmake-generator-expressions.7.html#genex:LINK_LIBRARY
+macro (spicy_get_runtime_libraries out)
+    if (MSVC)
+        set(${out} "/WHOLEARCHIVE:${HILTI_LIBRARY_RT};/WHOLEARCHIVE:${SPICY_LIBRARY_RT}")
+    elseif (APPLE)
+        set(${out} "-Wl,-force_load;${HILTI_LIBRARY_RT};-Wl,-force_load;${SPICY_LIBRARY_RT}")
+    else ()
+        set(${out}
+            "-Wl,--whole-archive;${HILTI_LIBRARY_RT};${SPICY_LIBRARY_RT};-Wl,--no-whole-archive")
+    endif ()
+endmacro ()
 
 # Runs `spicy-config` and stores its result in the given output variable.
 function (run_spicy_config output)

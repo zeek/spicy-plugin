@@ -12,8 +12,6 @@
 #include <spicy/rt/driver.h>
 #include <spicy/rt/parser.h>
 
-#include <hilti/base/util.h>
-
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/plugin/cookie.h>
 #include <zeek-spicy/plugin/zeek-compat.h>

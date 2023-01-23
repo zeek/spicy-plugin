@@ -12,11 +12,10 @@
 #include <hilti/rt/init.h>
 #include <hilti/rt/library.h>
 #include <hilti/rt/types/vector.h>
+#include <hilti/rt/util.h>
 
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
-
-#include <hilti/autogen/config.h>
 
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/plugin/file-analyzer.h>
@@ -67,7 +66,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.name_parser_orig = parser_orig;
     info.name_parser_resp = parser_resp;
     info.name_replaces = replaces;
-    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeek = hilti::rt::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.protocol = proto;
     info.ports = ports;
@@ -133,7 +132,7 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     info.name_analyzer = name;
     info.name_parser = parser;
     info.name_replaces = replaces;
-    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeek = hilti::rt::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.mime_types = mime_types;
     info.linker_scope = linker_scope;
@@ -182,7 +181,7 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     info.name_analyzer = name;
     info.name_replaces = replaces;
     info.name_parser = parser;
-    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeek = hilti::rt::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", info.name_zeek);
     info.linker_scope = linker_scope;
 
