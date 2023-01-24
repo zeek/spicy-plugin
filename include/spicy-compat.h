@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <hilti/rt/exception.h>
+
 #include <zeek-spicy/autogen/config.h>
 
 namespace spicy::compat {
@@ -17,5 +19,12 @@ auto enum_value(E e) {
     return typename E::Value(e.value());
 #endif
 }
+
+// Adapt to rename of exception.
+#if SPICY_VERSION_NUMBER >= 10700
+using UsageError = ::hilti::rt::UsageError;
+#else
+using UsageError = ::hilti::rt::UserException;
+#endif
 
 } // namespace spicy::compat

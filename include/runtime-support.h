@@ -29,37 +29,37 @@ namespace spicy::zeek::rt {
  * Exception thrown by event generation code if the value of an `$...`
  * expression isn't available.
  */
-class ValueUnavailable : public hilti::rt::UserException {
+class ValueUnavailable : public spicy::compat::UsageError {
 public:
-    using hilti::rt::UserException::UserException;
+    using spicy::compat::UsageError::UsageError;
 };
 
 /**
  * Exception thrown by event generation code if the values can't be converted
  * to Zeek.
  */
-class InvalidValue : public hilti::rt::UserException {
+class InvalidValue : public spicy::compat::UsageError {
 public:
-    using hilti::rt::UserException::UserException;
+    using spicy::compat::UsageError::UsageError;
 };
 
 /**
  * Exception thrown by event generation code if functionality is used
  * that the current build does not support.
  */
-class Unsupported : public hilti::rt::UserException {
+class Unsupported : public spicy::compat::UsageError {
 public:
-    using hilti::rt::UserException::UserException;
+    using spicy::compat::UsageError::UsageError;
 };
 
 /**
  * Exception thrown by event generation code if there's a type mismatch
  * between the Spicy-side value and what the Zeek event expects.
  */
-class TypeMismatch : public hilti::rt::UserException {
+class TypeMismatch : public spicy::compat::UsageError {
 public:
     TypeMismatch(const std::string_view& msg, std::string_view location = "")
-        : hilti::rt::UserException(hilti::rt::fmt("Event parameter mismatch, %s", msg), location) {}
+        : spicy::compat::UsageError(hilti::rt::fmt("Event parameter mismatch, %s", msg), location) {}
     TypeMismatch(const std::string_view& have, ::zeek::TypePtr want, std::string_view location = "")
         : TypeMismatch(_fmt(have, want), location) {}
 
@@ -75,9 +75,9 @@ private:
 /**
  * Exception thrown by the runtime library when Zeek has flagged a problem.
  */
-class ZeekError : public hilti::rt::UserException {
+class ZeekError : public spicy::compat::UsageError {
 public:
-    using hilti::rt::UserException::UserException;
+    using spicy::compat::UsageError::UsageError;
 };
 
 /**

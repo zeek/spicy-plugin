@@ -9,11 +9,8 @@
 #
 # Check that exceeding max-file-depth leads to aborting and an event.
 # @TEST-EXEC: ${ZEEK} -t /tmp/zeek.trace -r ${TRACES}/http-post.trace text.hlto %INPUT Spicy::max_file_depth=2 | sort -k 3 >output-max
-# @TEST-EXEC: cat weird.log | zeek-cut addl | grep -q "maximal file depth exceeded"
+# @TEST-EXEC: cat notice.log | zeek-cut note | grep -q "Spicy_Max_File_Depth_Exceeded"
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output-max
-# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff weird.log
-# @TEST-EXEC: cat notice.log | zeek-cut note >notice.log.filtered
-# @TEST-EXEC: btest-diff notice.log.filtered
 
 event text::data1(f: fa_file, data: string)
 	{
