@@ -808,7 +808,7 @@ void plugin::Zeek_Spicy::Plugin::loadModule(const hilti::rt::filesystem::path& p
         else {
             ZEEK_DEBUG(hilti::rt::fmt("Ignoring duplicate loading request for %s", canonical_path.native()));
         }
-    } catch ( const hilti::rt::EnvironmentError& e ) {
+    } catch ( const hilti::rt::UsageError& e ) {
         hilti::rt::fatalError(e.what());
     }
 }

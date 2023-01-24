@@ -91,17 +91,27 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
 
         file->FileEvent(Spicy::max_file_depth_exceeded,
                         {file_val, analyzer_args, ::zeek::val_mgr->Count(_state.cookie().depth)});
-        reporter::analyzerError(_state.cookie().analyzer, "maximal file depth exceeded", "Spicy file analysis plugin");
+
+        auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
+#if ZEEK_VERSION_NUMBER >= 50200
+        AnalyzerViolation("maximal file depth exceeded", reinterpret_cast<const char*>(data), len, tag);
+#else
+        // We don't have an an appropiate way to report this with older Zeeks.
+#endif
         return false;
     }
 
     try {
         hilti::rt::context::CookieSetter _(&_state.cookie());
         _state.process(len, reinterpret_cast<const char*>(data));
-    } catch ( const spicy::rt::ParseError& e ) {
-        STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+    } catch ( const hilti::rt::RuntimeError& e ) {
+        STATE_DEBUG_MSG(hilti::rt::fmt("error during parsing, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
-        // TODO: Report a weird from this file analysis once Zeek supports it.
+#if ZEEK_VERSION_NUMBER >= 50200
+        AnalyzerViolation(e.what(), reinterpret_cast<const char*>(data), len, tag);
+#else
+        // We don't have an an appropiate way to report this with older Zeeks.
+#endif
     } catch ( const hilti::rt::Exception& e ) {
         STATE_DEBUG_MSG(e.what());
         reporter::analyzerError(_state.cookie().analyzer, e.description(),
@@ -115,10 +125,10 @@ void FileAnalyzer::Finish() {
     try {
         hilti::rt::context::CookieSetter _(&_state.cookie());
         _state.finish();
-    } catch ( const spicy::rt::ParseError& e ) {
-        STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+    } catch ( const hilti::rt::RuntimeError& e ) {
+        STATE_DEBUG_MSG(hilti::rt::fmt("error during parsing, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
-        // TODO: Report a weird from this file analysis once Zeek supports it.
+        AnalyzerViolation(e.what(), "", 0, tag);
     } catch ( const hilti::rt::Exception& e ) {
         reporter::analyzerError(_state.cookie().analyzer, e.description(),
                                 e.location()); // this sets Zeek to skip sending any further input

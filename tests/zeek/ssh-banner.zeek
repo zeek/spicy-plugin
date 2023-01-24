@@ -3,8 +3,10 @@
 # @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/ssh-single-conn.trace -s ./ssh.sig Zeek::Spicy base/frameworks/notice/weird ssh.hlto %INPUT ./extern.zeek | sort >>output
 # @TEST-EXEC: btest-diff weird.log
 # @TEST-EXEC: echo === violation >>output
-# @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/http-post.trace -s ./ssh.sig Zeek::Spicy ssh.hlto  ./extern.zeek %INPUT | sort >>output
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace -s ./ssh.sig Zeek::Spicy ssh.hlto  ./extern.zeek %INPUT | sort >>output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/diff-remove-abspath btest-diff output
+# @TEST-EXEC: if [ "$(zeek-version)" -ge 50200 ]; then btest-diff analyzer.log; fi
+# @TEST-EXEC: if [ "$(zeek-version)" -ge 50200 ]; then test '!' -f reporter.log; fi
 
 event ssh::banner(c: connection, is_orig: bool, version: string, software: string)
 	{
