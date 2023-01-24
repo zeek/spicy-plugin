@@ -6,7 +6,7 @@
 
 #include <zeek-spicy/autogen/config.h>
 
-#include <zeek/util.h>
+#include <zeek/zeek-config.h>
 
 #ifdef ZEEK_VERSION_NUMBER
 #if ZEEK_SPICY_VERSION_NUMBER != ZEEK_VERSION_NUMBER
@@ -19,7 +19,46 @@
 #endif
 #endif
 
+//// Collect all the Zeek includes here that we need anywhere in the plugin.
+
+#if ZEEK_DEBUG_BUILD
+#ifndef DEBUG
+#define SPICY_PLUGIN_DEBUG_DEFINED
+#define DEBUG
+#endif
+#endif
+
+#include <zeek/Conn.h>
+#include <zeek/DebugLogger.h>
+#include <zeek/Desc.h>
+#include <zeek/Event.h>
+#include <zeek/EventHandler.h>
+#include <zeek/EventRegistry.h>
+#include <zeek/Expr.h>
+#include <zeek/IPAddr.h>
+#include <zeek/Reporter.h>
+#include <zeek/Tag.h>
+#include <zeek/Type.h>
+#include <zeek/Val.h>
+#include <zeek/Var.h>
+#include <zeek/analyzer/Analyzer.h>
+#include <zeek/analyzer/Manager.h>
+#include <zeek/analyzer/protocol/pia/PIA.h>
+#include <zeek/analyzer/protocol/tcp/TCP.h>
+#include <zeek/file_analysis/Analyzer.h>
+#include <zeek/file_analysis/File.h>
+#include <zeek/file_analysis/Manager.h>
+#include <zeek/module_util.h>
+#include <zeek/packet_analysis/Analyzer.h>
+#include <zeek/plugin/Plugin.h>
+
+#ifdef SPICY_PLUGIN_DEBUG_DEFINED
+#undef DEBUG
+#undef SPICY_PLUGIN_DEBUG_DEFINED
+#endif
+
+//// Import types and globals into the new namespaces.
+
 #if ZEEK_VERSION_NUMBER < 50100 // Zeek < 5.1
-#include <zeek/zeek-config.h>
 using zeek_int_t = bro_int_t;
 #endif

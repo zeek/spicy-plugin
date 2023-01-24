@@ -11,17 +11,6 @@
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
 
-#include <zeek/Conn.h>
-#include <zeek/Event.h>
-#include <zeek/analyzer/Analyzer.h>
-#include <zeek/analyzer/Manager.h>
-#include <zeek/analyzer/protocol/pia/PIA.h>
-#include <zeek/analyzer/protocol/tcp/TCP.h>
-#include <zeek/file_analysis/Analyzer.h>
-#include <zeek/file_analysis/File.h>
-#include <zeek/file_analysis/Manager.h>
-#include <zeek/session/Manager.h>
-
 using namespace spicy::zeek;
 using namespace plugin::Zeek_Spicy;
 

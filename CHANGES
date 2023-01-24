@@ -1,3 +1,8 @@
+1.4.2-16 | 2023-01-24 16:18:27 +0100
+
+  * Revert moving Zeek includes out of `zeek-compat.h`. (Robin Sommer,
+    Corelight)
+
 1.4.2-14 | 2023-01-09 17:29:42 +0100
 
   * Push includes from `zeek-compat.h` into actual users. (Benjamin Bannier, Corelight)

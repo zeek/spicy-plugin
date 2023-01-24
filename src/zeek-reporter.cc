@@ -8,8 +8,6 @@
 #include <zeek-spicy/zeek-compat.h>
 #include <zeek-spicy/zeek-reporter.h>
 
-#include <zeek/file_analysis/Analyzer.h>
-
 using namespace spicy::zeek;
 
 void reporter::error(const std::string& msg) { ::zeek::reporter->Error("%s", msg.c_str()); }

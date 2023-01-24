@@ -23,8 +23,6 @@
 #include <zeek-spicy/spicy-compat.h>
 #include <zeek-spicy/zeek-compat.h>
 
-#include <zeek/Desc.h>
-
 namespace spicy::zeek::rt {
 
 /**
