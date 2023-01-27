@@ -1,3 +1,20 @@
+1.4.2-23 | 2023-01-27 12:19:58 +0100
+
+  * GH-160: Adapt to Spicy's changes to exception hierarchy. (Robin Sommer, Corelight)
+
+    We now consistently report runtime errors (including actual
+    parsing errors) as analyzer violations that will be reported in
+    `dpd.log` and, starting eith Zeek 5.2, in `analyzer.log`. We now
+    also log excerpts of the offending data there.
+
+  * Report file analysis errors through Zeek's new file violation API available since 5.2.
+
+  * Add BTest alternative for running tests when plugin is built into Zeek. (Robin Sommer, Corelight)
+
+  * Switch to new Spicy API for accessing the HLTO scope. (Robin Sommer, Corelight)
+
+  * For CI, factor out the download URL for the Spicy artifact to use. (Robin Sommer, Corelight)
+
 1.4.2-16 | 2023-01-24 16:18:27 +0100
 
   * Revert moving Zeek includes out of `zeek-compat.h`. (Robin Sommer,
