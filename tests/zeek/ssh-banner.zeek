@@ -43,6 +43,7 @@ event ssh::banner(c: connection, is_orig: bool, version: string, software: strin
 # @TEST-START-FILE ssh.spicy
 module SSH;
 
+import spicy;
 import zeek;
 
 public type Banner = unit {
@@ -51,8 +52,8 @@ public type Banner = unit {
     dash    : /-/;
     software: /[^\r\n]*/ { zeek::weird("my_weird", $$.decode()); }
 
-    on %done { zeek::confirm_protocol(); assert zeek::uid() == "CHhAvVGS1DHFjwGM9"; }
-    on %error { zeek::reject_protocol("kaputt"); }
+    on %done { spicy::accept_input(); assert zeek::uid() == "CHhAvVGS1DHFjwGM9"; }
+    on %error { spicy::decline_input("kaputt"); }
 };
 # @TEST-END-FILE
 

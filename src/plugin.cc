@@ -605,6 +605,28 @@ static ::TransportProto transport_protocol(const hilti::rt::Port port) {
     }
 }
 
+static void hook_accept_input() {
+    auto cookie = static_cast<rt::Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( auto x = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) ) {
+        auto tag = plugin::Zeek_Spicy::OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
+        ZEEK_DEBUG(hilti::rt::fmt("confirming protocol %s", tag.AsString()));
+        return x->analyzer->AnalyzerConfirmation(tag);
+    }
+}
+
+static void hook_decline_input(const std::string& reason) {
+    auto cookie = static_cast<rt::Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    if ( auto x = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) ) {
+        auto tag = plugin::Zeek_Spicy::OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
+        ZEEK_DEBUG(hilti::rt::fmt("rejecting protocol %s", tag.AsString()));
+        return x->analyzer->AnalyzerViolation("protocol rejected", nullptr, 0, tag);
+    }
+}
+
 void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     zeek::plugin::Plugin::InitPostScript();
 
@@ -631,17 +653,22 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     // Init runtime, which will trigger all initialization code to execute.
     ZEEK_DEBUG("Initializing Spicy runtime");
 
-    auto config = hilti::rt::configuration::get();
+    auto hilti_config = hilti::rt::configuration::get();
 
     if ( ::zeek::id::find_const("Spicy::enable_print")->AsBool() ) //NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-        config.cout = std::cout;
+        hilti_config.cout = std::cout;
     else
-        config.cout.reset();
+        hilti_config.cout.reset();
 
-    config.abort_on_exceptions = ::zeek::id::find_const("Spicy::abort_on_exceptions")->AsBool();
-    config.show_backtraces = ::zeek::id::find_const("Spicy::show_backtraces")->AsBool();
+    hilti_config.abort_on_exceptions = ::zeek::id::find_const("Spicy::abort_on_exceptions")->AsBool();
+    hilti_config.show_backtraces = ::zeek::id::find_const("Spicy::show_backtraces")->AsBool();
 
-    hilti::rt::configuration::set(config);
+    hilti::rt::configuration::set(hilti_config);
+
+    auto spicy_config = spicy::rt::configuration::get();
+    spicy_config.hook_accept_input = hook_accept_input;
+    spicy_config.hook_decline_input = hook_decline_input;
+    spicy::rt::configuration::set(std::move(spicy_config));
 
     try {
         hilti::rt::init();

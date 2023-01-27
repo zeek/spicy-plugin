@@ -1,3 +1,17 @@
+1.4.2-32 | 2023-01-27 15:39:28 +0100
+
+  * Port the new `-x` option from `spicyc` to `spicyz`. (Robin Sommer, Corelight)
+
+  * Switch to using Spicy's new `accept_input`/`decline_input` hooks. (Robin Sommer, Corelight)
+
+  * Deprecate `zeek::confirm_protocol()` and `zeek::reject_protocol()`
+    in the favor of the Spicy-wide `spicy::accept_input` and
+    `spicy::decline_input()`. (Robin Sommer, Corelight)
+
+  * When generating C++ output, unique symbol names by including provided prefix. (Robin Sommer, Corelight)
+
+  * Trigger HILTI runtime's module pre-init phase from plugin. (Robin Sommer, Corelight)
+
 1.4.2-25 | 2023-01-27 12:43:26 +0100
 
   * Add a script-level constant indicating Spicy availability. (Robin Sommer, Corelight)
