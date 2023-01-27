@@ -87,19 +87,34 @@ macro (configure)
             NAMES spicy
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
         find_library(
             HILTI_LIBRARY
             NAMES hilti
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
         find_library(
             SPICY_LIBRARY_RT
             NAMES spicy-rt
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
         find_library(
             HILTI_LIBRARY_RT
             NAMES hilti-rt
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
+        find_library(
+            SPICY_LIBRARY_RT_DEBUG
+            NAMES spicy-rt-debug
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
+        find_library(
+            HILTI_LIBRARY_RT_DEBUG
+            NAMES hilti-rt-debug
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
     endif ()
@@ -145,14 +160,21 @@ endfunction ()
 #
 # With CMake >= 3.24, we could instead use LINK_LIBRARY, see
 # https://cmake.org/cmake/help/v3.24/manual/cmake-generator-expressions.7.html#genex:LINK_LIBRARY
-macro (spicy_get_runtime_libraries out)
-    if (MSVC)
-        set(${out} "/WHOLEARCHIVE:${HILTI_LIBRARY_RT};/WHOLEARCHIVE:${SPICY_LIBRARY_RT}")
-    elseif (APPLE)
-        set(${out} "-Wl,-force_load;${HILTI_LIBRARY_RT};-Wl,-force_load;${SPICY_LIBRARY_RT}")
+macro (spicy_get_runtime_libraries out debug)
+    if (debug)
+        set(hilti_rt ${HILTI_LIBRARY_RT_DEBUG})
+        set(spicy_rt ${SPICY_LIBRARY_RT_DEBUG})
     else ()
-        set(${out}
-            "-Wl,--whole-archive;${HILTI_LIBRARY_RT};${SPICY_LIBRARY_RT};-Wl,--no-whole-archive")
+        set(hilti_rt ${HILTI_LIBRARY_RT})
+        set(spicy_rt ${SPICY_LIBRARY_RT})
+    endif ()
+
+    if (MSVC)
+        set(${out} "/WHOLEARCHIVE:${hilti_rt};/WHOLEARCHIVE:${spicy_rt}")
+    elseif (APPLE)
+        set(${out} "-Wl,-force_load;${hilti_rt};-Wl,-force_load;${spicy_rt}")
+    else ()
+        set(${out} "-Wl,--whole-archive;${hilti_rt};${spicy_rt};-Wl,--no-whole-archive")
     endif ()
 endmacro ()
 

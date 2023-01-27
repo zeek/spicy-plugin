@@ -163,7 +163,7 @@ endforeach ()
 
 zeek_plugin_end()
 
-spicy_get_runtime_libraries(rt_libs)
+spicy_get_runtime_libraries(rt_libs "${ZEEK_DEBUG_BUILD}")
 
 if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     # This gets picked up when linking the "zeek" binary.
