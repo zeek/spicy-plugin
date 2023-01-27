@@ -1,4 +1,6 @@
 # @TEST-EXEC: HILTI_DEBUG=zeek ${ZEEK} -r ${TRACES}/ssh-single-conn.trace misc/dump-events test.evt test.spicy %INPUT
+# Zeek versions differ in their quoting of the newline character in dpd.log (two slashes vs one).
+# @TEST-EXEC: cat dpd.log | sed 's#\\\\#\\#g' >dpd.log.tmp && mv dpd.log.tmp dpd.log
 # @TEST-EXEC: btest-diff dpd.log
 #
 # @TEST-DOC: Trigger parse error after confirmation, should be recorded in dpd.log
