@@ -3,10 +3,10 @@
 #include <utility>
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/file-analyzer.h>
-#include <zeek-spicy/plugin.h>
-#include <zeek-spicy/runtime-support.h>
-#include <zeek-spicy/zeek-reporter.h>
+#include <zeek-spicy/plugin/file-analyzer.h>
+#include <zeek-spicy/plugin/plugin.h>
+#include <zeek-spicy/plugin/runtime-support.h>
+#include <zeek-spicy/plugin/zeek-reporter.h>
 
 #include "consts.bif.h"
 #include "events.bif.h"

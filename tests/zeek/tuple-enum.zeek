@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace tupleenum.spicy ./tupleenum.evt %INPUT Spicy::enable_print=T | sort >output
+# @TEST-EXEC: spicyz -o test.hlto tupleenum.spicy ./tupleenum.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace test.hlto %INPUT Spicy::enable_print=T | sort >output
 # @TEST-EXEC: btest-diff output
 
 type Foo: record {

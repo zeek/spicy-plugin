@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -Cr ${TRACES}/ssh-over-udp.pcap ./foo.evt %INPUT
+# @TEST-EXEC: spicyz -o test.hlto %INPUT ./foo.evt
+# @TEST-EXEC: ${ZEEK} -Cr ${TRACES}/ssh-over-udp.pcap test.hlto
 # @TEST-EXEC: btest-diff ssh.log
 #
 # @TEST-DOC: Pass data from inside a UDP analyzer to a Zeek analyzers that works on top of TCP. Regression tests for #92 and also #91.

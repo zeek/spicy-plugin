@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/dns53-proto-255.pcap raw-layer.spicy raw-layer.evt %INPUT >output
+# @TEST-EXEC: spicyz -o test.hlto raw-layer.spicy raw-layer.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/dns53-proto-255.pcap test.hlto %INPUT >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 
 module PacketAnalyzer::SPICY_RAWLAYER;

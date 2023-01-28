@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -Cr ${TRACES}/udp.trace udp-test.spicy ./udp-test.evt %INPUT >output
+# @TEST-EXEC: spicyz -o test.hlto udp-test.spicy ./udp-test.evt
+# @TEST-EXEC: ${ZEEK} -Cr ${TRACES}/udp.trace test.hlto %INPUT >output
 # @TEST-EXEC: btest-diff output
 
 event zeek_init()

@@ -1,11 +1,11 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/plugin.h>
-#include <zeek-spicy/protocol-analyzer.h>
-#include <zeek-spicy/runtime-support.h>
-#include <zeek-spicy/zeek-compat.h>
-#include <zeek-spicy/zeek-reporter.h>
+#include <zeek-spicy/plugin/plugin.h>
+#include <zeek-spicy/plugin/protocol-analyzer.h>
+#include <zeek-spicy/plugin/runtime-support.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
+#include <zeek-spicy/plugin/zeek-reporter.h>
 
 using namespace spicy::zeek;
 using namespace spicy::zeek::rt;

@@ -14,9 +14,7 @@
 
 #include <spicy/global.h>
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/spicy-compat.h>
-
-#include "debug.h"
+#include <zeek-spicy/compiler/debug.h>
 
 using namespace spicy::zeek;
 
@@ -427,21 +425,18 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
                 auto a = parseProtocolAnalyzer(*chunk);
                 ZEEK_DEBUG(hilti::util::fmt("  Got protocol analyzer definition for %s", a.name));
                 _protocol_analyzers.push_back(a);
-                newProtocolAnalyzer(_protocol_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "file") ) {
                 auto a = parseFileAnalyzer(*chunk);
                 ZEEK_DEBUG(hilti::util::fmt("  Got file analyzer definition for %s", a.name));
                 _file_analyzers.push_back(a);
-                newFileAnalyzer(_file_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "packet") ) {
                 auto a = parsePacketAnalyzer(*chunk);
                 ZEEK_DEBUG(hilti::util::fmt("  Got packet analyzer definition for %s", a.name));
                 _packet_analyzers.push_back(a);
-                newPacketAnalyzer(_packet_analyzers.back());
             }
 
             else if ( looking_at(*chunk, 0, "on") ) {
@@ -797,9 +792,14 @@ bool GlueCompiler::compile() {
             }
         }
 
-        hilti::ID protocol;
+#if SPICY_VERSION_NUMBER >= 10700
+        auto proto = a.protocol.value();
+#else
+        auto proto = a.protocol;
+#endif
 
-        switch ( spicy::compat::enum_value(a.protocol) ) {
+        hilti::ID protocol;
+        switch ( proto ) {
             case hilti::rt::Protocol::TCP: protocol = hilti::ID("hilti::Protocol::TCP"); break;
             case hilti::rt::Protocol::UDP: protocol = hilti::ID("hilti::Protocol::UDP"); break;
             default: hilti::logger().internalError("unexpected protocol");
@@ -1125,6 +1125,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     return true;
 }
+
 
 hilti::Expression GlueCompiler::location(const glue::Event& ev) { return builder::string(ev.location); }
 

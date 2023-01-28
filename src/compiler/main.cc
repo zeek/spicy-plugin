@@ -8,11 +8,7 @@
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/compiler/driver.h>
 #include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/debug.h>
-
-const ::hilti::logging::DebugStream ZeekPlugin("zeek");
-
-void ::spicy::zeek::debug::do_log(const std::string& msg) { HILTI_DEBUG(ZeekPlugin, std::string(msg)); }
+#include <zeek-spicy/compiler/debug.h>
 
 constexpr int OPT_CXX_LINK = 1000;
 

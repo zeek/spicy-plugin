@@ -12,27 +12,18 @@
 #include <hilti/rt/init.h>
 #include <hilti/rt/library.h>
 #include <hilti/rt/types/vector.h>
+#include <hilti/rt/util.h>
 
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
 
-#include <hilti/autogen/config.h>
-
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/file-analyzer.h>
-#include <zeek-spicy/packet-analyzer.h>
-#include <zeek-spicy/plugin.h>
-#include <zeek-spicy/protocol-analyzer.h>
-#include <zeek-spicy/spicy-compat.h>
-#include <zeek-spicy/zeek-compat.h>
-#include <zeek-spicy/zeek-reporter.h>
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-namespace spicy::zeek::debug {
-const hilti::logging::DebugStream ZeekPlugin("zeek");
-}
-#endif
+#include <zeek-spicy/plugin/file-analyzer.h>
+#include <zeek-spicy/plugin/packet-analyzer.h>
+#include <zeek-spicy/plugin/plugin.h>
+#include <zeek-spicy/plugin/protocol-analyzer.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
+#include <zeek-spicy/plugin/zeek-reporter.h>
 
 const char* ZEEK_SPICY_PLUGIN_VERSION_FUNCTION() { return spicy::zeek::configuration::PluginVersion; }
 
@@ -40,42 +31,6 @@ plugin::Zeek_Spicy::Plugin SpicyPlugin;
 plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 
 using namespace spicy::zeek;
-
-class OurGlueCompiler : public spicy::zeek::GlueCompiler {
-public:
-    OurGlueCompiler(plugin::Zeek_Spicy::Plugin* plugin) : _plugin(plugin) {}
-
-protected:
-    void newFileAnalyzer(const glue::FileAnalyzer& analyzer) override {
-        // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerFileAnalyzer(analyzer.name, to_rt_vector(analyzer.mime_types), analyzer.unit_name,
-                                      analyzer.replaces, "");
-    }
-
-    void newPacketAnalyzer(const glue::PacketAnalyzer& analyzer) override {
-        // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerPacketAnalyzer(analyzer.name, analyzer.unit_name, analyzer.replaces, "");
-    }
-
-    void newProtocolAnalyzer(const glue::ProtocolAnalyzer& analyzer) override {
-        // We don't know the linker scope yet, that'll be updated later.
-        _plugin->registerProtocolAnalyzer(analyzer.name, analyzer.protocol, to_rt_vector(analyzer.ports),
-                                          analyzer.unit_name_orig, analyzer.unit_name_resp, analyzer.replaces, "");
-    }
-
-private:
-    template<typename T>
-    hilti::rt::Vector<T> to_rt_vector(std::vector<T> in) {
-        hilti::rt::Vector<T> out;
-        out.reserve(in.size());
-        for ( auto&& x : in )
-            out.push_back(std::move(x));
-
-        return out;
-    }
-
-    plugin::Zeek_Spicy::Plugin* _plugin;
-};
 
 plugin::Zeek_Spicy::Plugin::Plugin() {
 #ifdef HILTI_VERSION_FUNCTION
@@ -90,57 +45,14 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
         reporter::fatalError(
             hilti::rt::fmt("Zeek version mismatch: running with Zeek %d, but plugin compiled for Zeek %s",
                            ZEEK_VERSION_NUMBER, spicy::zeek::configuration::ZeekVersionNumber));
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    hilti::rt::filesystem::path plugin_path;
-    std::string name;
-
-#ifdef ZEEK_SPICY_PLUGIN_INTERNAL_BUILD
-    auto zeek = hilti::util::currentExecutable();
-    auto build_path = zeek.parent_path() / "builtin-plugins" / spicy::zeek::configuration::StaticBuildName;
-
-    if ( hilti::rt::filesystem::exists(build_path) )
-        // Running out of build directory. Note that the path below
-        // "builtin-plugins/" depends on the directory name where the
-        // spicy-plugin code resaides.
-        plugin_path = build_path;
-    else
-        // Installation otherwise.
-        plugin_path = zeek.parent_path().parent_path() / spicy::zeek::configuration::InstallLibDir / "zeek-spicy";
-
-    name = zeek.native();
-#else
-    Dl_info info;
-    if ( ! dladdr(&SpicyPlugin, &info) )
-        reporter::fatalError("Spicy plugin cannot determine its file system path");
-
-    plugin_path = hilti::rt::filesystem::path(info.dli_fname).parent_path().parent_path();
-    name = info.dli_fname;
-#endif
-
-    _driver = std::make_unique<Driver>(std::make_unique<OurGlueCompiler>(this), name.c_str(), plugin_path,
-                                       spicy::zeek::configuration::ZeekVersionNumber);
-#endif
 }
 
 void ::spicy::zeek::debug::do_log(const std::string& msg) {
     PLUGIN_DBG_LOG(*plugin::Zeek_Spicy::OurPlugin, "%s", msg.c_str());
     HILTI_RT_DEBUG("zeek", msg);
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    HILTI_DEBUG(::spicy::zeek::debug::ZeekPlugin, msg);
-#endif
 }
 
 plugin::Zeek_Spicy::Plugin::~Plugin() {}
-
-void plugin::Zeek_Spicy::Plugin::addLibraryPaths(const std::string& dirs) {
-    for ( const auto& dir : hilti::rt::split(dirs, ":") )
-        ::zeek::util::detail::add_to_zeek_path(std::string(dir)); // Add to Zeek's search path.
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    _driver->addLibraryPaths(dirs);
-#endif
-}
 
 void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& name, hilti::rt::Protocol proto,
                                                           const hilti::rt::Vector<hilti::rt::Port>& ports,
@@ -154,7 +66,7 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
     info.name_parser_orig = parser_orig;
     info.name_parser_resp = parser_resp;
     info.name_replaces = replaces;
-    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeek = hilti::rt::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.protocol = proto;
     info.ports = ports;
@@ -179,7 +91,13 @@ void plugin::Zeek_Spicy::Plugin::registerProtocolAnalyzer(const std::string& nam
 
     ::zeek::analyzer::Component::factory_callback factory = nullptr;
 
-    switch ( spicy::compat::enum_value(proto) ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    auto proto_ = proto.value();
+#else
+    auto proto_ = proto;
+#endif
+
+    switch ( proto_ ) {
         case hilti::rt::Protocol::TCP: factory = spicy::zeek::rt::TCP_Analyzer::InstantiateAnalyzer; break;
         case hilti::rt::Protocol::UDP: factory = spicy::zeek::rt::UDP_Analyzer::InstantiateAnalyzer; break;
         default: reporter::error("unsupported protocol in analyzer"); return;
@@ -214,7 +132,7 @@ void plugin::Zeek_Spicy::Plugin::registerFileAnalyzer(const std::string& name,
     info.name_analyzer = name;
     info.name_parser = parser;
     info.name_replaces = replaces;
-    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeek = hilti::rt::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", name);
     info.mime_types = mime_types;
     info.linker_scope = linker_scope;
@@ -263,7 +181,7 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     info.name_analyzer = name;
     info.name_replaces = replaces;
     info.name_parser = parser;
-    info.name_zeek = hilti::util::replace(name, "::", "_");
+    info.name_zeek = hilti::rt::replace(name, "::", "_");
     info.name_zeekygen = hilti::rt::fmt("<Spicy-%s>", info.name_zeek);
     info.linker_scope = linker_scope;
 
@@ -552,7 +470,7 @@ bool plugin::Zeek_Spicy::Plugin::toggleAnalyzer(::zeek::EnumVal* tag, bool enabl
 ::zeek::plugin::Configuration plugin::Zeek_Spicy::Plugin::Configure() {
     ::zeek::plugin::Configuration config;
     config.name = "Zeek::Spicy";
-    config.description = "Support for Spicy parsers (``*.spicy``, ``*.evt``, ``*.hlto``)";
+    config.description = "Support for Spicy parsers (``*.hlto``)";
     config.version.major = spicy::zeek::configuration::PluginVersionMajor;
     config.version.minor = spicy::zeek::configuration::PluginVersionMinor;
     config.version.patch = spicy::zeek::configuration::PluginVersionPatch;
@@ -567,18 +485,7 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
     ZEEK_DEBUG("Beginning pre-script initialization");
 
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
     hilti::rt::executeManualPreInits();
-    _driver->InitPreScript();
-#endif
-
-    // Note that, different from Spicy's own SPICY_PATH, this extends the
-    // search path, it doesn't replace it.
-    if ( auto dir = hilti::rt::getenv("ZEEK_SPICY_PATH") )
-        addLibraryPaths(*dir);
-
-    if ( const auto& dir = OurPlugin->PluginDirectory(); ! dir.empty() )
-        addLibraryPaths(hilti::rt::normalizePath(dir).string() + "/spicy");
 
     autoDiscoverModules();
 
@@ -594,7 +501,13 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
 // Returns a port's Zeek-side transport protocol.
 static ::TransportProto transport_protocol(const hilti::rt::Port port) {
-    switch ( spicy::compat::enum_value(port.protocol()) ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    auto proto = port.protocol().value();
+#else
+    auto proto = port.protocol();
+#endif
+
+    switch ( proto ) {
         case hilti::rt::Protocol::TCP: return ::TransportProto::TRANSPORT_TCP;
         case hilti::rt::Protocol::UDP: return ::TransportProto::TRANSPORT_UDP;
         case hilti::rt::Protocol::ICMP: return ::TransportProto::TRANSPORT_ICMP;
@@ -631,10 +544,6 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     zeek::plugin::Plugin::InitPostScript();
 
     ZEEK_DEBUG("Beginning post-script initialization");
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    _driver->InitPostScript();
-#endif
 
     disableReplacedAnalyzers();
 
@@ -803,18 +712,17 @@ void plugin::Zeek_Spicy::Plugin::loadModule(const hilti::rt::filesystem::path& p
         else {
             ZEEK_DEBUG(hilti::rt::fmt("Ignoring duplicate loading request for %s", canonical_path.native()));
         }
-    } catch ( const spicy::compat::UsageError& e ) {
+#if SPICY_VERSION_NUMBER >= 10700
+    } catch ( const ::hilti::rt::UsageError& e ) {
+#else
+    } catch ( const ::hilti::rt::UserException& e ) {
+#endif
         hilti::rt::fatalError(e.what());
     }
 }
 
 int plugin::Zeek_Spicy::Plugin::HookLoadFile(const LoadType type, const std::string& file,
                                              const std::string& resolved) {
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    if ( int rc = _driver->HookLoadFile(type, file, resolved) >= 0 )
-        return rc;
-#endif
-
     auto ext = hilti::rt::filesystem::path(file).extension();
 
     if ( ext == ".hlto" ) {
@@ -823,7 +731,7 @@ int plugin::Zeek_Spicy::Plugin::HookLoadFile(const LoadType type, const std::str
     }
 
     if ( ext == ".spicy" || ext == ".evt" || ext == ".hlt" )
-        reporter::fatalError(hilti::rt::fmt("cannot load '%s', Spicy plugin was not compiled with JIT support", file));
+        reporter::fatalError(hilti::rt::fmt("cannot load '%s': analyzers need to be precompiled with 'spicyz' ", file));
 
     return -1;
 }

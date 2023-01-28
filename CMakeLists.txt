@@ -28,17 +28,15 @@ project(SpicyPlugin VERSION "${ZEEK_SPICY_PLUGIN_VERSION_MAIN}" LANGUAGES CXX)
 set(AUX_CMAKE cmake/FindSpicy.cmake cmake/FindZeek.cmake cmake/ZeekSpicyAnalyzerSupport.cmake)
 
 set(AUX_HEADERS
-    include/zeek-spicy/cookie.h
-    include/zeek-spicy/debug.h
-    include/zeek-spicy/driver.h
-    include/zeek-spicy/file-analyzer.h
-    include/zeek-spicy/packet-analyzer.h
-    include/zeek-spicy/plugin.h
-    include/zeek-spicy/protocol-analyzer.h
-    include/zeek-spicy/runtime-support.h
-    include/zeek-spicy/zeek-compat.h
-    include/zeek-spicy/spicy-compat.h
-    include/zeek-spicy/zeek-reporter.h)
+    include/zeek-spicy/plugin/cookie.h
+    include/zeek-spicy/plugin/debug.h
+    include/zeek-spicy/plugin/file-analyzer.h
+    include/zeek-spicy/plugin/packet-analyzer.h
+    include/zeek-spicy/plugin/plugin.h
+    include/zeek-spicy/plugin/protocol-analyzer.h
+    include/zeek-spicy/plugin/runtime-support.h
+    include/zeek-spicy/plugin/zeek-compat.h
+    include/zeek-spicy/plugin/zeek-reporter.h)
 
 set(AUX_SPICY spicy/zeek.spicy spicy/zeek_file.spicy spicy/zeek_rt.hlt)
 
@@ -105,17 +103,16 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 
 if (SPICY_HAVE_TOOLCHAIN)
-    set(ZEEK_SPICY_PLUGIN_USE_JIT "yes")
-else ()
-    set(ZEEK_SPICY_PLUGIN_USE_JIT "no")
-endif ()
-
-if (SPICY_HAVE_TOOLCHAIN)
     add_subdirectory(src/compiler)
 endif ()
 
 ###
-### Setup Zeek plugin
+### Set up Zeek plugin
+###
+### Note that we leave this logic here at the top-level, rather than creating
+### src/projects/CMakelists.txt, because otherwise Zeek's plugin machinery
+### would place the resulting plugin into a subdirectory of the build directory
+### as well.
 ###
 
 list(APPEND CMAKE_MODULE_PATH "${ZEEK_CMAKE_DIR}")
@@ -142,20 +139,16 @@ set(CMAKE_CXX_FLAGS ${save_cxx_flags})
 
 zeek_plugin_begin(Zeek Spicy)
 
-if (SPICY_HAVE_TOOLCHAIN)
-    zeek_plugin_cc(src/driver.cc)
-endif ()
+zeek_plugin_cc(src/plugin/file-analyzer.cc)
+zeek_plugin_cc(src/plugin/plugin.cc)
+zeek_plugin_cc(src/plugin/packet-analyzer.cc)
+zeek_plugin_cc(src/plugin/protocol-analyzer.cc)
+zeek_plugin_cc(src/plugin/runtime-support.cc)
+zeek_plugin_cc(src/plugin/zeek-reporter.cc)
 
-zeek_plugin_cc(src/file-analyzer.cc)
-zeek_plugin_cc(src/plugin.cc)
-zeek_plugin_cc(src/packet-analyzer.cc)
-zeek_plugin_cc(src/protocol-analyzer.cc)
-zeek_plugin_cc(src/runtime-support.cc)
-zeek_plugin_cc(src/zeek-reporter.cc)
-
-zeek_plugin_bif(src/consts.bif)
-zeek_plugin_bif(src/events.bif)
-zeek_plugin_bif(src/functions.bif)
+zeek_plugin_bif(src/plugin/consts.bif)
+zeek_plugin_bif(src/plugin/events.bif)
+zeek_plugin_bif(src/plugin/functions.bif)
 
 if (ZEEK_DEBUG_BUILD)
     # This one needs the DEBUG defined earlier than zeek-compat would.
@@ -170,36 +163,17 @@ endforeach ()
 
 zeek_plugin_end()
 
-if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    if (SPICY_HAVE_TOOLCHAIN)
-        zeek_plugin_link_library($<TARGET_OBJECTS:zeek-compiler>)
-        # This gets picked up when linking the "zeek" binary.
-        set(zeekdeps ${zeekdeps} ${HILTI_LIBRARY} ${SPICY_LIBRARY} PARENT_SCOPE)
-    endif ()
-else ()
-    if (SPICY_HAVE_TOOLCHAIN)
-        target_link_libraries(${_plugin_lib} zeek-compiler)
-    endif ()
+spicy_get_runtime_libraries(rt_libs "${ZEEK_DEBUG_BUILD}")
 
-    spicy_link_libraries(${_plugin_lib})
+if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
+    # This gets picked up when linking the "zeek" binary.
+    set(zeekdeps ${zeekdeps} ${rt_libs} PARENT_SCOPE)
+else ()
+    target_link_libraries(${_plugin_lib} PUBLIC ${rt_libs})
 endif ()
 
 spicy_include_directories(${_plugin_lib} PRIVATE)
 set_property(TARGET ${_plugin_lib} PROPERTY ENABLE_EXPORTS true)
-
-# TODO: The following is temporary to help people building from source
-# avoid trouble. We can remove this a couple releases after v1.3.10.
-if (NOT ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    # Remove any old _Zeek_Spicy.so left-over from previous versions.
-    get_property(plugin_dir TARGET ${_plugin_lib} PROPERTY LIBRARY_OUTPUT_DIRECTORY)
-    set(old_plugin_location
-        "${plugin_dir}/_Zeek-Spicy.${HOST_ARCHITECTURE}${CMAKE_SHARED_MODULE_SUFFIX}")
-    add_custom_command(
-        TARGET ${_plugin_lib}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove -f "${old_plugin_location}"
-        COMMENT "")
-endif ()
 
 ####
 #### Prepare the plugin build directory so that it resembles our installation layout.
@@ -219,6 +193,7 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     endif ()
 
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/cmake")
+    file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/include/zeek-spicy/plugin")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/spicy")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/tests")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/tests/Scripts")
@@ -226,7 +201,8 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     add_custom_target(
         copy-zeek-spicy-dist-files ALL
         COMMENT "Copying distribution files"
-        COMMAND ${CMAKE_COMMAND} -E copy ${AUX_HEADERS} ${PROJECT_BINARY_DIR}/include/zeek-spicy/
+        COMMAND ${CMAKE_COMMAND} -E copy ${AUX_HEADERS}
+                ${PROJECT_BINARY_DIR}/include/zeek-spicy/plugin
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_CMAKE} ${PROJECT_BINARY_DIR}/cmake/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_SPICY} ${PROJECT_BINARY_DIR}/spicy/
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_TESTS} ${PROJECT_BINARY_DIR}/tests/
@@ -309,7 +285,6 @@ message(
     "\nModules directory:     ${ZEEK_SPICY_MODULE_DIR}"
     "\nScripts directory:     ${ZEEK_SPICY_SCRIPTS_DIR}"
     "\nBuild directory:       ${PROJECT_BINARY_DIR}"
-    "\nHave JIT:              ${ZEEK_SPICY_PLUGIN_USE_JIT}"
     "\nZeek debug build:      ${ZEEK_DEBUG_BUILD}"
     "\nZeek-internal build:   ${ZEEK_SPICY_PLUGIN_INTERNAL_BUILD}"
     "\nspicy-config:          ${SPICY_CONFIG}"

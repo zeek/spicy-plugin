@@ -5,8 +5,8 @@
 #include <hilti/rt/logging.h>
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/zeek-compat.h>
-#include <zeek-spicy/zeek-reporter.h>
+#include <zeek-spicy/plugin/zeek-compat.h>
+#include <zeek-spicy/plugin/zeek-reporter.h>
 
 using namespace spicy::zeek;
 

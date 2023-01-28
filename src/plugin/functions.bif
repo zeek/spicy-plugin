@@ -2,8 +2,8 @@
 module Spicy;
 
 %%{
-    #include "zeek-spicy/zeek-compat.h"
-    #include "zeek-spicy/plugin.h"
+    #include "zeek-spicy/plugin/zeek-compat.h"
+    #include "zeek-spicy/plugin/plugin.h"
 %%}
 
 function Spicy::__toggle_analyzer%(tag: any, enable: bool%) : bool

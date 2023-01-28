@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace dtest.spicy ./dtest.evt %INPUT | sort >output
+# @TEST-EXEC: spicyz -o test.hlto dtest.spicy ./dtest.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace test.hlto %INPUT | sort >output
 # @TEST-EXEC: btest-diff output
 
 event dtest_one(x: dtest::RESULT) {

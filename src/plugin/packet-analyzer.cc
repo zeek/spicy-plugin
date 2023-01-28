@@ -1,10 +1,10 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
 #include <zeek-spicy/autogen/config.h>
-#include <zeek-spicy/packet-analyzer.h>
-#include <zeek-spicy/plugin.h>
-#include <zeek-spicy/runtime-support.h>
-#include <zeek-spicy/zeek-reporter.h>
+#include <zeek-spicy/plugin/packet-analyzer.h>
+#include <zeek-spicy/plugin/plugin.h>
+#include <zeek-spicy/plugin/runtime-support.h>
+#include <zeek-spicy/plugin/zeek-reporter.h>
 
 #ifndef NDEBUG
 #define STATE_DEBUG_MSG(...) DebugMsg(__VA_ARGS__)

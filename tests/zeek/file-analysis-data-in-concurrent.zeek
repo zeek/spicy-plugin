@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace ssh.spicy ./ssh-cond.evt %INPUT Spicy::enable_print=T >output
+# @TEST-EXEC: spicyz -o test.hlto ssh.spicy ./ssh-cond.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/ssh-single-conn.trace test.hlto %INPUT Spicy::enable_print=T >output
 # @TEST-EXEC: btest-diff output
 
 # @TEST-START-FILE ssh.spicy

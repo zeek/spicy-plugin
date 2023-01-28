@@ -12,11 +12,7 @@
 #include <hilti/rt/library.h>
 #include <hilti/rt/types/port.h>
 
-#include <zeek-spicy/zeek-compat.h>
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-#include <zeek-spicy/driver.h>
-#endif
+#include <zeek-spicy/plugin/zeek-compat.h>
 
 namespace spicy::rt {
 struct Parser;
@@ -216,16 +212,6 @@ public:
     bool toggleAnalyzer(::zeek::EnumVal* tag, bool enable);
 
 protected:
-    /**
-     * Adds one or more paths to search for *.spicy modules. The path will be
-     * passed to the compiler. Note that this must be called only before
-     * InitPreScripts().
-     *
-     * @param paths The directories to search. Multiple directories can be
-     * given at once by separating them with a colon.
-     */
-    virtual void addLibraryPaths(const std::string& dirs);
-
     // Overriding method from Zeek's plugin API.
     zeek::plugin::Configuration Configure() override;
 
@@ -352,10 +338,6 @@ private:
 
     // Mapping of component names to tag types. We use this to ensure analyzer uniqueness.
     std::unordered_map<std::string, int32_t> _analyzer_name_to_tag_type;
-
-#ifdef ZEEK_SPICY_PLUGIN_USE_JIT
-    std::unique_ptr<Driver> _driver;
-#endif
 };
 
 // Will be initalized to point to whatever type of plugin is instantiated.

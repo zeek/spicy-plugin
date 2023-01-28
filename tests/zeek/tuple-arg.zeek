@@ -1,4 +1,5 @@
-# @TEST-EXEC: HILTI_DEBUG=zeek ZEEK_SPICY_PLUGIN_OPTIONS="-d" ${ZEEK} -r ${TRACES}/ssh-single-conn.trace ssh.spicy ./ssh-tuple.evt %INPUT | sort >output
+# @TEST-EXEC: spicyz -d -o test.hlto ssh.spicy ./ssh-tuple.evt
+# @TEST-EXEC: HILTI_DEBUG=zeek ${ZEEK} -r ${TRACES}/ssh-single-conn.trace test.hlto %INPUT | sort >output
 # @TEST-EXEC: grep event .stderr | sort >>output
 # @TEST-EXEC: btest-diff output
 

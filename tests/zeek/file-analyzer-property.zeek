@@ -1,4 +1,5 @@
-# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace text.spicy ./text.evt %INPUT >output
+# @TEST-EXEC: spicyz -o test.hlto text.spicy ./text.evt
+# @TEST-EXEC: ${ZEEK} -r ${TRACES}/http-post.trace test.hlto %INPUT >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
 
 event text::data(f: fa_file, data: string)

@@ -87,11 +87,36 @@ macro (configure)
             NAMES spicy
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
         find_library(
             HILTI_LIBRARY
             NAMES hilti
             NO_DEFAULT_PATH
             HINTS "${SPICY_LIBRARY_DIRS_TOOLCHAIN}" "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
+        find_library(
+            SPICY_LIBRARY_RT
+            NAMES spicy-rt
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
+        find_library(
+            HILTI_LIBRARY_RT
+            NAMES hilti-rt
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
+        find_library(
+            SPICY_LIBRARY_RT_DEBUG
+            NAMES spicy-rt-debug
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
+
+        find_library(
+            HILTI_LIBRARY_RT_DEBUG
+            NAMES hilti-rt-debug
+            NO_DEFAULT_PATH
+            HINTS "${SPICY_LIBRARY_DIRS_RUNTIME}")
     endif ()
 endmacro ()
 
@@ -111,7 +136,7 @@ function (spicy_include_directories target)
                                ${SPICY_INCLUDE_DIRS_RUNTIME})
 endfunction ()
 
-# Add Spicy links to given target.
+# Add Spicy libraries to given target.
 function (spicy_link_libraries lib)
     target_link_directories(${lib} PRIVATE ${SPICY_LIBRARY_DIRS_TOOLCHAIN}
                             ${SPICY_LIBRARY_DIRS_RUNTIME})
@@ -128,6 +153,30 @@ function (spicy_link_executable exe)
     spicy_link_libraries(${exe} PRIVATE)
     set_property(TARGET ${exe} PROPERTY ENABLE_EXPORTS true)
 endfunction ()
+
+# Helper to link with `--whole-archive/-force-load`.
+#
+# This is adapted from https://github.com/horance-liu/flink.cmake
+#
+# With CMake >= 3.24, we could instead use LINK_LIBRARY, see
+# https://cmake.org/cmake/help/v3.24/manual/cmake-generator-expressions.7.html#genex:LINK_LIBRARY
+macro (spicy_get_runtime_libraries out debug)
+    if (debug)
+        set(hilti_rt ${HILTI_LIBRARY_RT_DEBUG})
+        set(spicy_rt ${SPICY_LIBRARY_RT_DEBUG})
+    else ()
+        set(hilti_rt ${HILTI_LIBRARY_RT})
+        set(spicy_rt ${SPICY_LIBRARY_RT})
+    endif ()
+
+    if (MSVC)
+        set(${out} "/WHOLEARCHIVE:${hilti_rt};/WHOLEARCHIVE:${spicy_rt}")
+    elseif (APPLE)
+        set(${out} "-Wl,-force_load;${hilti_rt};-Wl,-force_load;${spicy_rt}")
+    else ()
+        set(${out} "-Wl,--whole-archive;${hilti_rt};${spicy_rt};-Wl,--no-whole-archive")
+    endif ()
+endmacro ()
 
 # Runs `spicy-config` and stores its result in the given output variable.
 function (run_spicy_config output)

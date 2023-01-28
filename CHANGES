@@ -1,3 +1,19 @@
+1.4.2-39 | 2023-01-28 10:58:30 +0100
+
+  * GH-154: Remove JIT support from plugin. (Robin Sommer, Corelight)
+
+    This removes the plugin's capability to compile `*.{spicy,evt,hlt}`
+    files on the fly. Analyzers now always need to be pre-compiled with
+    `spicyz`.
+
+  * Link plugin only against Spicy runtime libraries. (Robin Sommer, Corelight)
+
+  * Disentangle plugin and compiler code trees. (Robin Sommer, Corelight)
+
+    This moves the plugin code a level down in `include/` and `src/`, and
+    separates the two components so that they don't depend on each other
+    anymore, both in terms of functionality and code.
+
 1.4.2-32 | 2023-01-27 15:39:28 +0100
 
   * Port the new `-x` option from `spicyc` to `spicyz`. (Robin Sommer, Corelight)
