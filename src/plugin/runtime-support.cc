@@ -32,13 +32,13 @@ void rt::register_packet_analyzer(const std::string& name, const std::string& pa
     OurPlugin->registerPacketAnalyzer(name, parser, replaces, linker_scope);
 }
 
-void rt::register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type) {
-    OurPlugin->registerType(hilti::ID(ns, id), type);
+void rt::register_type(const std::string& ns, const std::string& id, const ::zeek::TypePtr& type) {
+    OurPlugin->registerType(hilti::rt::fmt("%s::%s", ns, id), type);
 }
 
 // Helper to look up a global Zeek-side type, enforcing that it's of the expected type.
 static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, const std::string& id) {
-    auto id_ = hilti::ID(ns, id);
+    auto id_ = hilti::rt::fmt("%s::%s", ns, id);
     auto type = OurPlugin->findType(id_);
 
     if ( ! type )

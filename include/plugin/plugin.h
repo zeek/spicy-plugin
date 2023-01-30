@@ -92,7 +92,7 @@ public:
      * @param id fully-qualified ID of the type
      * @return error if the type could not be registered
      */
-    hilti::Result<hilti::Nothing> registerType(const hilti::ID& id);
+    hilti::rt::Result<hilti::rt::Nothing> registerType(const std::string& id);
 
     /**
      * Runtime method to register an already converted Spicy-generated type
@@ -101,7 +101,7 @@ public:
      * @param id fully-qualified ID of the type
      * @param type Zeek-side type to register
      */
-    void registerType(const hilti::ID& id, const ::zeek::TypePtr& type);
+    void registerType(const std::string& id, const ::zeek::TypePtr& type);
 
     /**
      * Looks up a global type by its ID with Zeek.
@@ -109,7 +109,7 @@ public:
      * @param id fully-qualified Zeek-side ID of the type
      * @return Zeek-side type, or null if not found
      */
-    ::zeek::TypePtr findType(const hilti::ID& id) const;
+    ::zeek::TypePtr findType(const std::string& id) const;
 
     /**
      * Runtime method to register a Spicy-generated event. The installs the ID
@@ -227,15 +227,6 @@ public:
      * @param enable true to enable, false to disable
      */
     bool toggleAnalyzer(::zeek::EnumVal* tag, bool enable);
-
-    /**
-     * Converts a HILTI type into a corresponding Zeek type at runtime.
-     *
-     * @param type HILTI type to convert
-     * @param id global Spicy-side ID associated with the type; it must be fully qualified
-     * @return corresponding Zeek type
-     */
-    hilti::Result<::zeek::TypePtr> createZeekType(const hilti::Type& t, const hilti::ID& id) const;
 
 protected:
     // Overriding method from Zeek's plugin API.

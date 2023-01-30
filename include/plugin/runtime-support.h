@@ -114,7 +114,7 @@ void register_packet_analyzer(const std::string& name, const std::string& parser
                               const std::string& linker_scope);
 
 /** Registers a Spicy-generated type to make it available inside Zeek. */
-void register_type(const std::string& ns, const std::string& id, ::zeek::TypePtr type);
+void register_type(const std::string& ns, const std::string& id, const ::zeek::TypePtr& type);
 
 /** Identifies a Zeek-side type. */
 enum class ZeekTypeTag : uint64_t {

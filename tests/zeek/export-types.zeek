@@ -1,8 +1,5 @@
-# @TEST-EXEC: echo "===== Pre-compiled" >>output
 # @TEST-EXEC: spicyz -o export.hlto export.spicy export.evt >>output
 # @TEST-EXEC: ${ZEEK} export.hlto %INPUT >>output
-# @TEST-EXEC: echo "===== JIT" >>output
-# @TEST-EXEC: ${ZEEK} export.spicy export.evt %INPUT >>output
 #
 # Zeek 5.0 doesn't include the ID when printing the enum type
 # @TEST-EXEC: cat output | sed 's/enum Test::type_enum/enum/g' >output.tmp && mv output.tmp output
@@ -10,9 +7,6 @@
 # @TEST-EXEC: btest-diff output
 #
 # @TEST-DOC: Test the `export` keyword to automatically create corresponding Zeek types.
-#
-# Note we run this both with and without precompilation to make sure that
-# works. Internally, there are different code paths for the two cases.
 
 module Test;
 

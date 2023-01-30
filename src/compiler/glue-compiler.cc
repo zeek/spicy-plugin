@@ -471,7 +471,6 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
 
                 hilti::ID id = extract_id(*chunk, &i);
                 _exports.emplace_back(id, _locations.back());
-                newExport(id);
             }
 
             else
