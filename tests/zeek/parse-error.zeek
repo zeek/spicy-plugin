@@ -1,3 +1,6 @@
+# Error semantics change with 1.7.0.
+# @TEST-REQUIRES: spicy-version 10700
+#
 # @TEST-EXEC: spicyz -o test.hlto test.evt test.spicy
 # @TEST-EXEC: HILTI_DEBUG=zeek ${ZEEK} -r ${TRACES}/ssh-single-conn.trace misc/dump-events test.hlto %INPUT
 # Zeek versions differ in their quoting of the newline character in dpd.log (two slashes vs one).
