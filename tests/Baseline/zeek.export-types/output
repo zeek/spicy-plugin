@@ -6,7 +6,14 @@ Test::type_enum_A
 Test::type_enum_B
 Test::type_enum_C
 Test::type_enum_Undef
-Test::type_record_s, {
+Test::type_record_u, {
+[s] = [type_name=string, log=F, value=<uninitialized>, default_val=<uninitialized>],
+[u2] = [type_name=record , log=F, value=<uninitialized>, default_val=<uninitialized>],
+[b] = [type_name=bool, log=F, value=<uninitialized>, default_val=<uninitialized>]
+}
+Test::u
+Test::u2
+XYZ::type_record_sss, {
 [a] = [type_name=addr, log=F, value=<uninitialized>, default_val=<uninitialized>],
 [v] = [type_name=vector of string, log=F, value=<uninitialized>, default_val=<uninitialized>],
 [iv] = [type_name=interval, log=F, value=<uninitialized>, default_val=<uninitialized>],
@@ -22,16 +29,9 @@ Test::type_record_s, {
 [e] = [type_name=enum, log=F, value=<uninitialized>, default_val=<uninitialized>],
 [r] = [type_name=double, log=F, value=<uninitialized>, default_val=<uninitialized>]
 }
-Test::type_record_u, {
-[s] = [type_name=string, log=F, value=<uninitialized>, default_val=<uninitialized>],
-[u2] = [type_name=record , log=F, value=<uninitialized>, default_val=<uninitialized>],
-[b] = [type_name=bool, log=F, value=<uninitialized>, default_val=<uninitialized>]
-}
-Test::type_record_u2, {
+type_record_u2, {
 [t] = [type_name=record , log=F, value=<uninitialized>, default_val=<uninitialized>]
 }
-Test::u
-Test::u2
 ---
 [a=1.2.3.4, b=bytes, e=Test::type_enum_B, i=-10, iv=5.0 secs, j=10, m={
 [4.3.2.1] = addr1,

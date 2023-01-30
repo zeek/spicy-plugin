@@ -155,7 +155,7 @@ extern ::zeek::TypePtr create_record_type(const std::string& ns, const std::stri
                                           const hilti::rt::Vector<RecordField>& fields);
 
 extern ::zeek::TypePtr create_table_type(::zeek::TypePtr key, std::optional<::zeek::TypePtr> value);
-extern ::zeek::TypePtr create_vector_type(::zeek::TypePtr elem);
+extern ::zeek::TypePtr create_vector_type(const ::zeek::TypePtr& elem);
 
 /** Returns true if an event has at least one handler defined. */
 inline hilti::rt::Bool have_handler(const ::zeek::EventHandlerPtr& handler) { return static_cast<bool>(handler); }

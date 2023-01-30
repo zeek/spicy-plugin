@@ -33,7 +33,7 @@ void rt::register_packet_analyzer(const std::string& name, const std::string& pa
 }
 
 void rt::register_type(const std::string& ns, const std::string& id, const ::zeek::TypePtr& type) {
-    OurPlugin->registerType(hilti::rt::fmt("%s::%s", ns, id), type);
+    OurPlugin->registerType(hilti::rt::fmt("%s::%s", (! ns.empty() ? ns : std::string("GLOBAL")), id), type);
 }
 
 // Helper to look up a global Zeek-side type, enforcing that it's of the expected type.
@@ -131,7 +131,7 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
     return ::zeek::make_intrusive<::zeek::TableType>(std::move(idx), value ? *value : nullptr);
 }
 
-::zeek::TypePtr rt::create_vector_type(::zeek::TypePtr elem) {
+::zeek::TypePtr rt::create_vector_type(const ::zeek::TypePtr& elem) {
     return ::zeek::make_intrusive<::zeek::VectorType>(elem);
 }
 

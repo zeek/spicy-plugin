@@ -11,9 +11,9 @@
 module Test;
 
 global e: Test::type_enum = Test::type_enum_B;
-global u2: Test::type_record_u2 = [$t=[$x="S", $y=T]];
+global u2: type_record_u2 = [$t=[$x="S", $y=T]];
 global u: Test::type_record_u = [$s="S", $b=T, $u2=u2];
-global s: Test::type_record_s = [
+global s: XYZ::type_record_sss = [
     $a=1.2.3.4,
     $b="bytes",
     $e=e,
@@ -40,7 +40,7 @@ event zeek_init() {
     for ( i in all_globals ) {
 	id = all_globals[i];
 
-	if ( ! (/Test::/ in id) )
+	if ( ! (/((Test|XYZ)::|type_record_u2)/ in id) )
 	    next;
 
 	if ( /type_record_/ in id )
@@ -92,8 +92,8 @@ type type_record_u2 = unit {
 # @TEST-START-FILE export.evt
 
 export Test::type_enum;
-export Test::type_record_u2;
+export Test::type_record_s as XYZ::type_record_sss;
 export Test::type_record_u;
-export Test::type_record_s;
+export Test::type_record_u2 as type_record_u2;
 
 # @TEST-END-FILE

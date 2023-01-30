@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <hilti/rt/filesystem.h>
@@ -97,12 +98,20 @@ public:
      * Returns all types seen so far during processing of Spicy files.
      * Depending on where we are at with processing, these may or may not be
      * resolved yet (as indicated by their `is_resolved` field).
-     *
-     * @param exported_only if true, include only types that have already been
-     * exported by an EVT file
+
      * @return list of types
      */
-    std::vector<TypeInfo> types(bool exported_only = false) const;
+    std::vector<TypeInfo> types() const;
+
+    /**
+     * Returns all *exported* types seen so far during processing of Spicy
+     * files, including their desired Zeek-side names. Depending on where we
+     * are at with processing, these may or may not be resolved yet (as
+     * indicated by their `is_resolved` field).
+     *
+     * @return list of pairs of type and Zeek-side name
+     */
+    std::vector<std::pair<TypeInfo, hilti::ID>> exportedTypes() const;
 
     /** Returns true if we're running out of the plugin's build directory. */
     bool usingBuildDirectory() const { return _using_build_directory; }
@@ -166,11 +175,11 @@ protected:
     /** Overidden from HILTI driver. */
     void hookFinishRuntime() override;
 
-    std::unique_ptr<GlueCompiler> _glue;  // glue compiler in use
-    std::map<hilti::ID, TypeInfo> _types; // map of Spicy type declarations encountered so far
-    std::vector<TypeInfo> _public_enums;  // tracks Spicy enum types declared public, for automatic export
-    bool _using_build_directory = false;  // true if we're running out of the plugin's build directory
-    bool _need_glue = true;               // true if glue code has not yet been generated
+    std::unique_ptr<GlueCompiler> _glue;            // glue compiler in use
+    std::unordered_map<hilti::ID, TypeInfo> _types; // map of Spicy type declarations encountered so far
+    std::vector<TypeInfo> _public_enums;            // tracks Spicy enum types declared public, for automatic export
+    bool _using_build_directory = false;            // true if we're running out of the plugin's build directory
+    bool _need_glue = true;                         // true if glue code has not yet been generated
 };
 
 } // namespace spicy::zeek

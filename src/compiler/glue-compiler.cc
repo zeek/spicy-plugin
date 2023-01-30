@@ -469,8 +469,19 @@ bool GlueCompiler::loadEvtFile(hilti::rt::filesystem::path& path) {
                 size_t i = 0;
                 eat_token(*chunk, &i, "export");
 
-                hilti::ID id = extract_id(*chunk, &i);
-                _exports.emplace_back(id, _locations.back());
+                hilti::ID spicy_id = extract_id(*chunk, &i);
+                hilti::ID zeek_id = spicy_id;
+
+                if ( looking_at(*chunk, i, "as") ) {
+                    eat_token(*chunk, &i, "as");
+                    zeek_id = extract_id(*chunk, &i);
+                }
+
+                eat_spaces(*chunk, &i);
+                if ( ! looking_at(*chunk, i, ";") )
+                    throw ParseError("syntax error in export");
+
+                _exports.emplace_back(std::move(spicy_id), std::move(zeek_id), _locations.back());
             }
 
             else
@@ -855,15 +866,6 @@ bool GlueCompiler::compile() {
                               _linker_scope()});
     }
 
-#if 0
-    // Check that our events align with what's defined on the Zeek side.
-    // TODO: See comment in header for CheckZeekEvent().
-    for ( auto&& ev : _events ) {
-        if ( ! CheckZeekEvent(ev) )
-            return false;
-    }
-#endif
-
     // Create the Spicy hooks and accessor functions.
     for ( auto&& ev : _events ) {
         if ( ! CreateSpicyHook(&ev) )
@@ -874,30 +876,14 @@ bool GlueCompiler::compile() {
     for ( auto&& ev : _events )
         preinit_body.addCall("zeek_rt::install_handler", {builder::string(ev.name)});
 
-    // Create Zeek types for exported Spicy types. We do this here
-    // mainly for when compiling C+ code offline. When running live inside
-    // Zeek, we also do it earlier through the GlueBuilder itself so that the
-    // new types are already available when scripts are parsed.
-    std::set<hilti::ID> exported_type_seen;
-    for ( const auto& ti : _driver->types(true) ) {
-        if ( auto type = createZeekType(ti.type, ti.id) )
+    // Create Zeek types for exported Spicy types.
+    for ( const auto& [tinfo, id] : _driver->exportedTypes() ) {
+        if ( auto type = createZeekType(tinfo.type, id) )
             preinit_body.addCall("zeek_rt::register_type",
-                                 {builder::string(ti.id.namespace_()), builder::string(ti.id.local()), *type});
+                                 {builder::string(id.namespace_()), builder::string(id.local()), *type});
         else
-            hilti::logger().error(hilti::util::fmt("cannot export Spicy type '%s': %s", ti.id, type.error()),
-                                  ti.location);
-
-        exported_type_seen.insert(ti.id);
-    }
-
-    // Check if all exports are accounted for.
-    for ( const auto& [id, location] : _exports ) {
-        if ( exported_type_seen.find(id) == exported_type_seen.end() ) {
-            if ( ! id.namespace_() )
-                hilti::logger().error(hilti::util::fmt("exported type must provide namespace: %d", id), location);
-            else
-                hilti::logger().error(hilti::util::fmt("unknown type exported: %s", id), location);
-        }
+            hilti::logger().error(hilti::util::fmt("cannot export Spicy type '%s': %s", id, type.error()),
+                                  tinfo.location);
     }
 
     for ( auto&& [id, m] : _spicy_modules ) {
@@ -915,8 +901,8 @@ bool GlueCompiler::compile() {
             m->spicy_module->add(std::move(import_));
         }
 
-        auto unit = hilti::Unit::fromModule(_driver->context(), std::move(*m->spicy_module), ".spicy");
-        _driver->addInput(std::move(unit));
+        auto unit = hilti::Unit::fromModule(_driver->context(), *m->spicy_module, ".spicy");
+        _driver->addInput(unit);
     }
 
     if ( ! preinit_body.empty() ) {
@@ -926,8 +912,8 @@ bool GlueCompiler::compile() {
         init_module.add(std::move(preinit_function));
     }
 
-    auto unit = hilti::Unit::fromModule(_driver->context(), std::move(init_module), ".hlt");
-    _driver->addInput(std::move(unit));
+    auto unit = hilti::Unit::fromModule(_driver->context(), init_module, ".hlt");
+    _driver->addInput(unit);
     return true;
 }
 
@@ -1086,7 +1072,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
         std::vector<std::string> fmt_ctrls(fmt_args.size() - 1, "%s");
         auto fmt_str = hilti::util::fmt("-> event %%s(%s)", hilti::util::join(fmt_ctrls, ", "));
-        auto msg = builder::modulo(builder::string(fmt_str), builder::tuple(std::move(fmt_args)));
+        auto msg = builder::modulo(builder::string(fmt_str), builder::tuple(fmt_args));
         auto call = builder::call("zeek_rt::debug", {std::move(msg)});
         body.addExpression(call);
     }
@@ -1137,7 +1123,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     auto attrs = hilti::AttributeSet({hilti::Attribute("&priority", builder::integer(ev->priority))});
     auto unit_hook = spicy::Hook({}, body.block(), spicy::Engine::All, {}, meta);
-    auto hook_decl = spicy::declaration::UnitHook(ev->hook, std::move(unit_hook), meta);
+    auto hook_decl = spicy::declaration::UnitHook(ev->hook, unit_hook, meta);
     ev->spicy_module->spicy_module->add(Declaration(hook_decl));
 
     return true;
@@ -1164,7 +1150,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
 
     result_t base_type(const char* tag) { return builder::call("zeek_rt::create_base_type", {builder::id(tag)}); }
 
-    result_t createZeekType(const hilti::Type& t, std::optional<hilti::ID> id_ = {}) {
+    result_t createZeekType(const hilti::Type& t, const std::optional<hilti::ID>& id_ = {}) {
         if ( id_ )
             id = id_;
         else if ( auto x = t.typeID() )
@@ -1294,10 +1280,7 @@ struct VisitorZeekType : hilti::visitor::PreOrder<hilti::Result<hilti::Expressio
 } // namespace
 
 hilti::Result<hilti::Expression> GlueCompiler::createZeekType(const hilti::Type& t, const hilti::ID& id) const {
-    if ( id.namespace_() )
-        return VisitorZeekType(this).createZeekType(t, id);
-    else
-        return hilti::result::Error("exported ID must be fully qualified");
+    return VisitorZeekType(this).createZeekType(t, id);
 }
 
 namespace {

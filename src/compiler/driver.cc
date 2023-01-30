@@ -15,9 +15,9 @@
 #include <spicy/ast/types/unit.h>
 #include <spicy/autogen/config.h>
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/debug.h>
 #include <zeek-spicy/compiler/driver.h>
 #include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/compiler/debug.h>
 
 // Must come after Bro includes to avoid namespace conflicts.
 #include <spicy/rt/libspicy.h>
@@ -335,22 +335,31 @@ hilti::Result<TypeInfo> Driver::lookupType(const hilti::ID& id) {
         return hilti::result::Error(hilti::util::fmt("unknown type '%s'", id));
 }
 
-std::vector<TypeInfo> Driver::types(bool exported_only) const {
-    auto exported = _glue->exportedIDs();
-
+std::vector<TypeInfo> Driver::types() const {
     std::vector<TypeInfo> result;
     result.reserve(_types.size());
-    for ( const auto& t : _types ) {
-        if ( exported_only && std::find_if(exported.begin(), exported.end(),
-                                           [&t](const auto& i) { return i.first == t.first; }) == exported.end() )
-            continue;
 
+    for ( const auto& t : _types )
         result.push_back(t.second);
+
+    return result;
+}
+
+std::vector<std::pair<TypeInfo, hilti::ID>> Driver::exportedTypes() const {
+    std::vector<std::pair<TypeInfo, hilti::ID>> result;
+
+    for ( const auto& [spicy_id, zeek_id, _] : _glue->exportedIDs() ) {
+        if ( auto t = _types.find(spicy_id); t != _types.end() )
+            result.emplace_back(t->second, zeek_id);
+        else {
+            hilti::logger().error(hilti::rt::fmt("unknown type '%s' exported", spicy_id));
+            continue;
+        }
     }
 
     // Automatically export public enums for backwards compatibility.
     for ( const auto& t : _public_enums )
-        result.push_back(t);
+        result.emplace_back(t, t.id);
 
     return result;
 }
