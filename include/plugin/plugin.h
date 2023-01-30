@@ -86,7 +86,7 @@ public:
 
     /**
      * Runtime method to register a Spicy-generated type with Zeek. The type
-     * must have been encoutered during AST traversal alreadt, so that its ID
+     * must have been encoutered during AST traversal already, so that its ID
      * is known. The corresponding Zeek type will be created and registered with Zeek.
      *
      * @param id fully-qualified ID of the type

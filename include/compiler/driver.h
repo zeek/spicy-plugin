@@ -19,8 +19,8 @@ struct TypeInfo {
     hilti::ID id;                        /**< fully-qualified name of the type */
     hilti::Type type;                    /**< the type itself */
     hilti::declaration::Linkage linkage; /**< linkage of of the type's declaration */
-    bool is_resolved;    /**< true if we are far enough in processing that the type has been fully resolved */
-    hilti::ID module_id; /**< name of module type is defined in */
+    bool is_resolved = false; /**< true if we are far enough in processing that the type has been fully resolved */
+    hilti::ID module_id;      /**< name of module type is defined in */
     hilti::rt::filesystem::path module_path; /**< path of module that type is defined in */
     hilti::Location location;                /**< location of type's declaration */
 };

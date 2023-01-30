@@ -239,9 +239,9 @@ void plugin::Zeek_Spicy::Plugin::registerType(const std::string& id, const ::zee
     auto [ns, local] = parseID(id);
 
     if ( ::zeek::detail::lookup_ID(local.c_str(), ns.c_str()) ) {
-        ZEEK_DEBUG(hilti::rt::fmt("Not registering Zeek type %s; it already exists", id));
-        // Already exists, which means it's either done by the Spicy plugin
-        // already, or provided manually. We leave it alone then.
+        // Note, this is unlikely  to trigger, because we run before Zeek
+        // registers its own IDs (but then Zeek will catch it).
+        reporter::error(hilti::rt::fmt("attempt to overwrite already defined Zeek type '%s'", id));
         return;
     }
 
