@@ -39,8 +39,8 @@ Zeek includes both Spicy and this plugin by default since version 5.0.
 To confirm that you have it available, run `zeek -N Zeek::Spicy`, it
 should show output like this:
 
-    # zeek -NN Zeek::Spicy
-    Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+    # zeek -N Zeek::Spicy
+    Zeek::Spicy - Support for Spicy parsers (*.hlto) (built-in)
 
 Assuming that's the case, you should also find the plugin's
 compilation tool `spicyz` at the same place as the Zeek executable:
@@ -62,16 +62,16 @@ install the Spicy plugin is through the Zeek package manager:
     # zkg install zeek/spicy-plugin
 
 This will pull down the package, compile and test the plugin, and then
-install and activate it. To check that the plugin becomes available,
+install and activate it. To check that the plugin has become available,
 run `zeek -N Zeek::Spicy` afterwards, it should show output like
 this:
 
-    # zeek -NN Zeek::Spicy
-    Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+    # zeek -N Zeek::Spicy
+    Zeek::Spicy - Support for Spicy parsers (*.hlto) (dynamic, version x.y.z)
 
-The compilation tool `spicyz` comes with package as well and should
-show up in your `PATH` after installation. If that's not the case,
-please see the [Spicy
+The compilation tool `spicyz` comes with the package as well, and
+should show up in your `PATH` after installation. If that's not the
+case, please see the [Spicy
 manual](https://docs.zeek.org/projects/spicy/en/latest/zeek.html#zeek_spicyz)
 on how to locate it (you might be using an older version of *zkg*
 still).
@@ -96,7 +96,7 @@ that you can write to the Zeek plugin directory):
 Zeek should now show it:
 
     # zeek -N Zeek::Spicy
-    Zeek::Spicy - Support for Spicy parsers (*.spicy, *.evt, *.hlto) (dynamic, version x.y.z)
+    Zeek::Spicy - Support for Spicy parsers (*.hlto) (dynamic, version x.y.z)
 
 You will also find `spicyz` in `${prefix}/bin` now.
 
