@@ -9,9 +9,8 @@ environment:
     # Cache JIT results.
     HILTI_CXX_COMPILER_LAUNCHER: ccache
 
-    # Artifact to download for Spicy.
-    SPICY_DEB: https://api.cirrus-ci.com/v1/artifact/github/zeek/spicy/docker_debian11/packages/spicy-dev.deb
-    # SPICY_DEB: https://api.cirrus-ci.com/v1/artifact/task/<task_number>/packages/spicy-dev.deb
+    # Spicy branch to download artifact from.
+    SPICY_BRANCH: main
 
 zkg_task:
   timeout_in: 120m
@@ -30,7 +29,7 @@ zkg_task:
     fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
-    - curl -o spicy-dev.deb $SPICY_DEB
+    - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
@@ -64,7 +63,7 @@ standalone_task:
       fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
-    - curl -o spicy-dev.deb $SPICY_DEB
+    - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
@@ -99,7 +98,7 @@ static_zeek_master_task:
       fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
 
   install_spicy_script:
-    - curl -o spicy-dev.deb $SPICY_DEB
+    - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
     - dpkg --install spicy-dev.deb
     - rm spicy-dev.deb
 
