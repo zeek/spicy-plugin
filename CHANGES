@@ -1,3 +1,13 @@
+1.4.2-45 | 2023-01-31 10:27:33 +0100
+
+  * Small README tweaks. (Robin Sommer, Corelight)
+
+  * Fence usage of new Spicy API with version check. (Robin Sommer, Corelight)
+
+  * Remove more code that we no longer need without JIT. (Robin Sommer, Corelight)
+
+  * Remove Markdown from plugin's version message. (Robin Sommer, Corelight)
+
 1.4.2-39 | 2023-01-28 10:58:30 +0100
 
   * GH-154: Remove JIT support from plugin. (Robin Sommer, Corelight)

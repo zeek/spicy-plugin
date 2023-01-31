@@ -1,3 +1,6 @@
+# File system layout changes with 1.7.0.
+# @TEST-REQUIRES: spicy-version 10700
+#
 # @TEST-EXEC: (cd $(spicyz --print-plugin-path) && find cmake include spicy tests) | sort >files
 # @TEST-EXEC: TEST_DIFF_CANONIFIER= btest-diff files
 #

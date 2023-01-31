@@ -485,7 +485,9 @@ void plugin::Zeek_Spicy::Plugin::InitPreScript() {
 
     ZEEK_DEBUG("Beginning pre-script initialization");
 
+#if SPICY_VERSION_NUMBER >= 10700
     hilti::rt::executeManualPreInits();
+#endif
 
     autoDiscoverModules();
 
@@ -574,10 +576,12 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
 
     hilti::rt::configuration::set(hilti_config);
 
+#if SPICY_VERSION_NUMBER >= 10700
     auto spicy_config = spicy::rt::configuration::get();
     spicy_config.hook_accept_input = hook_accept_input;
     spicy_config.hook_decline_input = hook_decline_input;
     spicy::rt::configuration::set(std::move(spicy_config));
+#endif
 
     try {
         hilti::rt::init();
