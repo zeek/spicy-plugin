@@ -17,6 +17,8 @@
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
 
+#include <hilti/autogen/config.h>
+
 #include <zeek-spicy/autogen/config.h>
 #include <zeek-spicy/plugin/file-analyzer.h>
 #include <zeek-spicy/plugin/packet-analyzer.h>
@@ -31,6 +33,14 @@ plugin::Zeek_Spicy::Plugin SpicyPlugin;
 plugin::Zeek_Spicy::Plugin* ::plugin::Zeek_Spicy::OurPlugin = &SpicyPlugin;
 
 using namespace spicy::zeek;
+
+// Split an potentially scoped ID into namespace and local part.
+static std::pair<std::string, std::string> parseID(const std::string& s) {
+    if ( auto i = s.rfind("::"); i != std::string::npos )
+        return std::make_pair(s.substr(0, i), s.substr(i + 2));
+    else
+        return std::make_pair("", s);
+}
 
 plugin::Zeek_Spicy::Plugin::Plugin() {
 #ifdef HILTI_VERSION_FUNCTION
@@ -225,32 +235,34 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
     _packet_analyzers_by_type[info.type] = info;
 }
 
-void plugin::Zeek_Spicy::Plugin::registerEnumType(
-    const std::string& ns, const std::string& id,
-    const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels) {
-    if ( ::zeek::detail::lookup_ID(id.c_str(), ns.c_str()) )
-        // Already exists, which means it's either done by the Spicy plugin
-        // already, or provided manually. We leave it alone then.
+void plugin::Zeek_Spicy::Plugin::registerType(const std::string& id, const ::zeek::TypePtr& type) {
+    auto [ns, local] = parseID(id);
+
+    if ( ::zeek::detail::lookup_ID(local.c_str(), ns.c_str()) ) {
+        // Note, this is unlikely  to trigger, because we run before Zeek
+        // registers its own IDs (but then Zeek will catch it).
+        reporter::error(hilti::rt::fmt("attempt to overwrite already defined Zeek type '%s'", id));
         return;
-
-    auto fqid = hilti::rt::fmt("%s::%s", ns, id);
-    ZEEK_DEBUG(hilti::rt::fmt("Adding Zeek enum type %s", fqid));
-
-    auto etype = ::zeek::make_intrusive<::zeek::EnumType>(fqid);
-
-    for ( auto [lid, lval] : labels ) {
-        auto name = ::hilti::rt::fmt("%s_%s", id, lid);
-
-        if ( lval == -1 )
-            // Zeek's enum can't be negative, so swap int max_int for our Undef.
-            lval = std::numeric_limits<::zeek_int_t>::max();
-
-        etype->AddName(ns, name.c_str(), lval, true);
     }
 
-    auto zeek_id = ::zeek::detail::install_ID(id.c_str(), ns.c_str(), true, true);
-    zeek_id->SetType(etype);
+    ZEEK_DEBUG(hilti::rt::fmt("Registering Zeek type %s", id));
+    auto zeek_id = ::zeek::detail::install_ID(local.c_str(), ns.c_str(), true, true);
+    zeek_id->SetType(type);
     zeek_id->MakeType();
+    AddBifItem(id, ::zeek::plugin::BifItem::TYPE);
+}
+
+::zeek::TypePtr plugin::Zeek_Spicy::Plugin::findType(const std::string& id) const {
+    auto [ns, local] = parseID(id);
+
+    auto zid = ::zeek::detail::lookup_ID(local.c_str(), ns.c_str());
+    if ( ! zid )
+        return nullptr;
+
+    if ( ! zid->IsType() )
+        return nullptr;
+
+    return zid->GetType();
 }
 
 void plugin::Zeek_Spicy::Plugin::registerEvent(const std::string& name) {

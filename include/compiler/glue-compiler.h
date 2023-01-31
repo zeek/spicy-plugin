@@ -6,6 +6,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -47,8 +48,8 @@ struct ProtocolAnalyzer {
     std::string replaces;     /**< Name of another analyzer this one replaces. */
 
     // Computed information.
-    std::optional<UnitInfo> unit_orig; /**< The type of the unit to parse the originator side. */
-    std::optional<UnitInfo> unit_resp; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit_orig; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit_resp; /**< The type of the unit to parse the originator side. */
 };
 
 /** Representation of a Spicy file analyzer, parsed from an EVT file. */
@@ -61,7 +62,7 @@ struct FileAnalyzer {
     std::string replaces;                /**< Name of another analyzer this one replaces. */
 
     // Computed information.
-    std::optional<UnitInfo> unit; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit; /**< The type of the unit to parse the originator side. */
 };
 
 /** Representation of a Spicy packet analyzer, parsed from an EVT file. */
@@ -73,7 +74,7 @@ struct PacketAnalyzer {
     std::string replaces;     /**< Name of another analyzer this one replaces. */
 
     // Computed information.
-    std::optional<UnitInfo> unit; /**< The type of the unit to parse the originator side. */
+    std::optional<TypeInfo> unit; /**< The type of the unit to parse the originator side. */
 };
 
 /**
@@ -155,6 +156,23 @@ public:
      */
     bool compile();
 
+    /** Returns all IDs that have been exported so far. */
+    const auto& exportedIDs() const { return _exports; }
+
+    /** Generates code to convert a HILTI type to a corresponding Zeek type at runtime. */
+    hilti::Result<hilti::Expression> createZeekType(const hilti::Type& t, const hilti::ID& id) const;
+
+    using RecordField = std::tuple<std::string, hilti::Type, bool>; /**< (ID, type, optional) */
+
+    /**
+     * Helper to retrieve a list of Zeek-side record fields that converting a
+     * Spicy unit to a Zeek record will yield.
+     *
+     * @param unit the unit type to retrieve fields for
+     * @return list of fields
+     */
+    static std::vector<RecordField> recordFields(const ::spicy::type::Unit& unit);
+
 protected:
     friend class Driver;
 
@@ -204,12 +222,13 @@ private:
 
     std::map<hilti::ID, std::shared_ptr<glue::SpicyModule>> _spicy_modules;
 
-    std::vector<std::pair<ID, std::optional<ID>>> _imports;  /**< imports from EVT file, with ID and optional scope */
-    std::vector<glue::Event> _events;                        /**< events parsed from EVT files */
-    std::vector<glue::ProtocolAnalyzer> _protocol_analyzers; /**< protocol analyzers parsed from EVT files */
-    std::vector<glue::FileAnalyzer> _file_analyzers;         /**< file analyzers parsed from EVT files */
-    std::vector<glue::PacketAnalyzer> _packet_analyzers;     /**< file analyzers parsed from EVT files */
-    std::vector<hilti::Location> _locations;                 /**< location stack during parsing EVT files */
+    std::vector<std::pair<ID, std::optional<ID>>> _imports; /**< imports from EVT files, with ID and optional scope */
+    std::vector<std::tuple<ID, ID, hilti::Location>> _exports; /**< exports from EVT files */
+    std::vector<glue::Event> _events;                          /**< events parsed from EVT files */
+    std::vector<glue::ProtocolAnalyzer> _protocol_analyzers;   /**< protocol analyzers parsed from EVT files */
+    std::vector<glue::FileAnalyzer> _file_analyzers;           /**< file analyzers parsed from EVT files */
+    std::vector<glue::PacketAnalyzer> _packet_analyzers;       /**< file analyzers parsed from EVT files */
+    std::vector<hilti::Location> _locations;                   /**< location stack during parsing EVT files */
 };
 } // namespace spicy::zeek
 

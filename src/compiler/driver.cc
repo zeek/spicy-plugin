@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -14,9 +15,9 @@
 #include <spicy/ast/types/unit.h>
 #include <spicy/autogen/config.h>
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/debug.h>
 #include <zeek-spicy/compiler/driver.h>
 #include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/compiler/debug.h>
 
 // Must come after Bro includes to avoid namespace conflicts.
 #include <spicy/rt/libspicy.h>
@@ -30,52 +31,36 @@
 using namespace spicy::zeek;
 using Driver = spicy::zeek::Driver;
 
-/** Visitor to extract unit information from an HILTI AST before it's compiled. */
-struct VisitorPreCompilation : public hilti::visitor::PreOrder<void, VisitorPreCompilation> {
-    explicit VisitorPreCompilation(Driver* driver, hilti::ID module, hilti::rt::filesystem::path path)
-        : driver(driver), module(std::move(module)), path(std::move(path)) {}
+/**
+ * Visitor to type information from a HILTI AST. This extracts user-visibl
+ * types only, we skip any internal ones.
+ */
+struct VisitorTypes : public hilti::visitor::PreOrder<void, VisitorTypes> {
+    explicit VisitorTypes(Driver* driver, hilti::ID module, hilti::rt::filesystem::path path, bool is_resolved)
+        : driver(driver), module(std::move(module)), path(std::move(path)), is_resolved(is_resolved) {}
 
     void operator()(const hilti::declaration::Type& t) {
-        if ( auto et = t.type().tryAs<hilti::type::Enum>(); et && t.linkage() == hilti::declaration::Linkage::Public ) {
-            auto ei = EnumInfo{
-                .id = hilti::ID(module, t.id()),
-                .type = *et,
-                .module_id = module,
-                .module_path = path,
-            };
+        assert(! t.type().typeID() || *t.type().typeID() == hilti::ID(module, t.id())); // ensure consistent IDs
 
-            enums.emplace_back(std::move(ei));
-        }
+        if ( module == hilti::ID("hilti") || module == hilti::ID("spicy_rt") || module == hilti::ID("zeek_rt") )
+            return;
+
+        types.emplace_back(TypeInfo{
+            .id = hilti::ID(module, t.id()),
+            .type = t.type()._clone().as<hilti::Type>(),
+            .linkage = t.linkage(),
+            .is_resolved = is_resolved,
+            .module_id = module,
+            .module_path = path,
+            .location = t.meta().location(),
+        });
     }
 
     Driver* driver;
     hilti::ID module;
     hilti::rt::filesystem::path path;
-    std::vector<EnumInfo> enums;
-};
-
-/** Visitor to extract unit information from an HILTI AST after it's compiled. */
-struct VisitorPostCompilation : public hilti::visitor::PreOrder<void, VisitorPostCompilation> {
-    explicit VisitorPostCompilation(Driver* driver, hilti::ID module, hilti::rt::filesystem::path path)
-        : driver(driver), module(std::move(module)), path(std::move(path)) {}
-
-    void operator()(const hilti::declaration::Type& t) {
-        if ( auto ut = t.type().tryAs<spicy::type::Unit>() ) {
-            auto ui = UnitInfo{
-                .id = *t.type().typeID(),
-                .type = *ut,
-                .module_id = module,
-                .module_path = path,
-            };
-
-            units.emplace_back(std::move(ui));
-        }
-    }
-
-    Driver* driver;
-    hilti::ID module;
-    hilti::rt::filesystem::path path;
-    std::vector<UnitInfo> units;
+    bool is_resolved;
+    std::vector<TypeInfo> types;
 };
 
 Driver::Driver(std::unique_ptr<GlueCompiler> glue, const char* argv0, hilti::rt::filesystem::path plugin_path,
@@ -211,11 +196,40 @@ hilti::Result<hilti::Nothing> Driver::compile() {
     return hilti::Nothing();
 }
 
-hilti::Result<UnitInfo> Driver::lookupUnit(const hilti::ID& unit) {
-    if ( auto x = _units.find(unit); x != _units.end() )
+hilti::Result<TypeInfo> Driver::lookupType(const hilti::ID& id) {
+    if ( auto x = _types.find(id); x != _types.end() )
         return x->second;
     else
-        return hilti::result::Error("unknown unit");
+        return hilti::result::Error(hilti::util::fmt("unknown type '%s'", id));
+}
+
+std::vector<TypeInfo> Driver::types() const {
+    std::vector<TypeInfo> result;
+    result.reserve(_types.size());
+
+    for ( const auto& t : _types )
+        result.push_back(t.second);
+
+    return result;
+}
+
+std::vector<std::pair<TypeInfo, hilti::ID>> Driver::exportedTypes() const {
+    std::vector<std::pair<TypeInfo, hilti::ID>> result;
+
+    for ( const auto& [spicy_id, zeek_id, _] : _glue->exportedIDs() ) {
+        if ( auto t = _types.find(spicy_id); t != _types.end() )
+            result.emplace_back(t->second, zeek_id);
+        else {
+            hilti::logger().error(hilti::rt::fmt("unknown type '%s' exported", spicy_id));
+            continue;
+        }
+    }
+
+    // Automatically export public enums for backwards compatibility.
+    for ( const auto& t : _public_enums )
+        result.emplace_back(t, t.id);
+
+    return result;
 }
 
 void Driver::hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) {
@@ -226,17 +240,20 @@ void Driver::hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) {
         // Ignore modules constructed in memory.
         return;
 
-    auto v = VisitorPreCompilation(this, unit->id(), unit->path());
+    auto v = VisitorTypes(this, unit->id(), unit->path(), false);
     for ( auto i : v.walk(unit->module()) )
         v.dispatch(i);
 
-    for ( const auto& e : v.enums ) {
-        if ( e.id.namespace_() == ID("hilti") || e.id.namespace_() == ID("spicy_rt") )
-            continue;
+    for ( const auto& ti : v.types ) {
+        ZEEK_DEBUG(hilti::util::fmt("  Got type '%s' (pre-compile)", ti.id));
+        _types[ti.id] = ti;
 
-        ZEEK_DEBUG(hilti::util::fmt("  Got public enum type '%s'", e.id));
-        hookNewEnumType(e);
-        _enums.push_back(e);
+        if ( auto et = ti.type.tryAs<hilti::type::Enum>(); et && ti.linkage == hilti::declaration::Linkage::Public ) {
+            ZEEK_DEBUG("    Automatically exporting public enum for backwards compatibilty");
+            _public_enums.push_back(ti);
+        }
+
+        hookNewType(ti);
     }
 }
 
@@ -244,22 +261,18 @@ void Driver::hookNewASTPostCompilation(std::shared_ptr<hilti::Unit> unit) {
     if ( unit->extension() != ".spicy" )
         return;
 
-    if ( unit->id() == ID("spicy_rt") || unit->id() == ID("hilti") || unit->id() == ID("zeek_rt") ||
-         unit->id() == ID("zeek") )
-        return;
-
     if ( unit->path().empty() )
         // Ignore modules constructed in memory.
         return;
 
-    auto v = VisitorPostCompilation(this, unit->id(), unit->path());
+    auto v = VisitorTypes(this, unit->id(), unit->path(), true);
     for ( auto i : v.walk(unit->module()) )
         v.dispatch(i);
 
-    for ( auto&& u : v.units ) {
-        ZEEK_DEBUG(hilti::util::fmt("  Got unit type '%s'", u.id));
-        hookNewUnitType(u);
-        _units[u.id] = std::move(u);
+    for ( auto&& t : v.types ) {
+        ZEEK_DEBUG(hilti::util::fmt("  Got type '%s' (post-compile)", t.id));
+        _types[t.id] = t;
+        hookNewType(t);
     }
 
     _glue->addSpicyModule(unit->id(), unit->path());

@@ -1,3 +1,26 @@
+1.4.2-57 | 2023-01-31 10:29:56 +0100
+
+  * Teach the plugin to create Zeek types automatically. (Robin
+    Sommer, Corelight).
+
+    One can now `export` types in EVT files to have the plugin
+    instantiate a corresponding Zeek type automatically, without
+    needing to declare it explicitly in a Zeek script. We did this
+    already for public `enum` types. The new `export` keyword
+    generalizes that for (almost) all types that can be passed to
+    Zeek. This is particularly helpful for units, where previously one
+    would have had to type out a corresponding `record` type.
+
+    The EVT syntax for this capability is: `export SPICY_ID [as
+    Zeek_ID];`, with the optional `as ...` part allowing to map the
+    Spicy type to a different Zeek-side ID.
+
+    We retain the automatic exporting of public `enum` types for
+    backwards compatibility, at least for now. Non-public enums can
+    now be exported as well through the new keyword.
+
+    More documentation on this is forthcoming in the manual.
+
 1.4.2-45 | 2023-01-31 10:27:33 +0100
 
   * Small README tweaks. (Robin Sommer, Corelight)

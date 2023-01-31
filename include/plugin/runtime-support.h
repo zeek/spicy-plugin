@@ -113,9 +113,49 @@ void weird(const std::string& id, const std::string& addl);
 void register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& replaces,
                               const std::string& linker_scope);
 
-/** Registers a Spicy enum type to make it available inside Zeek. */
-void register_enum_type(const std::string& ns, const std::string& id,
-                        const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels);
+/** Registers a Spicy-generated type to make it available inside Zeek. */
+void register_type(const std::string& ns, const std::string& id, const ::zeek::TypePtr& type);
+
+/** Identifies a Zeek-side type. */
+enum class ZeekTypeTag : uint64_t {
+    Addr,
+    Any,
+    Bool,
+    Count,
+    Double,
+    Enum,
+    Error,
+    File,
+    Func,
+    Int,
+    Interval,
+    List,
+    Opaque,
+    Pattern,
+    Port,
+    Record,
+    String,
+    Subnet,
+    Table,
+    Time,
+    Type,
+    Vector,
+    Void,
+};
+
+extern ::zeek::TypePtr create_base_type(ZeekTypeTag tag);
+
+extern ::zeek::TypePtr create_enum_type(
+    const std::string& ns, const std::string& id,
+    const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels);
+
+
+using RecordField = std::tuple<std::string, ::zeek::TypePtr, hilti::rt::Bool>; // (ID, type, optional)
+extern ::zeek::TypePtr create_record_type(const std::string& ns, const std::string& id,
+                                          const hilti::rt::Vector<RecordField>& fields);
+
+extern ::zeek::TypePtr create_table_type(::zeek::TypePtr key, std::optional<::zeek::TypePtr> value);
+extern ::zeek::TypePtr create_vector_type(const ::zeek::TypePtr& elem);
 
 /** Returns true if an event has at least one handler defined. */
 inline hilti::rt::Bool have_handler(const ::zeek::EventHandlerPtr& handler) { return static_cast<bool>(handler); }
