@@ -101,6 +101,36 @@ static hilti::ID extract_id(const std::string& chunk, size_t* i) {
     return hilti::ID(hilti::util::replace(id, "%", "0x25_"));
 }
 
+static hilti::Type extract_type(const std::string& chunk, size_t* i) {
+    eat_spaces(chunk, i);
+
+    // We currently only parse Spicy types that can appear in parameters of
+    // built-in hooks--which are not many.
+    auto token = extract_id(chunk, i);
+
+    if ( token == hilti::ID("string") )
+        return hilti::type::String();
+
+    if ( token == hilti::ID("uint64") )
+        return hilti::type::UnsignedInteger(64);
+
+    throw ParseError("mismatching type");
+}
+
+static hilti::type::function::Parameter extract_parameter(const std::string& chunk, size_t* i) {
+    eat_spaces(chunk, i);
+
+    auto id = extract_id(chunk, i);
+
+    if ( ! looking_at(chunk, *i, ":") )
+        throw ParseError("expected ':'");
+
+    eat_token(chunk, i, ":");
+
+    auto type = extract_type(chunk, i);
+    return builder::parameter(std::move(id), std::move(type));
+}
+
 static hilti::rt::filesystem::path extract_path(const std::string& chunk, size_t* i) {
     eat_spaces(chunk, i);
 
@@ -709,6 +739,24 @@ glue::Event GlueCompiler::parseEvent(const std::string& chunk) {
     eat_token(chunk, &i, "on");
     ev.path = extract_id(chunk, &i);
 
+    if ( looking_at(chunk, i, "(") ) {
+        eat_token(chunk, &i, "(");
+
+        if ( ! looking_at(chunk, i, ")") ) {
+            while ( true ) {
+                auto param = extract_parameter(chunk, &i);
+                ev.parameters.push_back(std::move(param));
+
+                if ( looking_at(chunk, i, ")") )
+                    break;
+
+                eat_token(chunk, &i, ",");
+            }
+        }
+
+        eat_token(chunk, &i, ")");
+    }
+
     if ( looking_at(chunk, i, "if") ) {
         eat_token(chunk, &i, "if");
         eat_token(chunk, &i, "(");
@@ -1122,7 +1170,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
                  meta);
 
     auto attrs = hilti::AttributeSet({hilti::Attribute("&priority", builder::integer(ev->priority))});
-    auto unit_hook = spicy::Hook({}, body.block(), spicy::Engine::All, {}, meta);
+    auto unit_hook = spicy::Hook(ev->parameters, body.block(), spicy::Engine::All, {}, meta);
     auto hook_decl = spicy::declaration::UnitHook(ev->hook, unit_hook, meta);
     ev->spicy_module->spicy_module->add(Declaration(hook_decl));
 

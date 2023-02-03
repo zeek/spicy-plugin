@@ -1,3 +1,14 @@
+1.4.2-66 | 2023-02-03 16:02:28 +0100
+
+  * GH-162: Support hook arguments in EVT files. (Robin Sommer, Corelight)
+
+    Some built-in unit hooks allow to receive parameters. To enable access
+    to them inside EVT files, we now support the same syntax there as with
+    `on ...` declarations in Spicy source code. For example, to gain
+    access to the error message with `%error`:
+
+        on SSH::Banner::%error(msg: string) -> event MyScript::my_event(msg);
+
 1.4.2-64 | 2023-02-03 12:13:57 +0100
 
   * GH-177: Allow duplicate Zeek-side type registration as long as

@@ -102,13 +102,14 @@ struct SpicyModule {
 /** Representation of an event parsed from an EVT file. */
 struct Event {
     // Information parsed directly from the *.evt file.
-    hilti::rt::filesystem::path file; /**< The path of the *.evt file we parsed this from. */
-    hilti::ID name;                   /**< The name of the event. */
-    hilti::ID path;                   /**< The hook path as specified in the evt file. */
-    std::string condition;            /**< Condition that must be true for the event to trigger. */
-    std::vector<std::string> exprs;   /**< The argument expressions. */
-    int priority;                     /**< Event/hook priority. */
-    hilti::Location location;         /**< Location where event is defined. */
+    hilti::rt::filesystem::path file;                  /**< The path of the *.evt file we parsed this from. */
+    hilti::ID name;                                    /**< The name of the event. */
+    hilti::ID path;                                    /**< The hook path as specified in the evt file. */
+    std::vector<type::function::Parameter> parameters; /**< Event parameters specified in the evt file. */
+    std::string condition;                             /**< Condition that must be true for the event to trigger. */
+    std::vector<std::string> exprs;                    /**< The argument expressions. */
+    int priority;                                      /**< Event/hook priority. */
+    hilti::Location location;                          /**< Location where event is defined. */
 
     // Computed information.
     hilti::ID hook;                               /**< The name of the hook triggering the event. */
