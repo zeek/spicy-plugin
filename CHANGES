@@ -1,3 +1,16 @@
+1.4.2-68 | 2023-02-03 16:32:03 +0100
+
+  * Add explicit dependency of spicyz on its runtime files. (Benjamin Bannier, Corelight)
+
+    If spicy-plugin is built as part of Zeek we want to be able to use a
+    simple dependency on `spicy` when declaring Spicy analyzers in the Zeek
+    tree (this is in fact exactly what the macro `spicy_add_analyzer` does).
+    In order for `spicy` to work when built into Zeek we need its runtime
+    dependencies like e.g., `zeek_rt.hlt` in place before using it.
+
+    This patch adds an explicit dependency of `spicyz` on
+    `copy-zeek-spicy-dist-files` which achieves just that.
+
 1.4.2-66 | 2023-02-03 16:02:28 +0100
 
   * GH-162: Support hook arguments in EVT files. (Robin Sommer, Corelight)
