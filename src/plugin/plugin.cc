@@ -238,7 +238,7 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
 void plugin::Zeek_Spicy::Plugin::registerType(const std::string& id, const ::zeek::TypePtr& type) {
     auto [ns, local] = parseID(id);
 
-    if ( auto old = ::zeek::detail::lookup_ID(local.c_str(), ns.c_str()) ) {
+    if ( const auto& old = ::zeek::detail::lookup_ID(local.c_str(), ns.c_str()) ) {
         // This is most likely to trigger for IDs that other Spicy modules
         // register. If we two Spicy modules need the same type, that's ok as
         // long as they match.
