@@ -209,6 +209,9 @@ if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
         COMMAND ${CMAKE_COMMAND} -E copy ${AUX_TESTS_SCRIPTS} ${PROJECT_BINARY_DIR}/tests/Scripts/
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
+    # spicyz can only work if its runtime dependencies are in place.
+    add_dependencies(spicyz copy-zeek-spicy-dist-files)
+
     # Note for static builds: We can't easily make Zeek's include headers
     # available inside the build directory. They need to be already installed
     # somewhere. Then set HILTI_CXX_INCLUDE_DIRS accordingly.
