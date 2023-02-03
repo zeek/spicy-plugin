@@ -238,10 +238,20 @@ void plugin::Zeek_Spicy::Plugin::registerPacketAnalyzer(const std::string& name,
 void plugin::Zeek_Spicy::Plugin::registerType(const std::string& id, const ::zeek::TypePtr& type) {
     auto [ns, local] = parseID(id);
 
-    if ( ::zeek::detail::lookup_ID(local.c_str(), ns.c_str()) ) {
-        // Note, this is unlikely  to trigger, because we run before Zeek
-        // registers its own IDs (but then Zeek will catch it).
-        reporter::error(hilti::rt::fmt("attempt to overwrite already defined Zeek type '%s'", id));
+    if ( auto old = ::zeek::detail::lookup_ID(local.c_str(), ns.c_str()) ) {
+        // This is most likely to trigger for IDs that other Spicy modules
+        // register. If we two Spicy modules need the same type, that's ok as
+        // long as they match.
+        if ( ! old->IsType() ) {
+            reporter::error(hilti::rt::fmt("Zeek type registration failed for '%s': ID already exists, but is not a type", id));
+            return;
+        }
+
+        if ( ! zeek::same_type(type, old->GetType()) ) {
+            reporter::error(hilti::rt::fmt("Zeek type registration failed for '%s': Type already exists, but differs", id));
+        }
+
+        ZEEK_DEBUG(hilti::rt::fmt("Not re-registering Zeek type %s: identical type already exists", id));
         return;
     }
 
