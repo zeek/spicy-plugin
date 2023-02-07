@@ -11,6 +11,7 @@
 #include <hilti/rt/fmt.h>
 #include <hilti/rt/init.h>
 #include <hilti/rt/library.h>
+#include <hilti/rt/logging.h>
 #include <hilti/rt/types/vector.h>
 #include <hilti/rt/util.h>
 
@@ -243,12 +244,14 @@ void plugin::Zeek_Spicy::Plugin::registerType(const std::string& id, const ::zee
         // register. If we two Spicy modules need the same type, that's ok as
         // long as they match.
         if ( ! old->IsType() ) {
-            reporter::error(hilti::rt::fmt("Zeek type registration failed for '%s': ID already exists, but is not a type", id));
+            reporter::error(
+                hilti::rt::fmt("Zeek type registration failed for '%s': ID already exists, but is not a type", id));
             return;
         }
 
         if ( ! zeek::same_type(type, old->GetType()) ) {
-            reporter::error(hilti::rt::fmt("Zeek type registration failed for '%s': Type already exists, but differs", id));
+            reporter::error(
+                hilti::rt::fmt("Zeek type registration failed for '%s': Type already exists, but differs", id));
         }
 
         ZEEK_DEBUG(hilti::rt::fmt("Not re-registering Zeek type %s: identical type already exists", id));
@@ -726,7 +729,10 @@ void plugin::Zeek_Spicy::Plugin::loadModule(const hilti::rt::filesystem::path& p
     try {
         // If our auto discovery ends up finding the same module multiple times,
         // we ignore subsequent requests.
-        auto canonical_path = hilti::rt::filesystem::canonical(path);
+        std::error_code ec;
+        auto canonical_path = hilti::rt::filesystem::canonical(path, ec);
+        if ( ec )
+            hilti::rt::fatalError(hilti::rt::fmt("could not compute canonical path for %s: %s", path, ec.message()));
 
         if ( auto [library, inserted] = _libraries.insert({canonical_path, hilti::rt::Library(canonical_path)});
              inserted ) {
@@ -768,17 +774,29 @@ void plugin::Zeek_Spicy::Plugin::searchModules(const std::string& paths) {
         if ( trimmed_dir.empty() )
             continue;
 
-        if ( ! hilti::rt::filesystem::is_directory(trimmed_dir) ) {
-            ZEEK_DEBUG(hilti::rt::fmt("Module directory %s does not exist, skipping", trimmed_dir));
+        std::error_code ec;
+        if ( auto is_directory = hilti::rt::filesystem::is_directory(trimmed_dir, ec); ec || ! is_directory ) {
+            ZEEK_DEBUG(hilti::rt::fmt("Module directory %s cannot be read, skipping", trimmed_dir));
             continue;
         }
 
         ZEEK_DEBUG(hilti::rt::fmt("Searching %s for *.hlto", trimmed_dir));
 
-        for ( const auto& e : hilti::rt::filesystem::recursive_directory_iterator(trimmed_dir) ) {
-            if ( e.is_regular_file() && e.path().extension() == ".hlto" )
-                loadModule(e.path());
+        auto it = hilti::rt::filesystem::recursive_directory_iterator(trimmed_dir, ec);
+        if ( ! ec ) {
+            while ( it != hilti::rt::filesystem::recursive_directory_iterator() ) {
+                if ( it->is_regular_file() && it->path().extension() == ".hlto" )
+                    loadModule(it->path());
+
+                if ( it.increment(ec); ec ) {
+                    hilti::rt::warning(hilti::rt::fmt("Error iterating over %s, skipping any remaining files: %s",
+                                                      trimmed_dir, ec.message()));
+                    break;
+                }
+            }
         }
+        else
+            hilti::rt::warning(hilti::rt::fmt("Cannot iterate over %s, skipping: %s", trimmed_dir, ec.message()));
     }
 };
 

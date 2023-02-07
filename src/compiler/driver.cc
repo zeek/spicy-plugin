@@ -125,12 +125,26 @@ Driver::~Driver() {}
 
 hilti::Result<hilti::Nothing> Driver::loadFile(hilti::rt::filesystem::path file,
                                                const hilti::rt::filesystem::path& relative_to) {
+    std::error_code ec;
     if ( ! relative_to.empty() && file.is_relative() ) {
-        if ( auto p = relative_to / file; hilti::rt::filesystem::exists(p) )
+        auto p = relative_to / file;
+        auto exists = hilti::rt::filesystem::exists(p, ec);
+
+        if ( ec )
+            return hilti::rt::result::Error(
+                hilti::util::fmt("error computing path of %s relative to %s: %s", file, relative_to, ec.message()));
+
+        if ( exists )
             file = p;
     }
 
-    if ( ! hilti::rt::filesystem::exists(file) ) {
+    auto exists = hilti::rt::filesystem::exists(file, ec);
+
+    if ( ec )
+        return hilti::rt::result::Error(
+            hilti::util::fmt("cannot check whether file %s exists: %s", file, ec.message()));
+
+    if ( ! exists ) {
         if ( auto path = hilti::util::findInPaths(file, hiltiOptions().library_paths) )
             file = *path;
         else
