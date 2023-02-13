@@ -10,7 +10,7 @@ environment:
     HILTI_CXX_COMPILER_LAUNCHER: ccache
 
     # Spicy branch to download artifact from.
-    SPICY_BRANCH: main
+    SPICY_BRANCH: topic/robin/gh-1328-barrier
 
 zkg_task:
   timeout_in: 120m
