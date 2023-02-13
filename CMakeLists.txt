@@ -184,14 +184,6 @@ set(AUTOGEN_H "${PROJECT_BINARY_DIR}/include/zeek-spicy/autogen")
 file(MAKE_DIRECTORY ${AUTOGEN_H})
 
 if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    if (NOT BINARY_PACKAGING_MODE)
-        # The static build doesn't put the aux files into the build directory
-        # We create links to get the same effect.
-        file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-        file(CREATE_LINK "${PROJECT_BINARY_DIR}"
-             "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/zeek-spicy" SYMBOLIC)
-    endif ()
-
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/cmake")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/include/zeek-spicy/plugin")
     file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/spicy")
