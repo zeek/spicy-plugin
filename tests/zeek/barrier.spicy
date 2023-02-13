@@ -1,0 +1,46 @@
+# @TEST-EXEC: spicyz -o test.hlto %INPUT barrier.evt
+# @TEST-EXEC: zeek -b -Cr ${TRACES}/barrier.pcap Zeek::Spicy test.hlto Spicy::enable_print=T >output
+# @TEST-EXEC: btest-diff output
+#
+# @TEST-DOC: Use barriers to model a protocol where request/response pairs need to be processed in lock step.
+#
+# TODO: Doesn't quite work yet.
+
+module Test;
+
+type Context = struct {
+    b: barrier(2);
+};
+
+public type Requests = unit {
+    %context = Context;
+    : Request[] foreach {
+        self.context().b.arrive_and_wait();
+    }
+};
+
+type Request = unit {
+    /[^\n]+\n/ { print $$.strip(); }
+};
+
+public type Replies = unit {
+    %context = Context;
+    : Reply[] foreach {
+        self.context().b.arrive_and_wait();
+    }
+};
+
+type Reply = unit {
+    /[^\n]+\n/ { print $$.strip(); }
+};
+
+@TEST-START-FILE barrier.evt
+
+import zeek;
+
+protocol analyzer spicy::Test over TCP:
+    parse originator with Test::Requests,
+    parse responder with Test::Replies,
+    port 12345/tcp;
+
+@TEST-END-FILE
