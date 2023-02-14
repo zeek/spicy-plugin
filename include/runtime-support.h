@@ -538,7 +538,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Vector<T>& v, ::zeek::TypePtr targ
 
     auto vt = ::zeek::cast_intrusive<::zeek::VectorType>(target);
     auto zv = ::zeek::make_intrusive<::zeek::VectorVal>(vt);
-    for ( auto i : v )
+    for ( const auto& i : v )
         zv->Assign(zv->Size(), to_val(i, vt->Yield(), location));
 
     return zv;
@@ -565,10 +565,10 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Map<K, V>& m, ::zeek::TypePtr targ
 
     auto zv = ::zeek::make_intrusive<::zeek::TableVal>(tt);
 
-    for ( auto i : m ) {
+    for ( const auto& i : m ) {
         auto k = to_val(i.first, tt->GetIndexTypes()[0], location);
         auto v = to_val(i.second, tt->Yield(), location);
-        zv->Assign(k, v);
+        zv->Assign(std::move(k), std::move(v));
     }
 
     return zv;
@@ -589,7 +589,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Set<T>& s, ::zeek::TypePtr target,
 
     auto zv = ::zeek::make_intrusive<::zeek::TableVal>(tt);
 
-    for ( auto i : s ) {
+    for ( const auto& i : s ) {
         if constexpr ( hilti::rt::is_tuple<T>::value )
             throw TypeMismatch("internal error: sets with tuples not yet supported in to_val()");
         else {
@@ -597,7 +597,7 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Set<T>& s, ::zeek::TypePtr target,
                 throw TypeMismatch("set with non-tuple elements", target, location);
 
             auto idx = to_val(i, tt->GetIndexTypes()[0], location);
-            zv->Assign(idx, nullptr);
+            zv->Assign(std::move(idx), nullptr);
         }
     }
 
