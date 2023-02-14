@@ -1,3 +1,7 @@
+1.4.2-74 | 2023-02-14 16:25:25 +0100
+
+  * Avoid repeated redundant calls to `globals` in generated code. (Benjamin Bannier, Corelight)
+
 1.4.2-72 | 2023-02-14 12:47:22 +0100
 
   * Remove unnecessary copying when iterating collections. (Benjamin Bannier, Corelight)
