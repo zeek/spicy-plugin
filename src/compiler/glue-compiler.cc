@@ -1044,8 +1044,11 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
         body.addExpression(call);
     }
 
+    // Store reference to handler locally to avoid repeated lookups through globals store.
+    body.addLocal("handler", builder::id(handler_id), meta);
+
     // Nothing to do if there's not handler defined.
-    auto have_handler = builder::call("zeek_rt::have_handler", {builder::id(handler_id)}, meta);
+    auto have_handler = builder::call("zeek_rt::have_handler", {builder::id("handler")}, meta);
     auto exit_ = body.addIf(builder::not_(have_handler), meta);
     exit_->addReturn(meta);
 
@@ -1077,7 +1080,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
             }
 
             auto ztype = builder::call("zeek_rt::event_arg_type",
-                                       {builder::id(handler_id), builder::integer(i), location(e)}, meta);
+                                       {builder::id("handler"), builder::integer(i), location(e)}, meta);
             val = builder::call("zeek_rt::to_val", {std::move(*expr), ztype, location(e)}, meta);
         }
 
@@ -1085,7 +1088,7 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
         i++;
     }
 
-    body.addCall("zeek_rt::raise_event", {builder::id(handler_id), builder::move(builder::id("args")), location(*ev)},
+    body.addCall("zeek_rt::raise_event", {builder::id("handler"), builder::move(builder::id("args")), location(*ev)},
                  meta);
 
     auto attrs = hilti::AttributeSet({hilti::Attribute("&priority", builder::integer(ev->priority))});
