@@ -111,7 +111,7 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
 
     auto decls = std::make_unique<::zeek::type_decl_list>();
 
-    for ( auto [id, type, optional] : fields ) {
+    for ( const auto& [id, type, optional] : fields ) {
         auto attrs = ::zeek::make_intrusive<::zeek::detail::Attributes>(nullptr, true, false);
 
         if ( optional ) {

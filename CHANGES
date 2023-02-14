@@ -1,3 +1,7 @@
+1.4.2-72 | 2023-02-14 12:47:22 +0100
+
+  * Remove unnecessary copying when iterating collections. (Benjamin Bannier, Corelight)
+
 1.4.2-70 | 2023-02-13 12:13:34 +0100
 
   * GH-181: Allow more file system operations to fail. (Benjamin Bannier, Corelight)
