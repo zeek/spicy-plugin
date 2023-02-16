@@ -59,10 +59,14 @@ include(GNUInstallDirs)
 
 list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 find_package(Spicy REQUIRED)
-find_package(Zeek REQUIRED)
-
 spicy_require_version("1.3.0")
-zeek_require_version("5.0.0")
+
+if (NOT ZEEK_PLUGIN_INTERNAL_BUILD)
+    find_package(Zeek REQUIRED)
+    zeek_require_version("5.0.0")
+else ()
+    set(ZEEK_DEBUG_BUILD ${ENABLE_DEBUG})
+endif ()
 
 ###
 ### Configure build
@@ -121,7 +125,7 @@ if (NOT ZEEK_SPICY_PLUGIN_BUILD_LIBDIR)
     set(ZEEK_SPICY_PLUGIN_BUILD_LIBDIR ${PROJECT_BINARY_DIR})
 endif ()
 
-# Prepare environment for Zeek's BroPlugin
+# Prepare environment for Zeek's Plugin
 set(BROKER_ROOT_DIR "${ZEEK_PREFIX}")
 set(BRO_CONFIG_CMAKE_DIR "${ZEEK_CMAKE_DIR}")
 set(BRO_CONFIG_INCLUDE_DIR "${ZEEK_INCLUDE_DIRS}")
@@ -133,7 +137,7 @@ set(CAF_ROOT_DIR "${ZEEK_PREFIX}")
 
 set(save_c_flags ${CMAKE_C_FLAGS})
 set(save_cxx_flags ${CMAKE_CXX_FLAGS})
-include(BroPlugin)
+include(ZeekPlugin)
 set(CMAKE_C_FLAGS ${save_c_flags})
 set(CMAKE_CXX_FLAGS ${save_cxx_flags})
 
@@ -165,10 +169,7 @@ zeek_plugin_end()
 
 spicy_get_runtime_libraries(rt_libs "${ZEEK_DEBUG_BUILD}")
 
-if (ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
-    # This gets picked up when linking the "zeek" binary.
-    set(zeekdeps ${zeekdeps} ${rt_libs} PARENT_SCOPE)
-else ()
+if (NOT ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
     target_link_libraries(${_plugin_lib} PUBLIC ${rt_libs})
 endif ()
 
@@ -270,7 +271,10 @@ configure_file(${PROJECT_SOURCE_DIR}/include/config.h.in ${AUTOGEN_H}/config.h)
 ###
 
 spicy_print_summary()
-zeek_print_summary()
+
+if (NOT ZEEK_PLUGIN_INTERNAL_BUILD)
+    zeek_print_summary()
+endif ()
 
 message(
     "\n====================|  Spicy Zeek Plugin  |===================="
