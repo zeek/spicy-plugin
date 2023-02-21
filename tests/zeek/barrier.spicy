@@ -3,36 +3,58 @@
 # @TEST-EXEC: btest-diff output
 #
 # @TEST-DOC: Use barriers to model a protocol where request/response pairs need to be processed in lock step.
-#
-# TODO: Doesn't quite work yet.
 
 module Test;
 
 type Context = struct {
-    b: barrier(2);
+    request: barrier(1);
+    reply: barrier(1);
 };
 
 public type Requests = unit {
     %context = Context;
-    : Request[] foreach {
-        self.context().b.arrive_and_wait();
+
+    on %init {
+        self.context().reply.arrive();
     }
+
+    : (Request(self.context()))[];
 };
 
-type Request = unit {
+type Request = unit(ctx: Context&) {
+    on %init {
+        ctx.reply.wait();
+        ctx.reply.reset();
+    }
+
     /[^\n]+\n/ { print $$.strip(); }
+
+    on %done {
+        ctx.request.arrive();
+    }
+
 };
 
 public type Replies = unit {
     %context = Context;
-    : Reply[] foreach {
-        self.context().b.arrive_and_wait();
-    }
+
+    : (Reply(self.context()))[];
 };
 
-type Reply = unit {
+type Reply = unit(ctx: Context&) {
+    on %init {
+        ctx.request.wait();
+        ctx.request.reset();
+    }
+
     /[^\n]+\n/ { print $$.strip(); }
+
+    on %done {
+        ctx.reply.arrive();
+    }
+
 };
+
 
 @TEST-START-FILE barrier.evt
 
