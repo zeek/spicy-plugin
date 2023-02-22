@@ -8,7 +8,13 @@
 
 #include <zeek/zeek-config.h>
 
-#ifdef ZEEK_VERSION_NUMBER
+// When building as internal plugin, the newest Zeek version does not define
+// ZEEK_VERSION_NUMBER through zeek-config.h, it'll be in the new
+// zeek/zeek-version.h header.
+#if __has_include(<zeek/zeek-version.h>)
+#include <zeek/zeek-version.h>
+#endif
+
 #if ZEEK_SPICY_VERSION_NUMBER != ZEEK_VERSION_NUMBER
 #define STR(x) __STR(x)
 #define __STR(x) #x
@@ -16,7 +22,6 @@
 #error "Mismatch in Zeek version numbers"
 #undef __STR
 #undef STR
-#endif
 #endif
 
 //// Collect all the Zeek includes here that we need anywhere in the plugin.

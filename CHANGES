@@ -1,3 +1,7 @@
+1.5.0-4 | 2023-02-22 15:09:56 +0100
+
+  * Include zeek-version.h if it exists, zeek/zeek#2776. (Arne Welzel, Corelight)
+
 1.5.0-2 | 2023-02-22 13:09:11 +0100
 
   * Set `reupload_on_changes` for ccache caches. (Benjamin Bannier, Corelight)
