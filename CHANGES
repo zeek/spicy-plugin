@@ -1,3 +1,7 @@
+1.5.0-6 | 2023-02-22 15:45:14 +0100
+
+  * GH-123: Remove unnecessary symlink. (Robin Sommer, Corelight)
+
 1.5.0-4 | 2023-02-22 15:09:56 +0100
 
   * Include zeek-version.h if it exists, zeek/zeek#2776. (Arne Welzel, Corelight)
