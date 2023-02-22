@@ -1,3 +1,7 @@
+1.5.0-2 | 2023-02-22 13:09:11 +0100
+
+  * Set `reupload_on_changes` for ccache caches. (Benjamin Bannier, Corelight)
+
 1.4.2-74 | 2023-02-14 16:25:25 +0100
 
   * Avoid repeated redundant calls to `globals` in generated code. (Benjamin Bannier, Corelight)
