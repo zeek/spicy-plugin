@@ -27,6 +27,7 @@ zkg_task:
   ccache_cache:
     folder: /tmp/ccache
     fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
+    reupload_on_changes: true
 
   install_spicy_script:
     - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
@@ -61,6 +62,7 @@ standalone_task:
     ccache_cache:
       folder: /tmp/ccache
       fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
+      reupload_on_changes: true
 
   install_spicy_script:
     - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
@@ -96,6 +98,7 @@ static_zeek_master_task:
     ccache_cache:
       folder: /tmp/ccache
       fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
+      reupload_on_changes: true
 
   install_spicy_script:
     - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
