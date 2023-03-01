@@ -70,6 +70,15 @@ void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
         originator().skipRemaining();
         responder().skipRemaining();
         endp->cookie().analyzer->SetSkip(true);
+    } catch ( const hilti::rt::RecoverableFailure& e ) {
+        // Spicy changed the exception hierarchy between 1.5 and 1.7 so that `RecoverableFailure`
+        // is a `ParseError` as well. Explicitly handle it for earlier versions.
+        STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);
+        originator().skipRemaining();
+        responder().skipRemaining();
+        endp->cookie().analyzer->SetSkip(true);
     } catch ( const hilti::rt::Exception& e ) {
         reporter::analyzerError(endp->cookie().analyzer, e.description(),
                                 e.location()); // this sets Zeek to skip sending any further input
@@ -86,6 +95,13 @@ void ProtocolAnalyzer::Finish(bool is_orig) {
         hilti::rt::context::CookieSetter _(&endp->cookie());
         endp->finish();
     } catch ( const spicy::rt::ParseError& e ) {
+        STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);
+        endp->skipRemaining();
+    } catch ( const hilti::rt::RecoverableFailure& e ) {
+        // Spicy changed the exception hierarchy between 1.5 and 1.7 so that `RecoverableFailure`
+        // is a `ParseError` as well. Explicitly handle it for earlier versions.
         STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
         spicy::zeek::compat::Analyzer_AnalyzerViolation(endp->cookie().analyzer, e.what(), nullptr, 0, tag);

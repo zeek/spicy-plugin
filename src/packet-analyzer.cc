@@ -60,6 +60,14 @@ bool PacketAnalyzer::AnalyzePacket(size_t len, const uint8_t* data, ::zeek::Pack
         spicy::zeek::compat::Analyzer_AnalyzerViolation(*packet, _state.cookie().analyzer, e.what(), nullptr, 0, tag);
         _state.reset();
         return false;
+    } catch ( const hilti::rt::RecoverableFailure& e ) {
+        // Spicy changed the exception hierarchy between 1.5 and 1.7 so that `RecoverableFailure`
+        // is a `ParseError` as well. Explicitly handle it for earlier versions.
+        STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = _state.cookie().analyzer->GetAnalyzerTag();
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(*packet, _state.cookie().analyzer, e.what(), nullptr, 0, tag);
+        _state.reset();
+        return false;
     } catch ( const hilti::rt::Exception& e ) {
         STATE_DEBUG_MSG(e.what());
         reporter::analyzerError(_state.cookie().analyzer, e.description(),

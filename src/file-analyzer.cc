@@ -100,6 +100,12 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
         STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
         spicy::zeek::compat::Analyzer_AnalyzerViolation(_state.cookie().analyzer, e.what(), nullptr, 0, tag);
+    } catch ( const hilti::rt::RecoverableFailure& e ) {
+        // Spicy changed the exception hierarchy between 1.5 and 1.7 so that `RecoverableFailure`
+        // is a `ParseError` as well. Explicitly handle it for earlier versions.
+        STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(_state.cookie().analyzer, e.what(), nullptr, 0, tag);
     } catch ( const hilti::rt::Exception& e ) {
         STATE_DEBUG_MSG(e.what());
         reporter::analyzerError(_state.cookie().analyzer, e.description(),
@@ -114,6 +120,12 @@ void FileAnalyzer::Finish() {
         hilti::rt::context::CookieSetter _(&_state.cookie());
         _state.finish();
     } catch ( const spicy::rt::ParseError& e ) {
+        STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
+        auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
+        spicy::zeek::compat::Analyzer_AnalyzerViolation(_state.cookie().analyzer, e.what(), nullptr, 0, tag);
+    } catch ( const hilti::rt::RecoverableFailure& e ) {
+        // Spicy changed the exception hierarchy between 1.5 and 1.7 so that `RecoverableFailure`
+        // is a `ParseError` as well. Explicitly handle it for earlier versions.
         STATE_DEBUG_MSG(hilti::rt::fmt("parse error, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForFileAnalyzer(_state.cookie().analyzer->Tag());
         spicy::zeek::compat::Analyzer_AnalyzerViolation(_state.cookie().analyzer, e.what(), nullptr, 0, tag);
