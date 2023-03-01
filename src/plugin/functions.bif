@@ -4,6 +4,8 @@ module Spicy;
 %%{
     #include "zeek-spicy/plugin/zeek-compat.h"
     #include "zeek-spicy/plugin/plugin.h"
+    #include "zeek-spicy/autogen/config.h"
+
 %%}
 
 function Spicy::__toggle_analyzer%(tag: any, enable: bool%) : bool
@@ -18,4 +20,8 @@ function Spicy::__toggle_analyzer%(tag: any, enable: bool%) : bool
             zeek::reporter->Warning("could not toggle Spicy analyzer");
 
         return ::zeek::val_mgr->Bool(result);
+        %}
+function Spicy::version%(%) : count
+        %{
+            return ::zeek::val_mgr->Count(SPICY_VERSION_NUMBER);
         %}
