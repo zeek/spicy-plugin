@@ -68,6 +68,16 @@ else ()
     set(ZEEK_DEBUG_BUILD ${ENABLE_DEBUG})
 endif ()
 
+if (NOT TARGET spicy)
+  # If the spicy target does not exist, it can mean that we are either building
+  # a dynamic plugin (ZEEK_PLUGIN_INTERNAL_BUILD is OFF) *or* that we are
+  # building as part of Zeek but with an external Spicy. In both cases, we need
+  # to add a dependency to Spicy later on.
+  set(NEED_SPICY_DEPENDENCY ON)
+else()
+  set(NEED_SPICY_DEPENDENCY OFF)
+endif ()
+
 ###
 ### Configure build
 ####
@@ -154,6 +164,7 @@ zeek_plugin_bif(src/plugin/consts.bif)
 zeek_plugin_bif(src/plugin/events.bif)
 zeek_plugin_bif(src/plugin/functions.bif)
 
+
 if (ZEEK_DEBUG_BUILD)
     # This one needs the DEBUG defined earlier than zeek-compat would.
     set_source_files_properties(functions.bif.cc PROPERTIES COMPILE_DEFINITIONS DEBUG=1)
@@ -169,7 +180,7 @@ zeek_plugin_end()
 
 spicy_get_runtime_libraries(rt_libs "${ZEEK_DEBUG_BUILD}")
 
-if (NOT ZEEK_SPICY_PLUGIN_INTERNAL_BUILD)
+if (NEED_SPICY_DEPENDENCY)
     target_link_libraries(${_plugin_lib} PUBLIC ${rt_libs})
 endif ()
 
