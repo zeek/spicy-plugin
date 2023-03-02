@@ -69,13 +69,13 @@ else ()
 endif ()
 
 if (NOT TARGET spicy)
-  # If the spicy target does not exist, it can mean that we are either building
-  # a dynamic plugin (ZEEK_PLUGIN_INTERNAL_BUILD is OFF) *or* that we are
-  # building as part of Zeek but with an external Spicy. In both cases, we need
-  # to add a dependency to Spicy later on.
-  set(NEED_SPICY_DEPENDENCY ON)
-else()
-  set(NEED_SPICY_DEPENDENCY OFF)
+    # If the spicy target does not exist, it can mean that we are either building
+    # a dynamic plugin (ZEEK_PLUGIN_INTERNAL_BUILD is OFF) *or* that we are
+    # building as part of Zeek but with an external Spicy. In both cases, we need
+    # to add a dependency to Spicy later on.
+    set(NEED_SPICY_DEPENDENCY ON)
+else ()
+    set(NEED_SPICY_DEPENDENCY OFF)
 endif ()
 
 ###
@@ -163,7 +163,6 @@ zeek_plugin_cc(src/plugin/zeek-reporter.cc)
 zeek_plugin_bif(src/plugin/consts.bif)
 zeek_plugin_bif(src/plugin/events.bif)
 zeek_plugin_bif(src/plugin/functions.bif)
-
 
 if (ZEEK_DEBUG_BUILD)
     # This one needs the DEBUG defined earlier than zeek-compat would.
