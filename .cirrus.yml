@@ -106,7 +106,7 @@ static_zeek_master_task:
     - rm spicy-dev.deb
 
   clone_zeek_script:
-    - git clone --recursive https://github.com/zeek/zeek
+    - git clone --recursive -b topic/neverlord/cmake-redesign-phase1 https://github.com/zeek/zeek
 
   build_script:
     - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python --disable-spicy && cd build && ninja -j 2)
