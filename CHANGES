@@ -1,3 +1,66 @@
+1.3.25 | 2023-03-06 16:45:04 +0100
+
+  * Always finalize removed analyzers. (Benjamin Bannier, Corelight)
+
+    Zeek will eventually call `Done` on e.g., removed analyzers. At that
+    point analyzers might still have unprocessed state on their yielded
+    fibers, so explicitly `Finish` them to force flushing of that state.
+
+    (cherry picked from commit d657255a018593fd8b5dfd571073625544c81474)
+
+1.3.24 | 2023-03-06 16:44:24 +0100
+
+  * Always finalize removed analyzers. (Benjamin Bannier, Corelight)
+
+    Zeek will eventually call `Done` on e.g., removed analyzers. At that
+    point analyzers might still have unprocessed state on their yielded
+    fibers, so explicitly `Finish` them to force flushing of that state.
+
+    (cherry picked from commit d657255a018593fd8b5dfd571073625544c81474)
+
+  * GH-195: Fix backport of change to how exceptions are reported. (Benjamin Bannier, Corelight)
+
+    47e1e95cb149fb48a4a56473dc51ffeadcc1442b changed how parse errors are
+    reported to Zeek. In backporting this change we missed that the changes
+    depended on the Spicy-side exception, namely that a `RecoverableFailure`
+    was a `ParseError`. This is not the case for older Spicy versions.
+
+    This patch fixes the backport so we handle `RecoverableFailure`
+    exceptions as well. This prevents exception escape from that.
+
+    Closes #195.
+
+  * Avoid repeated redundant calls to `globals` in generated code. (Benjamin Bannier, Corelight)
+
+    Previously we would perform repeated, identical calls to `globals` in
+    hook bodies generated for interfacing with Zeek event handlers in order
+    to look up the generated event handler to the point where this became
+    noticable in perf traces.
+
+    Since the event handler does not change during the hook body, we now
+    cache the globals lookup in a local variable.
+
+    (cherry picked from commit be1d17983eef843d731cb3890b73dbee85847b21)
+
+  * Remove unnecessary copying when iterating collections. (Benjamin Bannier, Corelight)
+
+    (cherry picked from commit f17bc60ad81821542329af63e88c47f71046f952)
+
+  * GH-181: Allow more file system operations to fail. (Benjamin Bannier, Corelight)
+
+    We previously would use the HILTI filesystem API in a couple places
+    without taking into account that operation might fail e.g., due to
+    insufficient file system permissions. Since we did not explicitly handle
+    the errors this lead to an exception escape into the calling process (in
+    this case Zeek) which didn't anticipate that either and just aborted.
+
+    With this patch we now should probably handle these cases gracefully as
+    well so no more exceptions escape from file system errors.
+
+    Closes #181.
+
+    (cherry picked from commit 6ad34ae27b25a8d0d09e5cf74cfab202e94970b2)
+
 1.3.22 | 2022-11-07 09:58:23 +0100
 
   * Quote CMake string to ensure correct argument count. (Nic Boet)

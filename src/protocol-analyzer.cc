@@ -37,7 +37,10 @@ ProtocolAnalyzer::~ProtocolAnalyzer() {}
 
 void ProtocolAnalyzer::Init() {}
 
-void ProtocolAnalyzer::Done() {}
+void ProtocolAnalyzer::Done() {
+    Finish(true);
+    Finish(false);
+}
 
 void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
     auto* endp = is_orig ? &_originator : &_responder;
