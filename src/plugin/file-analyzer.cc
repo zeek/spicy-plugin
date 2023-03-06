@@ -43,7 +43,7 @@ FileAnalyzer::~FileAnalyzer() {}
 
 void FileAnalyzer::Init() {}
 
-void FileAnalyzer::Done() {}
+void FileAnalyzer::Done() { Finish(); }
 
 bool FileAnalyzer::DeliverStream(const u_char* data, uint64_t len) {
     ::zeek::file_analysis::Analyzer::DeliverStream(data, len);
