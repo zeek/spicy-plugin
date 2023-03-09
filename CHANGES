@@ -1,3 +1,12 @@
+1.3.26 | 2023-03-10 10:51:45 +0100
+
+  * Fix arg mixup in call `protocol_gap`. (Benjamin Bannier, Corelight)
+
+    We seem to have passed arguments in the wrong order which unfortunately
+    compiled successfully due to implicit conversions.
+
+    (cherry picked from commit 8ca57cccb565cf8906d066ca7733455156eb7836)
+
 1.3.25 | 2023-03-06 16:45:04 +0100
 
   * Always finalize removed analyzers. (Benjamin Bannier, Corelight)
