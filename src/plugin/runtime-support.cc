@@ -1,5 +1,6 @@
 // Copyright (c) 2020-2021 by the Zeek Project. See LICENSE for details.
 
+#include <algorithm>
 #include <memory>
 
 #include <hilti/rt/types/port.h>
@@ -410,6 +411,12 @@ void rt::weird(const std::string& id, const std::string& addl) {
 }
 
 void rt::protocol_begin(const std::optional<std::string>& analyzer) {
+    if ( analyzer ) {
+        protocol_handle_get_or_create(*analyzer);
+        return;
+    }
+
+    // Instantiate a DPD analyzer.
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -417,53 +424,36 @@ void rt::protocol_begin(const std::optional<std::string>& analyzer) {
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
-    if ( analyzer ) {
-        if ( c->analyzer->Conn()->ConnTransport() != TRANSPORT_TCP ) {
-            // Some TCP application analyzer may expect to have access to a TCP
-            // analyzer. To make that work, we'll create a fake TCP analyzer,
-            // just so that they have something to access. It won't
-            // semantically have any "TCP" to analyze obviously.
-            c->fake_tcp = std::make_shared<::zeek::packet_analysis::TCP::TCPSessionAdapter>(c->analyzer->Conn());
-            static_cast<::zeek::analyzer::Analyzer*>(c->fake_tcp.get())
-                ->Done(); // will never see packets; cast to get around protected inheritance
-        }
+    // Use a Zeek PIA stream analyzer performing DPD.
+    auto pia_tcp = std::make_unique<::zeek::analyzer::pia::PIA_TCP>(c->analyzer->Conn());
 
-        auto child = ::zeek::analyzer_mgr->InstantiateAnalyzer(analyzer->c_str(), c->analyzer->Conn());
-        if ( ! child )
-            throw ZeekError(::hilti::rt::fmt("unknown analyzer '%s' requested", *analyzer));
+    // Forward empty payload to trigger lifecycle management in this analyzer tree.
+    c->analyzer->ForwardStream(0, reinterpret_cast<const u_char*>(c->analyzer), true);
+    c->analyzer->ForwardStream(0, reinterpret_cast<const u_char*>(c->analyzer), false);
 
-        auto* child_as_tcp = dynamic_cast<::zeek::analyzer::tcp::TCP_ApplicationAnalyzer*>(child);
-        if ( ! child_as_tcp )
-            throw ZeekError(
-                ::hilti::rt::fmt("could not add analyzer '%s' to connection; not a TCP-based analyzer", *analyzer));
+    // Direct child of this type already exists. We ignore this silently
+    // because that makes usage nicer if either side of the connection
+    // might end up creating the analyzer; this way the user doesn't
+    // need to track what the other side already did.
+    //
+    // We inspect the children directly to work around zeek/zeek#2899.
+    const auto& children = c->analyzer->GetChildren();
+    if ( auto it = std::find_if(children.begin(), children.end(),
+                                [&](const auto& it) {
+                                    return ! it->Removing() && ! it->IsFinished() &&
+                                           it->GetAnalyzerTag() == pia_tcp->GetAnalyzerTag();
+                                });
+         it != children.end() )
+        return;
 
-        if ( ! c->analyzer->AddChildAnalyzer(child) )
-            // Child of this type already exists. We ignore this silently
-            // because that makes usage nicer if either side of the connection
-            // might end up creating the analyzer; this way the user doesn't
-            // need to track what the other side already did. Note that
-            // AddChildAnalyzer() will have deleted child already, so nothing
-            // for us to clean up here.
-            return;
+    auto child = pia_tcp.release();
+    c->analyzer->AddChildAnalyzer(child);
 
-        if ( c->fake_tcp )
-            child_as_tcp->SetTCP(c->fake_tcp.get());
-    }
-
-    else {
-        // Use a Zeek PIA stream analyzer performing DPD.
-        auto child = new ::zeek::analyzer::pia::PIA_TCP(c->analyzer->Conn());
-
-        if ( ! c->analyzer->AddChildAnalyzer(child) )
-            // Same comment as above re/ ignoring the error and memory mgmt.
-            return;
-
-        child->FirstPacket(true, nullptr);
-        child->FirstPacket(false, nullptr);
-    }
+    child->FirstPacket(true, nullptr);
+    child->FirstPacket(false, nullptr);
 }
 
-void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data) {
+rt::ProtocolHandle rt::protocol_handle_get_or_create(const std::string& analyzer) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -471,11 +461,86 @@ void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
-    c->analyzer->ForwardStream(data.size(), reinterpret_cast<const u_char*>(data.data()), is_orig);
+    // Forward empty payload to trigger lifecycle management in this analyzer tree.
+    c->analyzer->ForwardStream(0, reinterpret_cast<const u_char*>(c->analyzer), true);
+    c->analyzer->ForwardStream(0, reinterpret_cast<const u_char*>(c->analyzer), false);
+
+    // If the child already exists, do not add it again so this function is idempotent.
+    //
+    // We inspect the children directly to work around zeek/zeek#2899.
+    const auto& children = c->analyzer->GetChildren();
+    if ( auto it = std::find_if(children.begin(), children.end(),
+                                [&](const auto& it) {
+                                    return ! it->Removing() && ! it->IsFinished() && it->GetAnalyzerName() == analyzer;
+                                });
+         it != children.end() )
+        return rt::ProtocolHandle((*it)->GetID());
+
+    auto child = ::zeek::analyzer_mgr->InstantiateAnalyzer(analyzer.c_str(), c->analyzer->Conn());
+    if ( ! child )
+        throw ZeekError(::hilti::rt::fmt("unknown analyzer '%s' requested", analyzer));
+
+    // If we had no such child before but cannot add it the analyzer was prevented.
+    //
+    // NOTE: We make this a hard error since returning e.g., an empty optional
+    // here would make it easy to incorrectly use the return value with e.g.,
+    // `protocol_data_in` or `protocol_gap`.
+    if ( ! c->analyzer->AddChildAnalyzer(child) )
+        throw ZeekError(::hilti::rt::fmt("creation of child analyzer %s was prevented", analyzer));
+
+    if ( c->analyzer->Conn()->ConnTransport() != TRANSPORT_TCP ) {
+        // Some TCP application analyzer may expect to have access to a TCP
+        // analyzer. To make that work, we'll create a fake TCP analyzer,
+        // just so that they have something to access. It won't
+        // semantically have any "TCP" to analyze obviously.
+        c->fake_tcp = std::make_shared<::zeek::packet_analysis::TCP::TCPSessionAdapter>(c->analyzer->Conn());
+        static_cast<::zeek::analyzer::Analyzer*>(c->fake_tcp.get())
+            ->Done(); // will never see packets; cast to get around protected inheritance
+    }
+
+    auto* child_as_tcp = dynamic_cast<::zeek::analyzer::tcp::TCP_ApplicationAnalyzer*>(child);
+    if ( ! child_as_tcp )
+        throw ZeekError(
+            ::hilti::rt::fmt("could not add analyzer '%s' to connection; not a TCP-based analyzer", analyzer));
+
+    if ( c->fake_tcp )
+        child_as_tcp->SetTCP(c->fake_tcp.get());
+
+    return rt::ProtocolHandle(child->GetID());
+}
+
+void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data,
+                          const std::optional<rt::ProtocolHandle>& h) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    if ( ! c )
+        throw ValueUnavailable("no current connection available");
+
+    auto len = data.size();
+    auto* data_ = reinterpret_cast<const u_char*>(data.data());
+
+    if ( h ) {
+        if ( auto* output_handler = c->analyzer->GetOutputHandler() )
+            output_handler->DeliverStream(len, data_, is_orig);
+
+        auto* child = c->analyzer->FindChild(h->id());
+        if ( ! child )
+            throw ValueUnavailable(hilti::rt::fmt("unknown child analyzer %s", *h));
+
+        if ( child->IsFinished() || child->Removing() )
+            throw ValueUnavailable(hilti::rt::fmt("child analyzer %s no longer exist", *h));
+
+        child->NextStream(len, data_, is_orig);
+    }
+
+    else
+        c->analyzer->ForwardStream(len, data_, is_orig);
 }
 
 void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::safe<uint64_t>& offset,
-                      const hilti::rt::integer::safe<uint64_t>& len) {
+                      const hilti::rt::integer::safe<uint64_t>& len, const std::optional<rt::ProtocolHandle>& h) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -483,7 +548,22 @@ void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
-    c->analyzer->ForwardUndelivered(offset, len, is_orig);
+    if ( h ) {
+        if ( auto* output_handler = c->analyzer->GetOutputHandler() )
+            output_handler->Undelivered(offset, len, is_orig);
+
+        auto* child = c->analyzer->FindChild(h->id());
+        if ( ! child )
+            throw ValueUnavailable(hilti::rt::fmt("unknown child analyzer %s", *h));
+
+        if ( child->IsFinished() || child->Removing() )
+            throw ValueUnavailable(hilti::rt::fmt("child analyzer %s no longer exist", *h));
+
+        child->NextUndelivered(offset, len, is_orig);
+    }
+
+    else
+        c->analyzer->ForwardUndelivered(offset, len, is_orig);
 }
 
 void rt::protocol_end() {
@@ -494,11 +574,29 @@ void rt::protocol_end() {
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
-    c->analyzer->ForwardEndOfData(true);
-    c->analyzer->ForwardEndOfData(false);
-
     for ( const auto& i : c->analyzer->GetChildren() )
         c->analyzer->RemoveChildAnalyzer(i);
+}
+
+void rt::protocol_handle_close(const ProtocolHandle& handle) {
+    auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
+    assert(cookie);
+
+    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    if ( ! c )
+        throw ValueUnavailable("no current connection available");
+
+    auto child = c->analyzer->FindChild(handle.id());
+    if ( ! child )
+        throw ValueUnavailable(hilti::rt::fmt("unknown child analyzer %s", handle));
+
+    if ( child->IsFinished() || child->Removing() )
+        throw ValueUnavailable(hilti::rt::fmt("child analyzer %s no longer exist", handle));
+
+    child->NextEndOfData(true);
+    child->NextEndOfData(false);
+
+    c->analyzer->RemoveChildAnalyzer(handle.id());
 }
 
 rt::cookie::FileState* rt::cookie::FileStateStack::push() {
