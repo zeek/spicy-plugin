@@ -454,7 +454,7 @@ void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
-    c->analyzer->ForwardUndelivered(is_orig, offset, len);
+    c->analyzer->ForwardUndelivered(offset, len, is_orig);
 }
 
 void rt::protocol_end() {
