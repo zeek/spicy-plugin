@@ -1,3 +1,14 @@
+1.5.2 | 2023-03-10 10:51:12 +0100
+
+  * Release 1.5.2.
+
+1.5.1-2 | 2023-03-10 10:51:00 +0100
+
+  * Fix arg mixup in call `protocol_gap`. (Benjamin Bannier, Corelight)
+
+    We seem to have passed arguments in the wrong order which unfortunately
+    compiled successfully due to implicit conversions.
+
 1.5.1 | 2023-03-06 16:41:49 +0100
 
   * Always finalize removed analyzers. (Benjamin Bannier, Corelight)
