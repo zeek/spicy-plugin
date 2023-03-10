@@ -230,14 +230,43 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
         throw ValueUnavailable("neither $conn nor $file nor packet analyzer available for debug logging");
 }
 
+inline rt::cookie::FileStateStack* _file_state_stack(rt::Cookie* cookie) {
+    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
+        return c->is_orig ? &c->fstate_orig : &c->fstate_resp;
+    else if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) )
+        return &f->fstate;
+    else
+        throw rt::ValueUnavailable("no current connection or file available");
+}
+
+inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optional<std::string> fid) {
+    auto* stack = _file_state_stack(cookie);
+    if ( fid ) {
+        if ( auto* fstate = stack->find(*fid) )
+            return fstate;
+        else
+            throw rt::ValueUnavailable(hilti::rt::fmt("no file analysis currently in flight for file ID %s", fid));
+    }
+    else {
+        if ( stack->isEmpty() )
+            throw rt::ValueUnavailable("no file analysis currently in flight");
+
+        return stack->current();
+    }
+}
+
 ::zeek::ValPtr rt::current_file(const std::string& location) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::FileAnalyzer>(cookie) )
         return x->analyzer->GetFile()->ToVal();
-    else
-        throw ValueUnavailable("$file not available", location);
+    else if ( auto* fstate = _file_state(cookie, {}) ) {
+        if ( auto* f = ::zeek::file_mgr->LookupFile(fstate->fid) )
+            return f->ToVal();
+    }
+
+    throw ValueUnavailable("$file not available", location);
 }
 
 ::zeek::ValPtr rt::current_packet(const std::string& location) {
@@ -470,31 +499,6 @@ void rt::protocol_end() {
 
     for ( const auto& i : c->analyzer->GetChildren() )
         c->analyzer->RemoveChildAnalyzer(i);
-}
-
-inline rt::cookie::FileStateStack* _file_state_stack(rt::Cookie* cookie) {
-    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
-        return c->is_orig ? &c->fstate_orig : &c->fstate_resp;
-    else if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) )
-        return &f->fstate;
-    else
-        throw rt::ValueUnavailable("no current connection or file available");
-}
-
-inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optional<std::string> fid) {
-    auto* stack = _file_state_stack(cookie);
-    if ( fid ) {
-        if ( auto* fstate = stack->find(*fid) )
-            return fstate;
-        else
-            throw rt::ValueUnavailable(hilti::rt::fmt("no file analysis currently in flight for file ID %s", fid));
-    }
-    else {
-        if ( stack->isEmpty() )
-            throw rt::ValueUnavailable("no file analysis currently in flight");
-
-        return stack->current();
-    }
 }
 
 rt::cookie::FileState* rt::cookie::FileStateStack::push() {
