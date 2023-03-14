@@ -7,6 +7,9 @@ const available: bool;
 # Show output of Spicy print statements.
 const enable_print: bool;
 
+# Record and display profiling information.
+const enable_profiling: bool;
+
 # abort() instead of throwing HILTI # exceptions.
 const abort_on_exceptions: bool;
 

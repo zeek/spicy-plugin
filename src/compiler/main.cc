@@ -6,9 +6,9 @@
 #include <hilti/base/util.h>
 
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/debug.h>
 #include <zeek-spicy/compiler/driver.h>
 #include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/compiler/debug.h>
 
 constexpr int OPT_CXX_LINK = 1000;
 
@@ -20,6 +20,7 @@ static struct option long_driver_options[] = {{"abort-on-exceptions", required_a
                                               {"debug-addl", required_argument, nullptr, 'X'},
                                               {"disable-optimizations", no_argument, nullptr, 'g'},
                                               {"dump-code", no_argument, nullptr, 'C'},
+                                              {"enable-profiling", no_argument, nullptr, 'Z'},
                                               {"help", no_argument, nullptr, 'h'},
                                               {"keep-tmps", no_argument, nullptr, 'T'},
                                               {"library-path", required_argument, nullptr, 'L'},
@@ -64,6 +65,7 @@ static void usage() {
                  "  -X | --debug-addl <addl>        Implies -d and adds selected additional instrumentation."
                  "(comma-separated; see 'help' for list).\n"
                  "       --cxx-link <lib>           Link specified static archive or shared library during JIT or to "
+                 "  -Z | --enable-profiling         Report profiling statistics after execution.\n"
                  "\n"
                  "Inputs can be *.spicy, *.evt, *.hlt, .cc/.cxx\n"
                  "\n";
@@ -97,7 +99,7 @@ static auto pluginPath() {
 static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver::Options* driver_options,
                                            hilti::Options* compiler_options) {
     while ( true ) {
-        int c = getopt_long(argc, argv, "ABc:Cdgx:X:D:L:Mo:pPRSTvhz", long_driver_options, nullptr);
+        int c = getopt_long(argc, argv, "ABc:Cdgx:X:D:L:Mo:pPRSTvhzZ", long_driver_options, nullptr);
 
         if ( c == -1 )
             break;
@@ -209,6 +211,11 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'V': std::cout << spicy::zeek::configuration::PluginVersionNumber << std::endl; return Nothing();
 
             case 'z': std::cout << spicy::zeek::configuration::ZeekConfig << std::endl; return Nothing();
+
+            case 'Z':
+                driver_options->enable_profiling = true;
+                compiler_options->enable_profiling = true;
+                break;
 
             case OPT_CXX_LINK:
 #if SPICY_VERSION_NUMBER >= 10600

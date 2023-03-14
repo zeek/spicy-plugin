@@ -10,6 +10,9 @@ export {
     ## Show output of Spicy print statements.
     const enable_print = F &redef;
 
+    # Record and display profiling information, if compiled into analyzer.
+    const enable_profiling = F &redef;
+
     ## abort() instead of throwing HILTI exceptions.
     const abort_on_exceptions = F &redef;
 
