@@ -140,11 +140,19 @@ if (SPICYZ)
     add_executable(spicyz IMPORTED)
     set_property(TARGET spicyz PROPERTY IMPORTED_LOCATION "${SPICYZ}")
 
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        set(SPICYZ_FLAGS "-d")
-    else ()
+    # Allow passing -DSPICYZ_FLAGS="..."
+    if (NOT DEFINED SPICYZ_FLAGS)
         set(SPICYZ_FLAGS "")
     endif ()
+
+    # Allow passing SPICYZ_FLAGS via environment variable
+    set(SPICYZ_FLAGS "${SPICYZ_FLAGS};$ENV{SPICYZ_FLAGS}")
+
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        set(SPICYZ_FLAGS "${SPICYZ_FLAGS};-d")
+    endif ()
+
+    string(REPLACE " " ";" SPICYZ_FLAGS "${SPICYZ_FLAGS}")
 
     set(SPICY_MODULE_OUTPUT_DIR_BUILD "${PROJECT_BINARY_DIR}/spicy-modules")
 
