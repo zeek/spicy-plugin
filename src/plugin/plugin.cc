@@ -596,6 +596,9 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
     else
         hilti_config.cout.reset();
 
+    if ( ::zeek::id::find_const("Spicy::enable_profiling")->AsBool() )
+        hilti_config.enable_profiling = true;
+
     hilti_config.abort_on_exceptions = ::zeek::id::find_const("Spicy::abort_on_exceptions")->AsBool();
     hilti_config.show_backtraces = ::zeek::id::find_const("Spicy::show_backtraces")->AsBool();
 
