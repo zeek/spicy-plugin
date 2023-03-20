@@ -1084,6 +1084,8 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
     // Create the hook body that raises the event.
     auto body = hilti::builder::Builder(_driver->context());
 
+    body.startProfiler(hilti::util::fmt("zeek/event/%s", ev->name));
+
     // If the event comes with a condition, evaluate that first.
     if ( ev->condition.size() ) {
         auto cond = spicy::parseExpression(ev->condition, meta);

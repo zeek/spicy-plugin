@@ -15,3 +15,4 @@ spicy/unit/SSH::Banner::dash 2
 spicy/unit/SSH::Banner::magic 2
 spicy/unit/SSH::Banner::software 2
 spicy/unit/SSH::Banner::version 2
+zeek/event/ssh::banner 2
