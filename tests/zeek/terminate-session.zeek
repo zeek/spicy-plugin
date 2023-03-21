@@ -1,5 +1,6 @@
 # @TEST-EXEC: spicyz -o test.hlto test.spicy test.evt
 # @TEST-EXEC: ${ZEEK} -b -r ${TRACES}/long-dns-connection.pcap Zeek::Spicy test.hlto base/protocols/conn %INPUT
+# @TEST-EXEC: cat conn.log | zeek-cut uid -C > conn.log2 && mv conn.log2 conn.log
 # @TEST-EXEC: btest-diff conn.log
 #
 # @TEST-DOC: Validate that `terminate_session` indeed flushes Zeek-side connection state

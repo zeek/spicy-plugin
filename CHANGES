@@ -1,3 +1,21 @@
+1.5.2-3 | 2023-03-21 08:14:22 +0100
+
+  * Sanitize `conn.log` for upstream Zeek change. (Benjamin Bannier, Corelight)
+
+    With zeek/zeek#2771 what is considered a local net changed. This
+    potentially causes differences in `conn.log`.
+
+    This patch reduces information in `conn.log` to just what is required to
+    check the behavior under test.
+
+  * Remove irrelevant diffing of `conn.log` in test. (Benjamin Bannier, Corelight)
+
+    With zeek/zeek#2771 what is considered a local net changed. This
+    potentially causes differences in `conn.log`.
+
+    This patch removes diffing of `conn.log` which was not relevant for the
+    behavior being tested, but affected by the upstream change.
+
 1.5.2 | 2023-03-10 10:51:12 +0100
 
   * Release 1.5.2.

@@ -1,7 +1,6 @@
 # @TEST-EXEC: spicyz -o test.hlto raw-layer.spicy raw-layer.evt
 # @TEST-EXEC: ${ZEEK} -r ${TRACES}/raw-layer.pcap test.hlto %INPUT >output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff output
-# @TEST-EXEC: TEST_DIFF_CANONIFIER=${SCRIPTS}/canonify-zeek-log btest-diff conn.log
 # @TEST-EXEC: btest-diff weird.log
 
 module PacketAnalyzer::SPICY_RAWLAYER;
