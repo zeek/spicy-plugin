@@ -56,7 +56,7 @@ function (spicy_add_analyzer)
         DEPENDS ${SPICY_ANALYZER_SOURCES} spicyz
         COMMENT "Compiling ${SPICY_ANALYZER_NAME} analyzer"
         COMMAND mkdir -p ${SPICY_MODULE_OUTPUT_DIR_BUILD}
-        COMMAND spicyz -o ${OUTPUT} ${SPICYZ_FLAGS} ${SPICY_ANALYZER_SOURCES} ${CXX_LINK}
+        COMMAND spicyz -o ${OUTPUT} ${_SPICYZ_FLAGS} ${SPICY_ANALYZER_SOURCES} ${CXX_LINK}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     add_custom_target(${SPICY_ANALYZER_NAME} ALL DEPENDS ${OUTPUT}
@@ -127,6 +127,8 @@ endfunction ()
 
 ### Main
 
+option(SPICYZ_FLAGS "Additional flags for spicyz" "")
+
 set_property(GLOBAL PROPERTY __spicy_included_analyzers)
 set_property(GLOBAL PROPERTY __spicy_skipped_analyzers)
 
@@ -135,16 +137,24 @@ if (NOT SPICYZ)
 endif ()
 
 if (SPICYZ)
-    message(STATUS "spicyz: ${SPICYZ}")
+    message(STATUS "Using spicyz: ${SPICYZ}")
 
     add_executable(spicyz IMPORTED)
     set_property(TARGET spicyz PROPERTY IMPORTED_LOCATION "${SPICYZ}")
 
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        set(SPICYZ_FLAGS "-d")
-    else ()
-        set(SPICYZ_FLAGS "")
+    string(REPLACE " " ";" _SPICYZ_FLAGS "${SPICYZ_FLAGS}")
+
+    # Allow passing further SPICYZ_FLAGS via environment variable.
+    string(REPLACE " " ";" _spicyz_flags_env "$ENV{SPICYZ_FLAGS}")
+    if (_spicyz_flags_env)
+        list(APPEND _SPICYZ_FLAGS ${_spicyz_flags_env})
     endif ()
+
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        list(APPEND _SPICYZ_FLAGS "-d")
+    endif ()
+
+    message(STATUS "Using spicyz with flags: ${_SPICYZ_FLAGS}")
 
     set(SPICY_MODULE_OUTPUT_DIR_BUILD "${PROJECT_BINARY_DIR}/spicy-modules")
 
