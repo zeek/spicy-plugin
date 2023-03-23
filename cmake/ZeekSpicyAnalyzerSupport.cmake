@@ -127,7 +127,7 @@ endfunction ()
 
 ### Main
 
-option(SPICYZ_FLAGS "Additional flags for spicyz" "")
+set(SPICYZ_FLAGS "" CACHE STRING "Additional flags for spicyz")
 
 set_property(GLOBAL PROPERTY __spicy_included_analyzers)
 set_property(GLOBAL PROPERTY __spicy_skipped_analyzers)

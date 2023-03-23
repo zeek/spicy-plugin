@@ -1,3 +1,7 @@
+1.5.3-10 | 2023-03-23 17:39:55 +0100
+
+  * Fix CMake option handling for `SPICYZ_FLAGS`. (Robin Sommer, Corelight)
+
 1.5.3-8 | 2023-03-23 13:32:32 +0100
 
   * Add profiling support to plugin and `spicyz`. (Robin Sommer, Corelight)
