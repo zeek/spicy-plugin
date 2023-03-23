@@ -1,3 +1,27 @@
+1.5.3-8 | 2023-03-23 13:32:32 +0100
+
+  * Add profiling support to plugin and `spicyz`. (Robin Sommer, Corelight)
+
+    `spicyz` learns the `--enable-profiling` option to insert profiling
+    instrumentation into the generated C++ code. The plugin learns a
+    Zeek-side option `Spicy::enable_profiling` to enable using that
+    instrumentation at runtime for producing a performance report.
+
+  * Profile generation of Zeek events. (Robin Sommer, Corelight)
+
+    This measures the time the plugin needs to create the event to Zeek and
+    send it to Zeek.
+
+  * Add `Spicy::resource_usage` BiF to query Spicy's runtime stats.
+    (Robin Sommer, Corelight)
+
+    A new, optional script `Zeek/Spicy/misc/resource-usage` prints out Spicy
+    resource stats while Zeek is running.
+
+  * Allow passing `spicyz` flags via `cmake -DSPICYZ_FLAGS=...` and/or
+    through the environment via `export SPICYZ=...`. (Simeon Miteff,
+    Corelight)
+
 1.5.3 | 2023-03-22 13:42:17 +0100
 
   * GH-200: Make most recently opened file available via `$file` in events. (Benjamin Bannier, Corelight)
