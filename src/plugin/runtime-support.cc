@@ -151,7 +151,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     // Caller must have checked already that there's a handler available.
     assert(handler);
 
-    const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
+    const auto& zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
     if ( args.size() != static_cast<uint64_t>(zeek_args.size()) )
         throw TypeMismatch(hilti::rt::fmt("expected %" PRIu64 " parameters, but got %zu",
                                           static_cast<uint64_t>(zeek_args.size()), args.size()));
@@ -173,7 +173,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
                                    const hilti::rt::integer::safe<uint64_t>& idx) {
     assert(handler);
 
-    const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
+    const auto& zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
     if ( idx >= static_cast<uint64_t>(zeek_args.size()) )
         throw TypeMismatch(hilti::rt::fmt("more parameters given than the %" PRIu64 " that the Zeek event expects",
                                           static_cast<uint64_t>(zeek_args.size())));

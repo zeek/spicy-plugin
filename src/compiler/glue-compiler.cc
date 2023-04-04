@@ -1139,6 +1139,8 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     // Build event's argument vector.
     body.addLocal(ID("args"), hilti::type::Vector(builder::typeByID("zeek_rt::Val"), meta), meta);
+    body.addMemberCall(builder::id("args"), "reserve",
+                       {builder::integer(static_cast<uint64_t>(ev->expression_accessors.size()))}, meta);
 
     int i = 0;
     for ( const auto& e : ev->expression_accessors ) {
