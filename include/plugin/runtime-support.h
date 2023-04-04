@@ -9,12 +9,14 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <tuple>
 #include <utility>
 
 #include <hilti/rt/deferred-expression.h>
 #include <hilti/rt/exception.h>
+#include <hilti/rt/extension-points.h>
 #include <hilti/rt/fmt.h>
 #include <hilti/rt/types/all.h>
 
@@ -271,6 +273,36 @@ void confirm_protocol();
 void reject_protocol(const std::string& reason);
 
 /**
+ * Opaque handle to a protocol analyzer.
+ */
+class ProtocolHandle {
+public:
+    ProtocolHandle() {}
+    explicit ProtocolHandle(uint64_t id) : _id(id) {}
+
+    uint64_t id() const {
+        if ( ! _id )
+            throw ValueUnavailable("uninitialized protocol handle");
+
+        return *_id;
+    }
+
+    friend std::string to_string(const ProtocolHandle& h, ::hilti::rt::detail::adl::tag) {
+        if ( ! h._id )
+            return "(uninitialized protocol handle)";
+
+        return std::to_string(*h._id);
+    }
+
+    friend std::ostream& operator<<(std::ostream& stream, const ProtocolHandle& h) {
+        return stream << ::hilti::rt::to_string(h);
+    }
+
+private:
+    std::optional<uint64_t> _id;
+};
+
+/**
  * Adds a Zeek-side child protocol analyzer to the current connection.
  *
  * @param analyzer if given, the Zeek-side name of the analyzer to instantiate;
@@ -279,13 +311,27 @@ void reject_protocol(const std::string& reason);
 void protocol_begin(const std::optional<std::string>& analyzer);
 
 /**
+ * Gets a handle to a child analyzer of a given type. If a child of that type
+ * does not yet exist it will be created.
+ *
+ * @param analyzer the Zeek-side name of the analyzer to get (e.g., `HTTP`)
+ *
+ * @return a handle to the child analyzer. When done, the handle should be
+ * closed, either explicitly with protocol_handle_close or implicitly with
+ * protocol_end.
+ */
+ProtocolHandle protocol_handle_get_or_create(const std::string& analyzer);
+
+/**
  * Forwards data to all previously instantiated Zeek-side child protocol
  * analyzers.
  *
  * @param is_orig true to feed data to originator side, false for responder
  * @param data next chunk of stream data for child analyzer to process
+ * @param h optional handle to the child analyzer to stream data into
  */
-void protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data);
+void protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data,
+                      const std::optional<ProtocolHandle>& h = {});
 
 /**
  * Signals a gap in input data to all previously instantiated Zeek-side child
@@ -294,17 +340,23 @@ void protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& da
  * @param is_orig true to signal gap to originator side, false for responder
  * @param offset of the gap inside the protocol stream
  * @param length of the gap
+ * @param h optional handle to the child analyzer to signal a gap to
  */
 void protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::safe<uint64_t>& offset,
-                  const hilti::rt::integer::safe<uint64_t>& len);
+                  const hilti::rt::integer::safe<uint64_t>& len, const std::optional<ProtocolHandle>& h = {});
 
 /**
  * Signals EOD to all previously instantiated Zeek-side child protocol
  * analyzers and removes them.
- *
- * @param analyzer ID of analyzer previously instantiated through `protocol_begin()`.
  */
 void protocol_end();
+
+/**
+ * Closes a protocol handle.
+ *
+ * @param handle handle of the protocol analyzer to close.
+ */
+void protocol_handle_close(const ProtocolHandle& handle);
 
 /**
  * Signals the beginning of a file to Zeek's file analysis, associating it

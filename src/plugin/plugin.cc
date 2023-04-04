@@ -597,7 +597,11 @@ void plugin::Zeek_Spicy::Plugin::InitPostScript() {
         hilti_config.cout.reset();
 
     if ( ::zeek::id::find_const("Spicy::enable_profiling")->AsBool() )
+#if SPICY_VERSION_NUMBER >= 10800
         hilti_config.enable_profiling = true;
+#else
+        std::cerr << "Profiling is not supported with this version of Spicy, ignoring 'Spicy::enable_profiling'\n";
+#endif
 
     hilti_config.abort_on_exceptions = ::zeek::id::find_const("Spicy::abort_on_exceptions")->AsBool();
     hilti_config.show_backtraces = ::zeek::id::find_const("Spicy::show_backtraces")->AsBool();

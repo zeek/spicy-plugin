@@ -20,10 +20,22 @@ public type Banner = unit {
 
 on Banner::%done {
     zeek::protocol_begin("HTTP");
+
     zeek::protocol_data_in(True, b"GET /etc/passwd1 HTTP/1.0\r\n\r\n");
     zeek::protocol_data_in(False, b"HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n");
-    zeek::protocol_end();
 
+    # We can get a handle to the existing HTTP analyzer.
+    local http1 = zeek::protocol_handle_get_or_create("HTTP");
+    zeek::protocol_data_in(True, b"GET /etc/passwd1.1 HTTP/1.0\r\n\r\n", http1);
+
+    # We can get another handle to the existing HTTP analyzer.
+    local http2 = zeek::protocol_handle_get_or_create("HTTP");
+    zeek::protocol_data_in(False, b"HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n", http2);
+    zeek::protocol_handle_close(http1);
+
+    zeek::protocol_end();  # Noop.
+
+    # Creating a DPD child analyzer creates no handle.
     zeek::protocol_begin(); # DPD
     zeek::protocol_data_in(True, b"GET /etc/passwd2 HTTP/1.0\r\n\r\n");
     zeek::protocol_data_in(False, b"HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n");

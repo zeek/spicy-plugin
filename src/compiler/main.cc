@@ -6,9 +6,9 @@
 #include <hilti/base/util.h>
 
 #include <zeek-spicy/autogen/config.h>
+#include <zeek-spicy/compiler/debug.h>
 #include <zeek-spicy/compiler/driver.h>
 #include <zeek-spicy/compiler/glue-compiler.h>
-#include <zeek-spicy/compiler/debug.h>
 
 constexpr int OPT_CXX_LINK = 1000;
 
@@ -213,8 +213,12 @@ static hilti::Result<Nothing> parseOptions(int argc, char** argv, hilti::driver:
             case 'z': std::cout << spicy::zeek::configuration::ZeekConfig << std::endl; return Nothing();
 
             case 'Z':
+#if SPICY_VERSION_NUMBER >= 10800
                 driver_options->enable_profiling = true;
                 compiler_options->enable_profiling = true;
+#else
+                std::cerr << "Profiling is not supported with this version of Spicy, ignoring '-Z'\n";
+#endif
                 break;
 
             case OPT_CXX_LINK:

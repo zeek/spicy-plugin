@@ -1084,7 +1084,9 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
     // Create the hook body that raises the event.
     auto body = hilti::builder::Builder(_driver->context());
 
+#if SPICY_VERSION_NUMBER >= 10800
     body.startProfiler(hilti::util::fmt("zeek/event/%s", ev->name));
+#endif
 
     // If the event comes with a condition, evaluate that first.
     if ( ev->condition.size() ) {

@@ -1,3 +1,15 @@
+1.5.3-13 | 2023-04-04 11:19:37 +0200
+
+  * GH-198: Bring `protocol_*` API in line with `file_*` API. (Benjamin Bannier, Corelight)
+
+    This patch makes it possible to forward to a specific child protocol
+    analyzer via `protocol_data_in` like we already supported for child file
+    analyzers.
+
+    Closes #198.
+
+  * Hide profiling-related code behind Spicy version check. (Benjamin Bannier, Corelight)
+
 1.5.3-10 | 2023-03-23 17:39:55 +0100
 
   * Fix CMake option handling for `SPICYZ_FLAGS`. (Robin Sommer, Corelight)
