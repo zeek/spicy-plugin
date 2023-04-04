@@ -1145,13 +1145,13 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
         Expression val;
 
         if ( e.expression == "$conn" )
-            val = builder::call("zeek_rt::current_conn", {location(e)}, meta);
+            val = builder::call("zeek_rt::current_conn", {}, meta);
         else if ( e.expression == "$file" )
-            val = builder::call("zeek_rt::current_file", {location(e)}, meta);
+            val = builder::call("zeek_rt::current_file", {}, meta);
         else if ( e.expression == "$packet" )
-            val = builder::call("zeek_rt::current_packet", {location(e)}, meta);
+            val = builder::call("zeek_rt::current_packet", {}, meta);
         else if ( e.expression == "$is_orig" )
-            val = builder::call("zeek_rt::current_is_orig", {location(e)}, meta);
+            val = builder::call("zeek_rt::current_is_orig", {}, meta);
         else {
             if ( hilti::util::startsWith(e.expression, "$") ) {
                 hilti::logger().error(hilti::util::fmt("unknown reserved parameter '%s'", e.expression));
@@ -1164,17 +1164,15 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
                 return false;
             }
 
-            auto ztype = builder::call("zeek_rt::event_arg_type",
-                                       {builder::id("handler"), builder::integer(i), location(e)}, meta);
-            val = builder::call("zeek_rt::to_val", {std::move(*expr), ztype, location(e)}, meta);
+            auto ztype = builder::call("zeek_rt::event_arg_type", {builder::id("handler"), builder::integer(i)}, meta);
+            val = builder::call("zeek_rt::to_val", {std::move(*expr), ztype}, meta);
         }
 
         body.addMemberCall(builder::id("args"), "push_back", {val}, meta);
         i++;
     }
 
-    body.addCall("zeek_rt::raise_event", {builder::id("handler"), builder::move(builder::id("args")), location(*ev)},
-                 meta);
+    body.addCall("zeek_rt::raise_event", {builder::id("handler"), builder::move(builder::id("args"))}, meta);
 
     auto attrs = hilti::AttributeSet({hilti::Attribute("&priority", builder::integer(ev->priority))});
     auto unit_hook = spicy::Hook(ev->parameters, body.block(), spicy::Engine::All, {}, meta);
@@ -1183,11 +1181,6 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     return true;
 }
-
-
-hilti::Expression GlueCompiler::location(const glue::Event& ev) { return builder::string(ev.location); }
-
-hilti::Expression GlueCompiler::location(const glue::ExpressionAccessor& e) { return builder::string(e.location); }
 
 namespace {
 // Visitor creasting code to instantiate a Zeek type corresponding to a give
