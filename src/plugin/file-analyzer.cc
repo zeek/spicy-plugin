@@ -94,7 +94,7 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
 #if ZEEK_VERSION_NUMBER >= 50200
         AnalyzerViolation("maximal file depth exceeded", reinterpret_cast<const char*>(data), len, tag);
 #else
-        // We don't have an an appropiate way to report this with older Zeeks.
+        // We don't have an an appropriate way to report this with older Zeeks.
 #endif
         return false;
     }
@@ -108,7 +108,7 @@ bool FileAnalyzer::Process(int len, const u_char* data) {
 #if ZEEK_VERSION_NUMBER >= 50200
         AnalyzerViolation(e.what(), reinterpret_cast<const char*>(data), len, tag);
 #else
-        // We don't have an an appropiate way to report this with older Zeeks.
+        // We don't have an an appropriate way to report this with older Zeeks.
 #endif
     } catch ( const hilti::rt::Exception& e ) {
         STATE_DEBUG_MSG(e.what());
@@ -129,7 +129,7 @@ void FileAnalyzer::Finish() {
 #if ZEEK_VERSION_NUMBER >= 50200
         AnalyzerViolation(e.what(), "", 0, tag);
 #else
-        // We don't have an an appropiate way to report this with older Zeeks.
+        // We don't have an an appropriate way to report this with older Zeeks.
 #endif
     } catch ( const hilti::rt::Exception& e ) {
         reporter::analyzerError(_state.cookie().analyzer, e.description(),

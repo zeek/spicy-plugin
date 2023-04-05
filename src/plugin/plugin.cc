@@ -298,7 +298,7 @@ void plugin::Zeek_Spicy::Plugin::registerEvent(const std::string& name) {
     }
     else
         // This installs & exports the ID, but it doesn't set its type yet.
-        // That will happen as handlers get defined. If there are no hanlders,
+        // That will happen as handlers get defined. If there are no handlers,
         // we set a dummy type in the plugin's InitPostScript
         _events[name] = ::zeek::detail::install_ID(name.c_str(), mod.c_str(), false, true);
 }

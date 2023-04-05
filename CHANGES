@@ -1,3 +1,9 @@
+1.5.3-16 | 2023-04-05 10:34:33 +0200
+
+  * Fix spelling in sources and file names. (Benjamin Bannier, Corelight)
+
+  * Add spell check pre-commit hook. (Benjamin Bannier, Corelight)
+
 1.5.3-13 | 2023-04-04 11:19:37 +0200
 
   * GH-198: Bring `protocol_*` API in line with `file_*` API. (Benjamin Bannier, Corelight)
@@ -231,7 +237,7 @@
 
     We now consistently report runtime errors (including actual
     parsing errors) as analyzer violations that will be reported in
-    `dpd.log` and, starting eith Zeek 5.2, in `analyzer.log`. We now
+    `dpd.log` and, starting with Zeek 5.2, in `analyzer.log`. We now
     also log excerpts of the offending data there.
 
   * Report file analysis errors through Zeek's new file violation API available since 5.2.
@@ -546,7 +552,7 @@
   * Switch file analysis state to stack of files currently in flight. (Robin Sommer, Corelight)
 
     This commit prepares for feeding data into multiple files concurrently
-    by switchting the internal state from representing just a single file to
+    by switching the internal state from representing just a single file to
     a stack of all files currently in flight.
 
     We do not yet actually make use of the new structure; for now we
