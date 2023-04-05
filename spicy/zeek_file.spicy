@@ -8,7 +8,7 @@ module zeek_file;
 
 import zeek;
 
-## Convinience wrapper for passing content into Zeek's file analysis.
+## Convenience wrapper for passing content into Zeek's file analysis.
 ## After connecting an instance of this unit type to a sink, all data
 ## sent to the sink will be passed on to Zeek as a file.
 ##

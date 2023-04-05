@@ -634,7 +634,7 @@ glue::ProtocolAnalyzer GlueCompiler::parseProtocolAnalyzer(const std::string& ch
         }
 
         else
-            throw ParseError("unexpect token");
+            throw ParseError("unexpected token");
 
         if ( looking_at(chunk, i, ";") )
             break; // All done.
@@ -676,7 +676,7 @@ glue::FileAnalyzer GlueCompiler::parseFileAnalyzer(const std::string& chunk) {
         }
 
         else
-            throw ParseError("unexpect token");
+            throw ParseError("unexpected token");
 
         if ( looking_at(chunk, i, ";") )
             break; // All done.
@@ -715,7 +715,7 @@ glue::PacketAnalyzer GlueCompiler::parsePacketAnalyzer(const std::string& chunk)
         }
 
         else
-            throw ParseError("unexpect token");
+            throw ParseError("unexpected token");
 
         if ( looking_at(chunk, i, ";") )
             break; // All done.
@@ -973,10 +973,10 @@ bool GlueCompiler::PopulateEvents() {
 
         TypeInfo uinfo;
 
-        // If we find the path itself, it's refering to a unit type directly;
+        // If we find the path itself, it's referring to a unit type directly;
         // then add a "%done" to form the hook name.
         if ( auto ui = _driver->lookupType<spicy::type::Unit>(ev.path) ) {
-            // TOOD: Check that it's a unit type.
+            // TODO: Check that it's a unit type.
             uinfo = *ui;
             ev.unit = ev.path;
             ev.hook = ev.unit + hilti::ID("0x25_done");
@@ -1013,7 +1013,7 @@ bool GlueCompiler::PopulateEvents() {
             hilti::logger().internalError(
                 hilti::util::fmt("module %s not known in Spicy module list", uinfo.module_id));
 
-        // Create accesor expression for event parameters.
+        // Create accessor expression for event parameters.
         int nr = 0;
 
         for ( const auto& e : ev.exprs ) {

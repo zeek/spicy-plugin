@@ -14,7 +14,7 @@ extern void do_log(const std::string& msg);
 
 // Macro helper to report debug messages.
 //
-// This forwards to another function that must be implemeneted externally to
+// This forwards to another function that must be implemented externally to
 // do the actual logging. The function can decide where to send it to, which
 // may, depending compilation mode, maybe the HILTI logger, the runtime's
 // logger, or both.

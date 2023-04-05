@@ -86,7 +86,7 @@ public:
 
     /**
      * Runtime method to register a Spicy-generated type with Zeek. The type
-     * must have been encoutered during AST traversal already, so that its ID
+     * must have been encountered during AST traversal already, so that its ID
      * is known. The corresponding Zeek type will be created and registered with Zeek.
      *
      * @param id fully-qualified ID of the type
@@ -151,7 +151,7 @@ public:
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
      * script-land when talking about a protocol analyzer. This is normally
-     * the analyzer's standard tag, but may be replaced with somethign else
+     * the analyzer's standard tag, but may be replaced with something else
      * if the analyzer substitutes for an existing one.
      *
      * @param tag original tag we query for how to pass it to script-land.
@@ -162,7 +162,7 @@ public:
     /**
      * Runtime method to retrieve the analyzer tag that should be passed to
      * script-land when talking about a file analyzer. This is normally the
-     * analyzer's standard tag, but may be replaced with somethign else if
+     * analyzer's standard tag, but may be replaced with something else if
      * the analyzer substitutes for an existing one.
      *
      * @param tag original tag we query for how to pass it to script-land.
@@ -186,7 +186,7 @@ public:
      * loaded will also be activated. By calling this method, an analyzer can
      * toggled.
      *
-     * @param analyzer tag of analyer
+     * @param analyzer tag of analyzer
      * @param enable true to enable, false to disable
      */
     bool toggleProtocolAnalyzer(const ::zeek::Tag& tag, bool enable);
@@ -196,7 +196,7 @@ public:
      * loaded will also be activated. By calling this method, an analyzer can
      * toggled.
      *
-     * @param analyzer tag of analyer
+     * @param analyzer tag of analyzer
      * @param enable true to enable, false to disable
      */
     bool toggleFileAnalyzer(const ::zeek::Tag& tag, bool enable);
@@ -209,7 +209,7 @@ public:
      * @note This is currently not supported because Zeek does not provide the
      * necessary API.
      *
-     * @param analyzer tag of analyer
+     * @param analyzer tag of analyzer
      * @param enable true to enable, false to disable
      */
     bool togglePacketAnalyzer(const ::zeek::Tag& tag, bool enable);
@@ -223,7 +223,7 @@ public:
      * protocol/file/packet analyzers. It takes an enum corresponding to either
      * kind and branches out accordingly.
      *
-     * @param analyzer tag of analyer
+     * @param analyzer tag of analyzer
      * @param enable true to enable, false to disable
      */
     bool toggleAnalyzer(::zeek::EnumVal* tag, bool enable);
@@ -357,7 +357,7 @@ private:
     std::unordered_map<std::string, int32_t> _analyzer_name_to_tag_type;
 };
 
-// Will be initalized to point to whatever type of plugin is instantiated.
+// Will be initialized to point to whatever type of plugin is instantiated.
 extern Plugin* OurPlugin;
 
 } // namespace plugin::Zeek_Spicy

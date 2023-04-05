@@ -149,7 +149,7 @@ void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(nam
 
 void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector<::zeek::ValPtr>& args,
                      const std::string& location) {
-    // Caller must have checked already that there's a handler availale.
+    // Caller must have checked already that there's a handler available.
     assert(handler);
 
     const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
@@ -657,7 +657,7 @@ void rt::terminate_session() {
         ::zeek::session_mgr->Remove(c->analyzer->Conn());
     }
     else
-        throw spicy::zeek::rt::ValueUnavailable("terminate_session() not available in the curent context");
+        throw spicy::zeek::rt::ValueUnavailable("terminate_session() not available in the current context");
 }
 
 std::string rt::fuid() {

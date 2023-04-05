@@ -84,7 +84,7 @@ Driver::Driver(std::unique_ptr<GlueCompiler> glue, const char* argv0, hilti::rt:
         plugin_path = hilti::rt::filesystem::canonical(plugin_path);
 
         // We make our search paths relative to the plugin library, so that the
-        // plugin instalation can move around.
+        // plugin installation can move around.
         options.cxx_include_paths.push_back(plugin_path / "include");
         options.library_paths.push_back(plugin_path / "spicy");
     } catch ( const hilti::rt::filesystem::filesystem_error& e ) {
@@ -263,7 +263,7 @@ void Driver::hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) {
         _types[ti.id] = ti;
 
         if ( auto et = ti.type.tryAs<hilti::type::Enum>(); et && ti.linkage == hilti::declaration::Linkage::Public ) {
-            ZEEK_DEBUG("    Automatically exporting public enum for backwards compatibilty");
+            ZEEK_DEBUG("    Automatically exporting public enum for backwards compatibility");
             _public_enums.push_back(ti);
         }
 

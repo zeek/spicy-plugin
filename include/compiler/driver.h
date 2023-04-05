@@ -60,7 +60,7 @@ public:
      *
      * Must be called before any packet processing starts.
      *
-     * @return False if an error occured. It will have been reported already.
+     * @return False if an error occurred. It will have been reported already.
      */
     hilti::Result<hilti::Nothing> compile();
 
@@ -160,19 +160,19 @@ protected:
      */
     virtual void hookNewType(const TypeInfo& ti) {}
 
-    /** Overidden from HILTI driver. */
+    /** Overridden from HILTI driver. */
     void hookNewASTPreCompilation(std::shared_ptr<hilti::Unit> unit) override;
 
-    /** Overidden from HILTI driver. */
+    /** Overridden from HILTI driver. */
     void hookNewASTPostCompilation(std::shared_ptr<hilti::Unit> unit) override;
 
-    /** Overidden from HILTI driver. */
+    /** Overridden from HILTI driver. */
     hilti::Result<hilti::Nothing> hookCompilationFinished(const hilti::Plugin& plugin) override;
 
-    /** Overidden from HILTI driver. */
+    /** Overridden from HILTI driver. */
     void hookInitRuntime() override;
 
-    /** Overidden from HILTI driver. */
+    /** Overridden from HILTI driver. */
     void hookFinishRuntime() override;
 
     std::unique_ptr<GlueCompiler> _glue;            // glue compiler in use
