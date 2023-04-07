@@ -147,16 +147,14 @@ void rt::install_handler(const std::string& name) { OurPlugin->registerEvent(nam
     return handler;
 }
 
-void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector<::zeek::ValPtr>& args,
-                     const std::string& location) {
+void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector<::zeek::ValPtr>& args) {
     // Caller must have checked already that there's a handler available.
     assert(handler);
 
-    const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
+    const auto& zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
     if ( args.size() != static_cast<uint64_t>(zeek_args.size()) )
         throw TypeMismatch(hilti::rt::fmt("expected %" PRIu64 " parameters, but got %zu",
-                                          static_cast<uint64_t>(zeek_args.size()), args.size()),
-                           location);
+                                          static_cast<uint64_t>(zeek_args.size()), args.size()));
 
     ::zeek::Args vl = ::zeek::Args();
     for ( const auto& v : args ) {
@@ -165,43 +163,42 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
         else
             // Shouldn't happen here, but we have to_vals() that
             // (legitimately) return null in certain contexts.
-            throw InvalidValue("null value encountered after conversion", location);
+            throw InvalidValue("null value encountered after conversion");
     }
 
     ::zeek::event_mgr.Enqueue(handler, vl);
 }
 
 ::zeek::TypePtr rt::event_arg_type(const ::zeek::EventHandlerPtr& handler,
-                                   const hilti::rt::integer::safe<uint64_t>& idx, const std::string& location) {
+                                   const hilti::rt::integer::safe<uint64_t>& idx) {
     assert(handler);
 
-    const auto zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
+    const auto& zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
     if ( idx >= static_cast<uint64_t>(zeek_args.size()) )
         throw TypeMismatch(hilti::rt::fmt("more parameters given than the %" PRIu64 " that the Zeek event expects",
-                                          static_cast<uint64_t>(zeek_args.size())),
-                           location);
+                                          static_cast<uint64_t>(zeek_args.size())));
 
     return zeek_args[idx];
 }
 
-::zeek::ValPtr rt::current_conn(const std::string& location) {
+::zeek::ValPtr rt::current_conn() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
         return x->analyzer->Conn()->GetVal();
     else
-        throw ValueUnavailable("$conn not available", location);
+        throw ValueUnavailable("$conn not available");
 }
 
-::zeek::ValPtr rt::current_is_orig(const std::string& location) {
+::zeek::ValPtr rt::current_is_orig() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
     if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
         return ::zeek::val_mgr->Bool(x->is_orig);
     else
-        throw ValueUnavailable("$is_orig not available", location);
+        throw ValueUnavailable("$is_orig not available");
 }
 
 void rt::debug(const std::string& msg) {
@@ -256,7 +253,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
     }
 }
 
-::zeek::ValPtr rt::current_file(const std::string& location) {
+::zeek::ValPtr rt::current_file() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -267,10 +264,10 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
             return f->ToVal();
     }
 
-    throw ValueUnavailable("$file not available", location);
+    throw ValueUnavailable("$file not available");
 }
 
-::zeek::ValPtr rt::current_packet(const std::string& location) {
+::zeek::ValPtr rt::current_packet() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -282,7 +279,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
         return c->packet_val;
     }
     else
-        throw ValueUnavailable("$packet not available", location);
+        throw ValueUnavailable("$packet not available");
 }
 
 hilti::rt::Bool rt::is_orig() {

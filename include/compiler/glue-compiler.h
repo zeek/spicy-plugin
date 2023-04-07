@@ -212,12 +212,6 @@ private:
      */
     bool CreateSpicyHook(glue::Event* ev);
 
-    /** Returns a HILTI string expression with the location of the event. */
-    hilti::Expression location(const glue::Event& ev);
-
-    /** Returns a HILTI string expression with the location of the event. */
-    hilti::Expression location(const glue::ExpressionAccessor& e);
-
     Driver* _driver = nullptr;        /**< driver provided to Init() */
     std::optional<int> _zeek_version; /**< Zeek version provided to Init() */
 

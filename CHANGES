@@ -1,3 +1,9 @@
+1.5.3-20 | 2023-04-07 09:33:21 +0200
+
+  * Remove location tracking in glue code. (Robin Sommer, Corelight)
+
+  * Apply a couple of tiny optimizations. (Robin Sommer, Corelight)
+
 1.5.3-16 | 2023-04-05 10:34:33 +0200
 
   * Fix spelling in sources and file names. (Benjamin Bannier, Corelight)
