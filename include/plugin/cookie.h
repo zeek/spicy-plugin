@@ -145,6 +145,7 @@ struct Cookie {
     struct {
         ::zeek::ValPtr conn = nullptr;    // valid only for protocol analyzers
         ::zeek::ValPtr is_orig = nullptr; // valid only for protocol analyzers
+        bool confirmed = false;           // valid only for protocol analyzers;
     } cache;
 
     enum Tag { Protocol, File, Packet };
@@ -193,6 +194,7 @@ private:
             protocol = nullptr;
             cache.conn = nullptr;
             cache.is_orig = nullptr;
+            cache.confirmed = false;
         }
         else if ( file ) {
             data.file.~FileAnalyzer();
@@ -205,8 +207,10 @@ private:
     }
 
     void _initLike(const Cookie& other) {
-        if ( other.protocol )
+        if ( other.protocol ) {
             protocol = &data.protocol;
+            cache.confirmed = other.cache.confirmed;
+        }
 
         else if ( other.file )
             file = &data.file;

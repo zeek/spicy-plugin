@@ -382,9 +382,13 @@ void rt::confirm_protocol() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
+    if ( cookie->cache.confirmed )
+        return;
+
     if ( auto x = cookie->protocol ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("confirming protocol %s", tag.AsString()));
+        cookie->cache.confirmed = true;
         return x->analyzer->AnalyzerConfirmation(tag);
     }
     throw ValueUnavailable("no current connection available");
