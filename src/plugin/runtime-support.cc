@@ -157,6 +157,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
                                           static_cast<uint64_t>(zeek_args.size()), args.size()));
 
     ::zeek::Args vl = ::zeek::Args();
+    vl.reserve(args.size());
     for ( const auto& v : args ) {
         if ( v )
             vl.emplace_back(v);
@@ -166,7 +167,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
             throw InvalidValue("null value encountered after conversion");
     }
 
-    ::zeek::event_mgr.Enqueue(handler, vl);
+    ::zeek::event_mgr.Enqueue(handler, std::move(vl));
 }
 
 ::zeek::TypePtr rt::event_arg_type(const ::zeek::EventHandlerPtr& handler,
