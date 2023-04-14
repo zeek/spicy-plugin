@@ -188,7 +188,7 @@ void raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector
  *
  * @return Zeek value of record type
  */
-::zeek::ValPtr current_conn();
+::zeek::ValPtr& current_conn();
 
 /**
  * Retrieves the direction of the currently processed Zeek connection.
@@ -196,7 +196,7 @@ void raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector
  *
  * @return Zeek value of boolean type
  */
-::zeek::ValPtr current_is_orig();
+::zeek::ValPtr& current_is_orig();
 
 /**
  * Logs a string through the Spicy plugin's debug output.

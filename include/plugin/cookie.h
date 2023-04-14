@@ -141,6 +141,12 @@ struct Cookie {
         return *this;
     }
 
+    // Cache of values that can be expensive to compute.
+    struct {
+        ::zeek::ValPtr conn = nullptr;    // valid only for protocol analyzers
+        ::zeek::ValPtr is_orig = nullptr; // valid only for protocol analyzers
+    } cache;
+
     enum Tag { Protocol, File, Packet };
 
     /** Returns the type of cookie currently stored. */
@@ -185,6 +191,8 @@ private:
         if ( protocol ) {
             data.protocol.~ProtocolAnalyzer();
             protocol = nullptr;
+            cache.conn = nullptr;
+            cache.is_orig = nullptr;
         }
         else if ( file ) {
             data.file.~FileAnalyzer();

@@ -182,22 +182,32 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     return zeek_args[idx];
 }
 
-::zeek::ValPtr rt::current_conn() {
+::zeek::ValPtr& rt::current_conn() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = cookie->protocol )
-        return x->analyzer->Conn()->GetVal();
+    if ( cookie->cache.conn )
+        return cookie->cache.conn;
+
+    if ( auto x = cookie->protocol ) {
+        cookie->cache.conn = x->analyzer->Conn()->GetVal();
+        return cookie->cache.conn;
+    }
     else
         throw ValueUnavailable("$conn not available");
 }
 
-::zeek::ValPtr rt::current_is_orig() {
+::zeek::ValPtr& rt::current_is_orig() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = cookie->protocol )
-        return ::zeek::val_mgr->Bool(x->is_orig);
+    if ( cookie->cache.is_orig )
+        return cookie->cache.is_orig;
+
+    if ( auto x = cookie->protocol ) {
+        cookie->cache.is_orig = ::zeek::val_mgr->Bool(x->is_orig);
+        return cookie->cache.is_orig;
+    }
     else
         throw ValueUnavailable("$is_orig not available");
 }
@@ -697,9 +707,9 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
         auto current = f->analyzer->GetFile()->ToVal()->AsRecordVal();
         rval->Assign(::zeek::id::fa_file->FieldOffset("parent_id"), current->GetField("id")); // set to parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("conns"),
-                     current->GetField("conns")); // copy from parent
+                     current->GetField("conns"));                                             // copy from parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
-                     current->GetField("is_orig")); // copy from parent
+                     current->GetField("is_orig"));                                           // copy from parent
     }
 
     // Double check everybody agrees on the file ID.
