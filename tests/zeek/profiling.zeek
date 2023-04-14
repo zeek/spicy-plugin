@@ -1,7 +1,7 @@
 # @TEST-REQUIRES: spicy-version 10800
 # @TEST-EXEC: spicyz -Z -o ssh.hlto ssh.spicy ./ssh.evt
 # @TEST-EXEC: zeek -b -r ${TRACES}/ssh-single-conn.trace Zeek::Spicy ssh.hlto %INPUT Spicy::enable_profiling=T >output 2>prof.log.raw
-# @TEST-EXEC: cat prof.log.raw | awk '{print $1, $2}' >prof.log
+# @TEST-EXEC: cat prof.log.raw | awk '{print $1, $2}' | grep -v zeek/rt/debug >prof.log
 # @TEST-EXEC: btest-diff output
 # @TEST-EXEC: TEST_DIFF_CANONIFIER= btest-diff prof.log
 #
