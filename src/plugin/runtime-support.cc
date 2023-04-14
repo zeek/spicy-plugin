@@ -185,7 +185,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+    if ( auto x = cookie->protocol )
         return x->analyzer->Conn()->GetVal();
     else
         throw ValueUnavailable("$conn not available");
@@ -195,7 +195,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+    if ( auto x = cookie->protocol )
         return ::zeek::val_mgr->Bool(x->is_orig);
     else
         throw ValueUnavailable("$is_orig not available");
@@ -211,16 +211,16 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
     std::string name;
     std::string id;
 
-    if ( const auto p = std::get_if<cookie::ProtocolAnalyzer>(&cookie) ) {
+    if ( const auto p = cookie.protocol ) {
         auto name = p->analyzer->GetAnalyzerName();
         ZEEK_DEBUG(
             hilti::rt::fmt("[%s/%" PRIu32 "/%s] %s", name, p->analyzer->GetID(), (p->is_orig ? "orig" : "resp"), msg));
     }
-    else if ( const auto f = std::get_if<cookie::FileAnalyzer>(&cookie) ) {
+    else if ( const auto f = cookie.file ) {
         auto name = ::zeek::file_mgr->GetComponentName(f->analyzer->Tag());
         ZEEK_DEBUG(hilti::rt::fmt("[%s/%" PRIu32 "] %s", name, f->analyzer->GetID(), msg));
     }
-    else if ( const auto f = std::get_if<cookie::PacketAnalyzer>(&cookie) ) {
+    else if ( const auto f = cookie.packet ) {
         auto name = ::zeek::packet_mgr->GetComponentName(f->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("[%s] %s", name, msg));
     }
@@ -229,9 +229,9 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
 }
 
 inline rt::cookie::FileStateStack* _file_state_stack(rt::Cookie* cookie) {
-    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) )
+    if ( auto c = cookie->protocol )
         return c->is_orig ? &c->fstate_orig : &c->fstate_resp;
-    else if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) )
+    else if ( auto f = cookie->file )
         return &f->fstate;
     else
         throw rt::ValueUnavailable("no current connection or file available");
@@ -257,7 +257,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::FileAnalyzer>(cookie) )
+    if ( auto x = cookie->file )
         return x->analyzer->GetFile()->ToVal();
     else if ( auto* fstate = _file_state(cookie, {}) ) {
         if ( auto* f = ::zeek::file_mgr->LookupFile(fstate->fid) )
@@ -271,7 +271,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::PacketAnalyzer>(cookie) ) {
+    if ( auto c = cookie->packet ) {
         if ( ! c->packet_val )
             // We cache the built value in case we need it multiple times.
             c->packet_val = c->packet->ToRawPktHdrVal();
@@ -286,7 +286,7 @@ hilti::rt::Bool rt::is_orig() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+    if ( auto x = cookie->protocol )
         return x->is_orig;
     else
         throw ValueUnavailable("is_orig() not available in current context");
@@ -296,7 +296,7 @@ std::string rt::uid() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto c = cookie->protocol ) {
         // Retrieve the ConnVal() so that we ensure the UID has been set.
         c->analyzer->ConnVal();
         return c->analyzer->Conn()->GetUID().Base62("C");
@@ -334,7 +334,7 @@ std::tuple<hilti::rt::Address, hilti::rt::Port, hilti::rt::Address, hilti::rt::P
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto c = cookie->protocol ) {
         const auto* conn = c->analyzer->Conn();
         return std::make_tuple(convert_address(conn->OrigAddr()), convert_port(conn->OrigPort(), conn->ConnTransport()),
                                convert_address(conn->RespAddr()),
@@ -350,7 +350,7 @@ void rt::flip_roles() {
 
     rt::debug(*cookie, "flipping roles");
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+    if ( auto x = cookie->protocol )
         x->analyzer->Conn()->FlipRoles();
     else
         throw ValueUnavailable("flip_roles() not available in current context");
@@ -360,7 +360,7 @@ hilti::rt::integer::safe<uint64_t> rt::number_packets() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto x = cookie->protocol ) {
         return x->num_packets;
     }
     else
@@ -371,7 +371,7 @@ void rt::confirm_protocol() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto x = cookie->protocol ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("confirming protocol %s", tag.AsString()));
         return x->analyzer->AnalyzerConfirmation(tag);
@@ -383,7 +383,7 @@ void rt::reject_protocol(const std::string& reason) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto x = cookie->protocol ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("rejecting protocol %s", tag.AsString()));
         return x->analyzer->AnalyzerViolation("protocol rejected", nullptr, 0, tag);
@@ -396,11 +396,11 @@ void rt::weird(const std::string& id, const std::string& addl) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( const auto x = std::get_if<cookie::ProtocolAnalyzer>(cookie) )
+    if ( const auto x = cookie->protocol )
         x->analyzer->Weird(id.c_str(), addl.data());
-    else if ( const auto x = std::get_if<cookie::FileAnalyzer>(cookie) )
+    else if ( const auto x = cookie->file )
         ::zeek::reporter->Weird(x->analyzer->GetFile(), id.c_str(), addl.data());
-    else if ( const auto x = std::get_if<cookie::PacketAnalyzer>(cookie) ) {
+    else if ( const auto x = cookie->packet ) {
         x->analyzer->Weird(id.c_str(), x->packet, addl.c_str());
     }
     else
@@ -417,7 +417,7 @@ void rt::protocol_begin(const std::optional<std::string>& analyzer) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    auto c = cookie->protocol;
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
@@ -454,7 +454,7 @@ rt::ProtocolHandle rt::protocol_handle_get_or_create(const std::string& analyzer
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    auto c = cookie->protocol;
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
@@ -511,7 +511,7 @@ void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    auto c = cookie->protocol;
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
@@ -541,7 +541,7 @@ void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    auto c = cookie->protocol;
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
@@ -567,7 +567,7 @@ void rt::protocol_end() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    auto c = cookie->protocol;
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
@@ -579,7 +579,7 @@ void rt::protocol_handle_close(const ProtocolHandle& handle) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie);
+    auto c = cookie->protocol;
     if ( ! c )
         throw ValueUnavailable("no current connection available");
 
@@ -629,7 +629,7 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
     auto data_ = reinterpret_cast<const unsigned char*>(data);
     auto mime_type = (fstate->mime_type ? *fstate->mime_type : std::string());
 
-    if ( auto c = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto c = cookie->protocol ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
 
         if ( offset )
@@ -649,7 +649,7 @@ void rt::terminate_session() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto c = cookie->protocol ) {
         assert(::zeek::session_mgr);
         ::zeek::session_mgr->Remove(c->analyzer->Conn());
     }
@@ -661,7 +661,7 @@ std::string rt::fuid() {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto f = std::get_if<cookie::FileAnalyzer>(cookie) ) {
+    if ( auto f = cookie->file ) {
         if ( auto file = f->analyzer->GetFile() )
             return file->GetID();
     }
@@ -680,7 +680,7 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
     auto file = ::zeek::file_mgr->LookupFile(fstate->fid);
     assert(file); // passing in empty data ensures that this is now available
 
-    if ( auto f = std::get_if<rt::cookie::FileAnalyzer>(cookie) ) {
+    if ( auto f = cookie->file ) {
         // We need to initialize some fa_info fields ourselves that would
         // normally be inferred from the connection.
 
@@ -710,7 +710,7 @@ void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size, const std
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie, fid);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto c = cookie->protocol ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
         ::zeek::file_mgr->SetSize(size, tag, c->analyzer->Conn(), c->is_orig, fstate->fid);
     }
@@ -732,7 +732,7 @@ void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti:
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie, fid);
 
-    if ( auto c = std::get_if<cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto c = cookie->protocol ) {
         auto tag = OurPlugin->tagForProtocolAnalyzer(c->analyzer->GetAnalyzerTag());
         ::zeek::file_mgr->Gap(offset, len, tag, c->analyzer->Conn(), c->is_orig, fstate->fid);
     }
@@ -752,7 +752,7 @@ void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto c = std::get_if<cookie::PacketAnalyzer>(cookie) )
+    if ( auto c = cookie->packet )
         c->next_analyzer = identifier;
     else
         throw ValueUnavailable("no current packet analyzer available");

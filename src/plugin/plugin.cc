@@ -549,7 +549,7 @@ static void hook_accept_input() {
     auto cookie = static_cast<rt::Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto x = cookie->protocol ) {
         auto tag = plugin::Zeek_Spicy::OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("confirming protocol %s", tag.AsString()));
         return x->analyzer->AnalyzerConfirmation(tag);
@@ -560,7 +560,7 @@ static void hook_decline_input(const std::string& reason) {
     auto cookie = static_cast<rt::Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
-    if ( auto x = std::get_if<rt::cookie::ProtocolAnalyzer>(cookie) ) {
+    if ( auto x = cookie->protocol ) {
         auto tag = plugin::Zeek_Spicy::OurPlugin->tagForProtocolAnalyzer(x->analyzer->GetAnalyzerTag());
         ZEEK_DEBUG(hilti::rt::fmt("rejecting protocol %s", tag.AsString()));
         return x->analyzer->AnalyzerViolation("protocol rejected", nullptr, 0, tag);

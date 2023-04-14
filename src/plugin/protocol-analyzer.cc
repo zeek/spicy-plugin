@@ -27,7 +27,7 @@ static auto create_endpoint(bool is_orig, ::zeek::analyzer::Analyzer* analyzer, 
                                         cookie::FileStateStack(hilti::rt::fmt("%x.resp", analyzer->GetID()))};
 
     // Cannot get parser here yet, analyzer may not have been fully set up.
-    return EndpointState(cookie, type);
+    return EndpointState(std::move(cookie), type);
 }
 
 ProtocolAnalyzer::ProtocolAnalyzer(::zeek::analyzer::Analyzer* analyzer, spicy::rt::driver::ParsingType type)
@@ -45,11 +45,11 @@ void ProtocolAnalyzer::Done() {
 void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
     auto* endp = is_orig ? &_originator : &_responder;
 
-    if ( endp->cookie().analyzer->Skipping() )
+    if ( endp->protocol().analyzer->Skipping() )
         return;
 
     if ( ! endp->hasParser() && ! endp->isSkipping() ) {
-        auto parser = OurPlugin->parserForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag(), is_orig);
+        auto parser = OurPlugin->parserForProtocolAnalyzer(endp->protocol().analyzer->GetAnalyzerTag(), is_orig);
         if ( parser ) {
             if ( ! _context )
                 _context = parser->createContext();
@@ -64,17 +64,17 @@ void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
     }
 
     try {
-        hilti::rt::context::CookieSetter _(&endp->cookie());
+        hilti::rt::context::CookieSetter _(endp->cookie());
         endp->process(len, reinterpret_cast<const char*>(data));
     } catch ( const hilti::rt::RuntimeError& e ) {
         STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("error during parsing, triggering analyzer violation: %s", e.what()));
-        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
-        endp->cookie().analyzer->AnalyzerViolation(e.what(), reinterpret_cast<const char*>(data), len, tag);
+        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->protocol().analyzer->GetAnalyzerTag());
+        endp->protocol().analyzer->AnalyzerViolation(e.what(), reinterpret_cast<const char*>(data), len, tag);
         originator().skipRemaining();
         responder().skipRemaining();
-        endp->cookie().analyzer->SetSkip(true);
+        endp->protocol().analyzer->SetSkip(true);
     } catch ( const hilti::rt::Exception& e ) {
-        reporter::analyzerError(endp->cookie().analyzer, e.description(),
+        reporter::analyzerError(endp->protocol().analyzer, e.description(),
                                 e.location()); // this sets Zeek to skip sending any further input
     }
 }
@@ -82,28 +82,28 @@ void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
 void ProtocolAnalyzer::Finish(bool is_orig) {
     auto* endp = is_orig ? &_originator : &_responder;
 
-    if ( endp->cookie().analyzer->Skipping() )
+    if ( endp->protocol().analyzer->Skipping() )
         return;
 
     try {
-        hilti::rt::context::CookieSetter _(&endp->cookie());
+        hilti::rt::context::CookieSetter _(endp->cookie());
         endp->finish();
     } catch ( const hilti::rt::RuntimeError& e ) {
         STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("error during parsing, triggering analyzer violation: %s", e.what()));
-        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->cookie().analyzer->GetAnalyzerTag());
-        endp->cookie().analyzer->AnalyzerViolation(e.what(), nullptr, 0, tag);
+        auto tag = OurPlugin->tagForProtocolAnalyzer(endp->protocol().analyzer->GetAnalyzerTag());
+        endp->protocol().analyzer->AnalyzerViolation(e.what(), nullptr, 0, tag);
         endp->skipRemaining();
     } catch ( const hilti::rt::Exception& e ) {
-        reporter::analyzerError(endp->cookie().analyzer, e.description(),
+        reporter::analyzerError(endp->protocol().analyzer, e.description(),
                                 e.location()); // this sets Zeek to skip sending any further input
     }
 }
 
 cookie::ProtocolAnalyzer& ProtocolAnalyzer::cookie(bool is_orig) {
     if ( is_orig )
-        return _originator.cookie();
+        return _originator.protocol();
     else
-        return _responder.cookie();
+        return _responder.protocol();
 }
 
 void ProtocolAnalyzer::DebugMsg(bool is_orig, const std::string& msg) {
@@ -150,9 +150,9 @@ void TCP_Analyzer::DeliverStream(int len, const u_char* data, bool is_orig) {
         responder().skipRemaining();
 
         if ( is_orig ) // doesn't really matter which endpoint here.
-            originator().cookie().analyzer->SetSkip(true);
+            originator().protocol().analyzer->SetSkip(true);
         else
-            responder().cookie().analyzer->SetSkip(true);
+            responder().protocol().analyzer->SetSkip(true);
     }
 }
 

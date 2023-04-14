@@ -112,7 +112,109 @@ struct PacketAnalyzer {
 
 } // namespace cookie
 
-/** Type of state stored in HILTI's execution context during Spicy processing. */
-using Cookie = std::variant<cookie::ProtocolAnalyzer, cookie::FileAnalyzer, cookie::PacketAnalyzer>;
+/**
+ * Type of state stored in HILTI's execution context during Spicy processing.
+ * This is optimized for fast access and small size.
+ */
+struct Cookie {
+    // Exactly one of these pointers is non-null at any time. In that way, the
+    // pointers provide the semantics of a tagged union. Internals are bit
+    // tricky because the union itself cannot be copied/moved.
+    cookie::ProtocolAnalyzer* protocol = nullptr;
+    cookie::FileAnalyzer* file = nullptr;
+    cookie::PacketAnalyzer* packet = nullptr;
+
+    Cookie(cookie::ProtocolAnalyzer&& c) : data(std::move(c)) { protocol = &data.protocol; }
+    Cookie(cookie::FileAnalyzer&& c) : data(std::move(c)) { file = &data.file; }
+    Cookie(cookie::PacketAnalyzer&& c) : data(std::move(c)) { packet = &data.packet; }
+    Cookie(Cookie&& other) noexcept : data(other.tag(), std::move(other.data)) { _initLike(other); }
+    ~Cookie() { _delete(); }
+
+    Cookie& operator=(Cookie&& other) noexcept {
+        if ( this == &other )
+            return *this;
+
+        _delete();
+        _initLike(other);
+
+        new (&data) Data(tag(), std::move(other.data));
+        return *this;
+    }
+
+    enum Tag { Protocol, File, Packet };
+
+    /** Returns the type of cookie currently stored. */
+    Tag tag() const {
+        if ( protocol )
+            return Tag::Protocol;
+        else if ( file )
+            return Tag::File;
+        else if ( packet )
+            return Tag::Packet;
+        else
+            throw std::runtime_error("invalid cookie");
+    }
+
+private:
+    union Data {
+        cookie::ProtocolAnalyzer protocol;
+        cookie::FileAnalyzer file;
+        cookie::PacketAnalyzer packet;
+
+        Data(cookie::ProtocolAnalyzer&& protocol) : protocol(std::move(protocol)) {}
+        Data(cookie::FileAnalyzer&& file) : file(std::move(file)) {}
+        Data(cookie::PacketAnalyzer&& packet) : packet(std::move(packet)) {}
+        Data(Tag tag, Data&& other) {
+            switch ( tag ) {
+                case Tag::Protocol: new (&protocol) cookie::ProtocolAnalyzer(std::move(other.protocol)); break;
+                case Tag::File: new (&file) cookie::FileAnalyzer(std::move(other.file)); break;
+                case Tag::Packet: new (&packet) cookie::PacketAnalyzer(std::move(other.packet)); break;
+            }
+        }
+
+        ~Data() {
+            // don't delete anything, Cookie is in charge.
+        }
+
+        Data(const Data& other) = delete;
+        Data& operator=(const Data& other) = delete;
+        Data& operator=(Data&& other) = delete;
+    } data;
+
+    void _delete() {
+        if ( protocol ) {
+            data.protocol.~ProtocolAnalyzer();
+            protocol = nullptr;
+        }
+        else if ( file ) {
+            data.file.~FileAnalyzer();
+            file = nullptr;
+        }
+        else if ( packet ) {
+            data.packet.~PacketAnalyzer();
+            packet = nullptr;
+        }
+    }
+
+    void _initLike(const Cookie& other) {
+        if ( other.protocol )
+            protocol = &data.protocol;
+
+        else if ( other.file )
+            file = &data.file;
+
+        else if ( other.packet )
+            packet = &data.packet;
+    }
+
+    Cookie(const Cookie& other) = delete;
+    Cookie& operator=(const Cookie& other) = delete;
+
+    friend inline void swap(Cookie& lhs, Cookie& rhs) {
+        Cookie tmp = std::move(lhs);
+        lhs = std::move(rhs);
+        rhs = std::move(tmp);
+    }
+};
 
 } // namespace spicy::zeek::rt
