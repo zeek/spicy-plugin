@@ -710,6 +710,28 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Set<T>& s, ::zeek::TypePtr target)
     return zv;
 }
 
+template<typename T>
+inline void set_record_field(::zeek::RecordVal* rval, ::zeek::IntrusivePtr<::zeek::RecordType>& rtype, int idx,
+                             const T& x) {
+    ::zeek::ValPtr v = nullptr;
+
+    if constexpr ( std::is_same<T, hilti::rt::Null>::value ) {
+        // "Null" turns into an unset optional record field.
+    }
+    else
+        // This may return a nullptr in cases where the field is to be left unset.
+        v = to_val(x, rtype->GetFieldType(idx));
+
+    if ( v )
+        rval->Assign(idx, v);
+    else {
+        // Field must be &optional or &default.
+        if ( auto attrs = rtype->FieldDecl(idx)->attrs;
+             ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) || attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
+            throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx)));
+    }
+}
+
 /**
  * Converts a Spicy-side tuple to a Zeek record value. The result is returned
  * with ref count +1.
@@ -726,27 +748,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target) {
 
     auto rval = ::zeek::make_intrusive<::zeek::RecordVal>(rtype);
     int idx = 0;
-    hilti::rt::tuple_for_each(t, [&](const auto& x) {
-        ::zeek::ValPtr v = nullptr;
-
-        if constexpr ( std::is_same<decltype(x), const hilti::rt::Null&>::value ) {
-            // "Null" turns into an unset optional record field.
-        }
-        else
-            // This may return a nullptr in cases where the field is to be left unset.
-            v = to_val(x, rtype->GetFieldType(idx));
-
-        if ( v )
-            rval->Assign(idx, v);
-        else {
-            // Field must be &optional or &default.
-            if ( auto attrs = rtype->FieldDecl(idx)->attrs; ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) ||
-                                                                          attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
-                throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx)));
-        }
-
-        idx++;
-    });
+    hilti::rt::tuple_for_each(t, [&](const auto& x) { set_record_field(rval.get(), rtype, idx++, x); });
 
     return rval;
 }
