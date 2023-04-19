@@ -15,6 +15,7 @@
 #include <hilti/rt/types/vector.h>
 #include <hilti/rt/util.h>
 
+#include <spicy/rt/configuration.h>
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
 
@@ -60,7 +61,9 @@ plugin::Zeek_Spicy::Plugin::Plugin() {
 
 void ::spicy::zeek::debug::do_log(const std::string& msg) {
     PLUGIN_DBG_LOG(*plugin::Zeek_Spicy::OurPlugin, "%s", msg.c_str());
-    HILTI_RT_DEBUG("zeek", msg);
+
+    if ( hilti::rt::isInitialized() )
+        HILTI_RT_DEBUG("zeek", msg);
 }
 
 plugin::Zeek_Spicy::Plugin::~Plugin() {}
