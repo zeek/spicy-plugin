@@ -29,8 +29,14 @@ public:
     EndpointState(Cookie cookie, spicy::rt::driver::ParsingType type)
         : ParsingState(type), _cookie(std::move(cookie)) {}
 
-    /** Returns the cookie associated with the endpoint. */
-    auto& cookie() { return std::get<cookie::ProtocolAnalyzer>(_cookie); }
+    /** Returns the protocol-specific cookie state associated with the endpoint. */
+    auto& protocol() {
+        assert(_cookie.protocol);
+        return *_cookie.protocol;
+    }
+
+    /** Returns the cookie pointer to use with the runtime library during analysis. */
+    auto* cookie() { return &_cookie; }
 
     /**
      * Records a debug message pertaining to this specific endpoint.

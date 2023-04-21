@@ -24,7 +24,6 @@
 #include <zeek-spicy/plugin/cookie.h>
 #include <zeek-spicy/plugin/zeek-compat.h>
 
-
 namespace spicy::zeek::rt {
 
 // Adapt to rename of exception.
@@ -188,7 +187,7 @@ void raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector
  *
  * @return Zeek value of record type
  */
-::zeek::ValPtr current_conn();
+::zeek::ValPtr& current_conn();
 
 /**
  * Retrieves the direction of the currently processed Zeek connection.
@@ -196,7 +195,7 @@ void raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector
  *
  * @return Zeek value of boolean type
  */
-::zeek::ValPtr current_is_orig();
+::zeek::ValPtr& current_is_orig();
 
 /**
  * Logs a string through the Spicy plugin's debug output.
@@ -710,6 +709,89 @@ inline ::zeek::ValPtr to_val(const hilti::rt::Set<T>& s, ::zeek::TypePtr target)
     return zv;
 }
 
+
+namespace {
+template<typename, template<typename...> typename>
+struct is_instance_impl : std::false_type {};
+
+template<template<typename...> typename U, typename... Ts>
+struct is_instance_impl<U<Ts...>, U> : std::true_type {};
+} // namespace
+
+template<typename T, template<typename...> typename U>
+using is_instance = is_instance_impl<std::remove_cv_t<T>, U>;
+
+
+template<typename T>
+inline void set_record_field(::zeek::RecordVal* rval, const ::zeek::IntrusivePtr<::zeek::RecordType>& rtype, int idx,
+                             const T& x) {
+    using NoConversionNeeded = std::integral_constant<
+        bool, std::is_same_v<T, int8_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, int32_t> ||
+                  std::is_same_v<T, int64_t> || std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> ||
+                  std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t> || std::is_same_v<T, double> ||
+                  std::is_same_v<T, std::string> || std::is_same_v<T, bool>>;
+
+    using IsSignedInteger = std::integral_constant<bool, std::is_same_v<T, hilti::rt::integer::safe<int8_t>> ||
+                                                             std::is_same_v<T, hilti::rt::integer::safe<int16_t>> ||
+                                                             std::is_same_v<T, hilti::rt::integer::safe<int32_t>> ||
+                                                             std::is_same_v<T, hilti::rt::integer::safe<int64_t>>>;
+
+    using IsUnsignedInteger = std::integral_constant<bool, std::is_same_v<T, hilti::rt::integer::safe<uint8_t>> ||
+                                                               std::is_same_v<T, hilti::rt::integer::safe<uint16_t>> ||
+                                                               std::is_same_v<T, hilti::rt::integer::safe<uint32_t>> ||
+                                                               std::is_same_v<T, hilti::rt::integer::safe<uint64_t>>>;
+
+    if constexpr ( NoConversionNeeded::value )
+        rval->Assign(idx, x);
+    else if constexpr ( IsSignedInteger::value )
+#if ZEEK_VERSION_NUMBER >= 50200
+        rval->Assign(idx, static_cast<int64_t>(x.Ref()));
+#else
+        rval->Assign(idx, static_cast<int>(x.Ref()));
+#endif
+    else if constexpr ( IsUnsignedInteger::value )
+        rval->Assign(idx, static_cast<uint64_t>(x.Ref()));
+    else if constexpr ( std::is_same_v<T, hilti::rt::Bytes> )
+        rval->Assign(idx, x.str());
+    else if constexpr ( std::is_same_v<T, hilti::rt::Bool> )
+        rval->Assign(idx, static_cast<bool>(x));
+    else if constexpr ( std::is_same_v<T, std::string> )
+        rval->Assign(idx, x);
+    else if constexpr ( std::is_same_v<T, hilti::rt::Time> )
+        rval->AssignTime(idx, x.seconds());
+    else if constexpr ( std::is_same_v<T, hilti::rt::Interval> )
+        rval->AssignInterval(idx, x.seconds());
+    else if constexpr ( std::is_same_v<T, hilti::rt::Null> ) {
+        // "Null" turns into an unset optional record field.
+    }
+    else if constexpr ( is_instance<T, std::optional>::value ) {
+        if ( x.has_value() )
+            set_record_field(rval, rtype, idx, *x);
+    }
+    else if constexpr ( is_instance<T, hilti::rt::DeferredExpression>::value ) {
+        try {
+            set_record_field(rval, rtype, idx, x());
+        } catch ( const hilti::rt::AttributeNotSet& ) {
+            // leave unset
+        }
+    }
+    else {
+        ::zeek::ValPtr v = nullptr;
+
+        // This may return a nullptr in cases where the field is to be left unset.
+        v = to_val(x, rtype->GetFieldType(idx));
+
+        if ( v )
+            rval->Assign(idx, v);
+        else {
+            // Field must be &optional or &default.
+            if ( auto attrs = rtype->FieldDecl(idx)->attrs; ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) ||
+                                                                          attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
+                throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx)));
+        }
+    }
+}
+
 /**
  * Converts a Spicy-side tuple to a Zeek record value. The result is returned
  * with ref count +1.
@@ -726,27 +808,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target) {
 
     auto rval = ::zeek::make_intrusive<::zeek::RecordVal>(rtype);
     int idx = 0;
-    hilti::rt::tuple_for_each(t, [&](const auto& x) {
-        ::zeek::ValPtr v = nullptr;
-
-        if constexpr ( std::is_same<decltype(x), const hilti::rt::Null&>::value ) {
-            // "Null" turns into an unset optional record field.
-        }
-        else
-            // This may return a nullptr in cases where the field is to be left unset.
-            v = to_val(x, rtype->GetFieldType(idx));
-
-        if ( v )
-            rval->Assign(idx, v);
-        else {
-            // Field must be &optional or &default.
-            if ( auto attrs = rtype->FieldDecl(idx)->attrs; ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) ||
-                                                                          attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
-                throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", rtype->FieldName(idx)));
-        }
-
-        idx++;
-    });
+    hilti::rt::tuple_for_each(t, [&](const auto& x) { set_record_field(rval.get(), rtype, idx++, x); });
 
     return rval;
 }
@@ -777,25 +839,7 @@ inline ::zeek::ValPtr to_val(const T& t, ::zeek::TypePtr target) {
         if ( field_name != name )
             throw TypeMismatch(hilti::rt::fmt("mismatch in field name: expected '%s', found '%s'", name, field_name));
 
-        ::zeek::ValPtr v = nullptr;
-
-        if constexpr ( std::is_same<decltype(val), const hilti::rt::Null&>::value ) {
-            // "Null" turns into an unset optional record field.
-        }
-        else
-            // This may return a nullptr in cases where the field is to be left unset.
-            v = to_val(val, field);
-
-        if ( v )
-            rval->Assign(idx, v);
-        else {
-            // Field must be &optional or &default.
-            if ( auto attrs = rtype->FieldDecl(idx)->attrs; ! attrs || ! (attrs->Find(::zeek::detail::ATTR_DEFAULT) ||
-                                                                          attrs->Find(::zeek::detail::ATTR_OPTIONAL)) )
-                throw TypeMismatch(hilti::rt::fmt("missing initialization for field '%s'", field_name));
-        }
-
-        idx++;
+        set_record_field(rval.get(), rtype, idx++, val);
     });
 
     // We already check above that all Spicy-side fields are mapped so we

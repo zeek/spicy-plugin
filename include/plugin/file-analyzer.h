@@ -26,8 +26,14 @@ public:
      */
     FileState(Cookie cookie) : ParsingState(spicy::rt::driver::ParsingType::Stream), _cookie(std::move(cookie)) {}
 
-    /** Returns the cookie associated with the file. */
-    auto& cookie() { return std::get<cookie::FileAnalyzer>(_cookie); }
+    /** Returns the cookie pointer to use with the runtime library during analysis. */
+    auto* cookie() { return &_cookie; }
+
+    /** Returns the file-specific cookie state associated with the endpoint. */
+    auto& file() {
+        assert(_cookie.file);
+        return *_cookie.file;
+    }
 
     /**
      * Records a debug message pertaining to the specific file.

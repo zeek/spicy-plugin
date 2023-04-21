@@ -28,8 +28,14 @@ public:
      */
     PacketState(Cookie cookie) : ParsingState(spicy::rt::driver::ParsingType::Block), _cookie(std::move(cookie)) {}
 
-    /** Returns the cookie associated with the packet. */
-    auto& cookie() { return std::get<cookie::PacketAnalyzer>(_cookie); }
+    /** Returns the cookie pointer to use with the runtime library during analysis. */
+    auto* cookie() { return &_cookie; }
+
+    /** Returns the packet-specific cookie state associated with the endpoint. */
+    auto& packet() {
+        assert(_cookie.packet);
+        return *_cookie.packet;
+    }
 
     /**
      * Records a debug message pertaining to the specific file.
