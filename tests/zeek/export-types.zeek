@@ -4,6 +4,8 @@
 # Zeek 5.0 doesn't include the ID when printing the enum type
 # @TEST-EXEC: cat output | sed 's/enum Test::type_enum/enum/g' >output.tmp && mv output.tmp output
 #
+# Zeek 6.0 includes information on whether a record field is `&optional`.
+# @TEST-EXEC: cat output | sed 's/, optional=F//g' >output.tmp && mv output.tmp output
 # @TEST-EXEC: btest-diff output
 #
 # @TEST-DOC: Test the `export` keyword to automatically create corresponding Zeek types.
