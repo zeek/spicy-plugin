@@ -1131,11 +1131,13 @@ bool GlueCompiler::CreateSpicyHook(glue::Event* ev) {
 
     auto handler_expr = builder::id(handler_id);
 
+#if SPICY_VERSION_NUMBER >= 10800
     if ( _driver->hiltiOptions().cxx_enable_dynamic_globals ) {
         // Store reference to handler locally to avoid repeated lookups through globals store.
         body.addLocal("handler", builder::id(handler_id), meta);
         handler_expr = builder::id("handler");
     }
+#endif
 
     // Nothing to do if there's not handler defined.
     auto have_handler = builder::call("zeek_rt::have_handler", {handler_expr}, meta);

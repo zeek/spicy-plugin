@@ -15,7 +15,6 @@
 #include <hilti/rt/types/vector.h>
 #include <hilti/rt/util.h>
 
-#include <spicy/rt/configuration.h>
 #include <spicy/rt/init.h>
 #include <spicy/rt/parser.h>
 
@@ -28,6 +27,10 @@
 #include <zeek-spicy/plugin/protocol-analyzer.h>
 #include <zeek-spicy/plugin/zeek-compat.h>
 #include <zeek-spicy/plugin/zeek-reporter.h>
+
+#if SPICY_VERSION_NUMBER >= 10800
+#include <spicy/rt/configuration.h>
+#endif
 
 const char* ZEEK_SPICY_PLUGIN_VERSION_FUNCTION() { return spicy::zeek::configuration::PluginVersion; }
 

@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <memory>
 
-#include <hilti/rt/profiler.h>
 #include <hilti/rt/types/port.h>
 #include <hilti/rt/util.h>
 
@@ -13,32 +12,46 @@
 #include <zeek-spicy/plugin/zeek-compat.h>
 #include <zeek-spicy/plugin/zeek-reporter.h>
 
+#if SPICY_VERSION_NUMBER >= 10800
+#include <hilti/rt/profiler.h>
+#endif
+
 using namespace spicy::zeek;
 using namespace plugin::Zeek_Spicy;
+
+#if SPICY_VERSION_NUMBER >= 10800
+static std::optional<hilti::rt::Profiler> _start_profiler(const std::string_view& name) {
+    return hilti::rt::profiler::start(name);
+}
+#else
+static std::nullopt_t _start_profiler(const std::string_view& name) {
+    return std::nullopt;
+}
+#endif
 
 void rt::register_protocol_analyzer(const std::string& name, hilti::rt::Protocol proto,
                                     const hilti::rt::Vector<hilti::rt::Port>& ports, const std::string& parser_orig,
                                     const std::string& parser_resp, const std::string& replaces,
                                     const std::string& linker_scope) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/register_protocol_analyzer");
+    auto _ = _start_profiler("zeek/rt/register_protocol_analyzer");
     OurPlugin->registerProtocolAnalyzer(name, proto, ports, parser_orig, parser_resp, replaces, linker_scope);
 }
 
 void rt::register_file_analyzer(const std::string& name, const hilti::rt::Vector<std::string>& mime_types,
                                 const std::string& parser, const std::string& replaces,
                                 const std::string& linker_scope) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/register_file_analyzer");
+    auto _ = _start_profiler("zeek/rt/register_file_analyzer");
     OurPlugin->registerFileAnalyzer(name, mime_types, parser, replaces, linker_scope);
 }
 
 void rt::register_packet_analyzer(const std::string& name, const std::string& parser, const std::string& replaces,
                                   const std::string& linker_scope) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/register_packet_analyzer");
+    auto _ = _start_profiler("zeek/rt/register_packet_analyzer");
     OurPlugin->registerPacketAnalyzer(name, parser, replaces, linker_scope);
 }
 
 void rt::register_type(const std::string& ns, const std::string& id, const ::zeek::TypePtr& type) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/register_type");
+    auto _ = _start_profiler("zeek/rt/register_type");
     OurPlugin->registerType(hilti::rt::fmt("%s::%s", (! ns.empty() ? ns : std::string("GLOBAL")), id), type);
 }
 
@@ -57,7 +70,7 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
 }
 
 ::zeek::TypePtr rt::create_base_type(ZeekTypeTag tag) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/create_base_type");
+    auto _ = _start_profiler("zeek/rt/create_base_type");
     ::zeek::TypeTag ztag;
 
     switch ( tag ) {
@@ -93,7 +106,7 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
 ::zeek::TypePtr rt::create_enum_type(
     const std::string& ns, const std::string& id,
     const hilti::rt::Vector<std::tuple<std::string, hilti::rt::integer::safe<int64_t>>>& labels) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/create_enum_type");
+    auto _ = _start_profiler("zeek/rt/create_enum_type");
 
     if ( auto t = findType(::zeek::TYPE_ENUM, ns, id) )
         return t;
@@ -115,7 +128,7 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
 
 ::zeek::TypePtr rt::create_record_type(const std::string& ns, const std::string& id,
                                        const hilti::rt::Vector<RecordField>& fields) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/create_record_type");
+    auto _ = _start_profiler("zeek/rt/create_record_type");
 
     if ( auto t = findType(::zeek::TYPE_RECORD, ns, id) )
         return t;
@@ -137,24 +150,24 @@ static ::zeek::TypePtr findType(::zeek::TypeTag tag, const std::string& ns, cons
 }
 
 ::zeek::TypePtr rt::create_table_type(::zeek::TypePtr key, std::optional<::zeek::TypePtr> value) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/create_table_type");
+    auto _ = _start_profiler("zeek/rt/create_table_type");
     auto idx = ::zeek::make_intrusive<::zeek::TypeList>();
     idx->Append(std::move(key));
     return ::zeek::make_intrusive<::zeek::TableType>(std::move(idx), value ? *value : nullptr);
 }
 
 ::zeek::TypePtr rt::create_vector_type(const ::zeek::TypePtr& elem) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/create_vector_type");
+    auto _ = _start_profiler("zeek/rt/create_vector_type");
     return ::zeek::make_intrusive<::zeek::VectorType>(elem);
 }
 
 void rt::install_handler(const std::string& name) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/install_handler");
+    auto _ = _start_profiler("zeek/rt/install_handler");
     OurPlugin->registerEvent(name);
 }
 
 ::zeek::EventHandlerPtr rt::internal_handler(const std::string& name) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/internal_handler");
+    auto _ = _start_profiler("zeek/rt/internal_handler");
     auto handler = ::zeek::event_registry->Lookup(name);
 
     if ( ! handler )
@@ -164,7 +177,7 @@ void rt::install_handler(const std::string& name) {
 }
 
 void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Vector<::zeek::ValPtr>& args) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/raise_event");
+    auto _ = _start_profiler("zeek/rt/raise_event");
 
     // Caller must have checked already that there's a handler available.
     assert(handler);
@@ -190,7 +203,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
 
 ::zeek::TypePtr rt::event_arg_type(const ::zeek::EventHandlerPtr& handler,
                                    const hilti::rt::integer::safe<uint64_t>& idx) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/event_arg_type");
+    auto _ = _start_profiler("zeek/rt/event_arg_type");
     assert(handler);
 
     const auto& zeek_args = const_cast<::zeek::EventHandlerPtr&>(handler)->GetType()->ParamList()->GetTypes();
@@ -202,7 +215,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
 }
 
 ::zeek::ValPtr& rt::current_conn() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/current_conn");
+    auto _ = _start_profiler("zeek/rt/current_conn");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -218,7 +231,7 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
 }
 
 ::zeek::ValPtr& rt::current_is_orig() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/current_is_orig");
+    auto _ = _start_profiler("zeek/rt/current_is_orig");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -234,14 +247,14 @@ void rt::raise_event(const ::zeek::EventHandlerPtr& handler, const hilti::rt::Ve
 }
 
 void rt::debug(const std::string& msg) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/debug");
+    auto _ = _start_profiler("zeek/rt/debug");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
     rt::debug(*cookie, msg);
 }
 
 void rt::debug(const Cookie& cookie, const std::string& msg) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/debug");
+    auto _ = _start_profiler("zeek/rt/debug");
     std::string name;
     std::string id;
 
@@ -263,7 +276,7 @@ void rt::debug(const Cookie& cookie, const std::string& msg) {
 }
 
 inline rt::cookie::FileStateStack* _file_state_stack(rt::Cookie* cookie) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_state_stack");
+    auto _ = _start_profiler("zeek/rt/file_state_stack");
 
     if ( auto c = cookie->protocol )
         return c->is_orig ? &c->fstate_orig : &c->fstate_resp;
@@ -274,7 +287,7 @@ inline rt::cookie::FileStateStack* _file_state_stack(rt::Cookie* cookie) {
 }
 
 inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optional<std::string> fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_state");
+    auto _ = _start_profiler("zeek/rt/file_state");
 
     auto* stack = _file_state_stack(cookie);
     if ( fid ) {
@@ -292,7 +305,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
 }
 
 ::zeek::ValPtr rt::current_file() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/current_file");
+    auto _ = _start_profiler("zeek/rt/current_file");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -307,7 +320,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
 }
 
 ::zeek::ValPtr rt::current_packet() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/current_packet");
+    auto _ = _start_profiler("zeek/rt/current_packet");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -323,7 +336,7 @@ inline const rt::cookie::FileState* _file_state(rt::Cookie* cookie, std::optiona
 }
 
 hilti::rt::Bool rt::is_orig() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/is_orig");
+    auto _ = _start_profiler("zeek/rt/is_orig");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -334,7 +347,7 @@ hilti::rt::Bool rt::is_orig() {
 }
 
 std::string rt::uid() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/uid");
+    auto _ = _start_profiler("zeek/rt/uid");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -348,7 +361,7 @@ std::string rt::uid() {
 }
 
 std::tuple<hilti::rt::Address, hilti::rt::Port, hilti::rt::Address, hilti::rt::Port> rt::conn_id() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/conn_id");
+    auto _ = _start_profiler("zeek/rt/conn_id");
 
     static auto convert_address = [](const ::zeek::IPAddr& zaddr) -> hilti::rt::Address {
         const uint32_t* bytes = nullptr;
@@ -389,7 +402,7 @@ std::tuple<hilti::rt::Address, hilti::rt::Port, hilti::rt::Address, hilti::rt::P
 }
 
 void rt::flip_roles() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/flip_roles");
+    auto _ = _start_profiler("zeek/rt/flip_roles");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -402,7 +415,7 @@ void rt::flip_roles() {
 }
 
 hilti::rt::integer::safe<uint64_t> rt::number_packets() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/number_packets");
+    auto _ = _start_profiler("zeek/rt/number_packets");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -414,7 +427,7 @@ hilti::rt::integer::safe<uint64_t> rt::number_packets() {
 }
 
 void rt::confirm_protocol() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/confirm_protocol");
+    auto _ = _start_profiler("zeek/rt/confirm_protocol");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -431,7 +444,7 @@ void rt::confirm_protocol() {
 }
 
 void rt::reject_protocol(const std::string& reason) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/reject_protocol");
+    auto _ = _start_profiler("zeek/rt/reject_protocol");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -445,7 +458,7 @@ void rt::reject_protocol(const std::string& reason) {
 }
 
 void rt::weird(const std::string& id, const std::string& addl) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/weird");
+    auto _ = _start_profiler("zeek/rt/weird");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -461,7 +474,7 @@ void rt::weird(const std::string& id, const std::string& addl) {
 }
 
 void rt::protocol_begin(const std::optional<std::string>& analyzer) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/protocol_begin");
+    auto _ = _start_profiler("zeek/rt/protocol_begin");
 
     if ( analyzer ) {
         protocol_handle_get_or_create(*analyzer);
@@ -506,7 +519,7 @@ void rt::protocol_begin(const std::optional<std::string>& analyzer) {
 }
 
 rt::ProtocolHandle rt::protocol_handle_get_or_create(const std::string& analyzer) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/protocol_handle_get_or_create");
+    auto _ = _start_profiler("zeek/rt/protocol_handle_get_or_create");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -564,7 +577,7 @@ rt::ProtocolHandle rt::protocol_handle_get_or_create(const std::string& analyzer
 
 void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes& data,
                           const std::optional<rt::ProtocolHandle>& h) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/protocol_data_in");
+    auto _ = _start_profiler("zeek/rt/protocol_data_in");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -595,7 +608,7 @@ void rt::protocol_data_in(const hilti::rt::Bool& is_orig, const hilti::rt::Bytes
 
 void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::safe<uint64_t>& offset,
                       const hilti::rt::integer::safe<uint64_t>& len, const std::optional<rt::ProtocolHandle>& h) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/protocol_gap");
+    auto _ = _start_profiler("zeek/rt/protocol_gap");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -622,7 +635,7 @@ void rt::protocol_gap(const hilti::rt::Bool& is_orig, const hilti::rt::integer::
 }
 
 void rt::protocol_end() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/protocol_end");
+    auto _ = _start_profiler("zeek/rt/protocol_end");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -635,7 +648,7 @@ void rt::protocol_end() {
 }
 
 void rt::protocol_handle_close(const ProtocolHandle& handle) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/protocol_handle_close");
+    auto _ = _start_profiler("zeek/rt/protocol_handle_close");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -657,14 +670,14 @@ void rt::protocol_handle_close(const ProtocolHandle& handle) {
 }
 
 rt::cookie::FileState* rt::cookie::FileStateStack::push() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file-stack-push");
+    auto _ = _start_profiler("zeek/rt/file-stack-push");
     auto fid = ::zeek::file_mgr->HashHandle(hilti::rt::fmt("%s.%d", _analyzer_id, ++_id_counter));
     _stack.emplace_back(fid);
     return &_stack.back();
 }
 
 const rt::cookie::FileState* rt::cookie::FileStateStack::find(const std::string& fid) const {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file-stack-find");
+    auto _ = _start_profiler("zeek/rt/file-stack-find");
 
     // Reverse search as the default state would be on top of the stack.
     for ( auto i = _stack.rbegin(); i != _stack.rend(); i++ ) {
@@ -676,7 +689,7 @@ const rt::cookie::FileState* rt::cookie::FileStateStack::find(const std::string&
 }
 
 void rt::cookie::FileStateStack::remove(const std::string& fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file-stack-remove");
+    auto _ = _start_profiler("zeek/rt/file-stack-remove");
 
     // Reverse search as the default state would be on top of the stack.
     for ( auto i = _stack.rbegin(); i != _stack.rend(); i++ ) {
@@ -711,7 +724,7 @@ static void _data_in(const char* data, uint64_t len, std::optional<uint64_t> off
 }
 
 void rt::terminate_session() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/terminate_session");
+    auto _ = _start_profiler("zeek/rt/terminate_session");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -724,7 +737,7 @@ void rt::terminate_session() {
 }
 
 std::string rt::fuid() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/fuid");
+    auto _ = _start_profiler("zeek/rt/fuid");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -737,7 +750,7 @@ std::string rt::fuid() {
 }
 
 std::string rt::file_begin(const std::optional<std::string>& mime_type) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_begin");
+    auto _ = _start_profiler("zeek/rt/file_begin");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state_stack(cookie)->push();
     fstate->mime_type = mime_type;
@@ -764,9 +777,9 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
         auto current = f->analyzer->GetFile()->ToVal()->AsRecordVal();
         rval->Assign(::zeek::id::fa_file->FieldOffset("parent_id"), current->GetField("id")); // set to parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("conns"),
-                     current->GetField("conns"));                                             // copy from parent
+                     current->GetField("conns")); // copy from parent
         rval->Assign(::zeek::id::fa_file->FieldOffset("is_orig"),
-                     current->GetField("is_orig"));                                           // copy from parent
+                     current->GetField("is_orig")); // copy from parent
     }
 
     // Double check everybody agrees on the file ID.
@@ -775,7 +788,7 @@ std::string rt::file_begin(const std::optional<std::string>& mime_type) {
 }
 
 void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size, const std::optional<std::string>& fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_set_size");
+    auto _ = _start_profiler("zeek/rt/file_set_size");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie, fid);
 
@@ -788,19 +801,19 @@ void rt::file_set_size(const hilti::rt::integer::safe<uint64_t>& size, const std
 }
 
 void rt::file_data_in(const hilti::rt::Bytes& data, const std::optional<std::string>& fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_data_in");
+    auto _ = _start_profiler("zeek/rt/file_data_in");
     _data_in(data.data(), data.size(), {}, fid);
 }
 
 void rt::file_data_in_at_offset(const hilti::rt::Bytes& data, const hilti::rt::integer::safe<uint64_t>& offset,
                                 const std::optional<std::string>& fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_data_in_at_offset");
+    auto _ = _start_profiler("zeek/rt/file_data_in_at_offset");
     _data_in(data.data(), data.size(), offset, fid);
 }
 
 void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti::rt::integer::safe<uint64_t>& len,
                   const std::optional<std::string>& fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_gap");
+    auto _ = _start_profiler("zeek/rt/file_gap");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie, fid);
 
@@ -813,7 +826,7 @@ void rt::file_gap(const hilti::rt::integer::safe<uint64_t>& offset, const hilti:
 }
 
 void rt::file_end(const std::optional<std::string>& fid) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/file_end");
+    auto _ = _start_profiler("zeek/rt/file_end");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     auto* fstate = _file_state(cookie, fid);
 
@@ -822,7 +835,7 @@ void rt::file_end(const std::optional<std::string>& fid) {
 }
 
 void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
-    auto _ = hilti::rt::profiler::start("zeek/rt/forward_packet");
+    auto _ = _start_profiler("zeek/rt/forward_packet");
     auto cookie = static_cast<Cookie*>(hilti::rt::context::cookie());
     assert(cookie);
 
@@ -833,6 +846,6 @@ void rt::forward_packet(const hilti::rt::integer::safe<uint32_t>& identifier) {
 }
 
 hilti::rt::Time rt::network_time() {
-    auto _ = hilti::rt::profiler::start("zeek/rt/network_time");
+    auto _ = _start_profiler("zeek/rt/network_time");
     return hilti::rt::Time(::zeek::run_state::network_time, hilti::rt::Time::SecondTag());
 }
