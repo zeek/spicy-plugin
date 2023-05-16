@@ -7,4 +7,4 @@ test_command = unset -v CXX CXXFLAGS LD LDFLAGS && cd tests && btest -d -j "${SP
 
 executables = build/bin/spicyz
 
-depends = zeek >=5.0.0
+depends = zeek >=5.0.0,<6.0.0
