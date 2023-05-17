@@ -1,4 +1,9 @@
 
+***Note: This plugin is no longer needed with Zeek >= 6.0, which comes
+with Spicy support built in. All new development now happens in Zeek
+directly. This repository will still be receiving important bugfixes
+for the time being, but will eventually be shut down.***
+
 # Spicy Plugin for Zeek
 
 This repository provides a [Zeek](https://github.com/zeek/zeek)

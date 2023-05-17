@@ -1,3 +1,27 @@
+
+1.5.3-37 | 2023-05-17 12:41:42 +0200
+
+  * Add banner to README pointing to Zeek 6 as the place where new
+    development continues. This plugin will continue to be maintained
+    for now, but generally receive only bug fixes, no new
+    functionality. (Robin Sommer, Corelight)
+
+  * Limit plugin package to be used with Zeek < 6. (Robin Sommer, Corelight)
+
+  * Guard some recent 1.8-only functionality. (Robin Sommer, Corelight)
+
+  * Fix tuple type conversion. (Robin Sommer, Corelight)
+
+    With an anonymous Spicy-side tuple type, we'd be missing an ID to
+    create a Zeek-side record, leading to undefined behavior. To still
+    support this case, we now make up an ID. In addition, we also could
+    end up not correctly tracking type ID during conversion; using a stack
+    now to handle recursion correctly.
+
+  * Fix generation of file IDs. (Robin Sommer, Corelight)
+
+    They weren't stable, and potentially repetitive.
+
 1.5.3-31 | 2023-04-29 11:43:09 +0200
 
   * Strip out information on whether field is optional in test. (Benjamin Bannier, Corelight)
