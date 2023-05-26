@@ -18,9 +18,9 @@ zkg_task:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
-        - ZEEK_VERSION: "v5.0.4"
+        - ZEEK_VERSION: "v5.0.9"
       - docker_arguments:
-        - ZEEK_VERSION: "v5.1.1"
+        - ZEEK_VERSION: "v5.2.2"
     cpu: 2
     memory: 8G
 
@@ -54,7 +54,7 @@ standalone_task:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
-        - ZEEK_VERSION: "v5.1.1"
+        - ZEEK_VERSION: "v5.2.2"
     cpu: 2
     memory: 8G
 
