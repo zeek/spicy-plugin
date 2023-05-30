@@ -18,9 +18,9 @@ zkg_task:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
-        - ZEEK_VERSION: "v5.0.4"
+        - ZEEK_VERSION: "v5.0.9"
       - docker_arguments:
-        - ZEEK_VERSION: "v5.1.1"
+        - ZEEK_VERSION: "v5.2.2"
     cpu: 2
     memory: 8G
 
@@ -54,7 +54,7 @@ standalone_task:
     dockerfile: ci/Dockerfile
     matrix:
       - docker_arguments:
-        - ZEEK_VERSION: "v5.1.1"
+        - ZEEK_VERSION: "v5.2.2"
     cpu: 2
     memory: 8G
 
@@ -86,40 +86,3 @@ standalone_task:
   test_install_script:
     - zeek -N Zeek::Spicy
     - PATH=/opt/spicy-plugin/bin:$PATH make -C tests test-install
-
-static_zeek_master_task:
-  timeout_in: 120m
-  container:
-    dockerfile: ci/Dockerfile
-    cpu: 2
-    memory: 8G
-
-  always:
-    ccache_cache:
-      folder: /tmp/ccache
-      fingerprint_script: echo $CIRRUS_TASK_NAME-$CIRRUS_OS
-      reupload_on_changes: true
-
-  install_spicy_script:
-    - ./ci/get-artifacts.sh "${SPICY_BRANCH}"
-    - dpkg --install spicy-dev.deb
-    - rm spicy-dev.deb
-
-  clone_zeek_script:
-    - git clone --recursive https://github.com/zeek/zeek
-
-  build_script:
-    - (cd zeek && ./configure --include-plugins=$CIRRUS_WORKING_DIR --generator=Ninja --ccache --prefix=/opt/zeek-master --disable-zeekctl --disable-python --disable-spicy && cd build && ninja -j 2)
-
-  install_script:
-    - (cd zeek/build && ninja install)
-
-  # Note that the build tests need the Zeek headers installed.
-  test_build_script:
-    - (. zeek/build/zeek-path-dev.sh && ./zeek/build/src/zeek -N Zeek::Spicy)
-    - PATH=$(pwd)/zeek/build/src:$(pwd)/zeek/build/src/builtin-plugins/$(basename $(pwd))/bin:$PATH make -C tests test
-
-  test_install_script:
-    - rm -rf zeek/build
-    - PATH=/opt/zeek-master/bin:$PATH zeek -N Zeek::Spicy
-    - PATH=/opt/zeek-master/bin:$PATH make -C tests test-install

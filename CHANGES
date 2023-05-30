@@ -1,3 +1,20 @@
+1.5.3-42 | 2023-05-30 15:49:07 +0200
+
+  * GH-3094: Register test analyzer only for required ports. (Benjamin Bannier, Corelight)
+
+    This is a workaround for zeek/zeek#3094.
+
+  * Fix disappearing unit fields in Spicy type export. (Robin Sommer, Corelight)
+
+    When a Spicy unit type was used in an EVT event definition, it could
+    end up being cleared out at the time the logic for `export` got to see it.
+
+  * Bump Zeek versions we test against in CI. (Benjamin Bannier, Corelight)
+
+  * Remove CI against master version of Zeek. (Benjamin Bannier, Corelight)
+
+    As of 6.0 Zeek directly includes spicy-plugin and this is not needed
+    anymore.
 
 1.5.3-37 | 2023-05-17 12:41:42 +0200
 
