@@ -2,6 +2,7 @@
 Our PCAPs:
     - ssh-single-conn.trace
     - udp.trace
+    - barrier.pcap
 
 Sources for external PCAPs:
 

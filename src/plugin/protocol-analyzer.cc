@@ -49,6 +49,7 @@ void ProtocolAnalyzer::Done() {
 
 void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
     auto* endp = is_orig ? &_originator : &_responder;
+    auto* other_endp = is_orig ? &_responder : &_originator;
 
     if ( endp->protocol().analyzer->Skipping() )
         return;
@@ -71,6 +72,12 @@ void ProtocolAnalyzer::Process(bool is_orig, int len, const u_char* data) {
     try {
         hilti::rt::context::CookieSetter _(endp->cookie());
         endp->process(len, reinterpret_cast<const char*>(data));
+
+        if ( other_endp->isWaitingAtBarrier() )
+            // Give the other side a chance to see if the barrier is now
+            // cleared.
+            other_endp->process(0, "");
+
     } catch ( const hilti::rt::RuntimeError& e ) {
         STATE_DEBUG_MSG(is_orig, hilti::rt::fmt("error during parsing, triggering analyzer violation: %s", e.what()));
         auto tag = OurPlugin->tagForProtocolAnalyzer(endp->protocol().analyzer->GetAnalyzerTag());

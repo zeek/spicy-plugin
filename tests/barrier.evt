@@ -1,0 +1,6 @@
+import zeek;
+
+protocol analyzer spicy::Test over TCP:
+    parse originator with Test::Requests,
+    parse responder with Test::Replies,
+    port 12345/tcp;
